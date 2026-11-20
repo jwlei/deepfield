@@ -1,0 +1,50 @@
+#include <common>
+#include <logdepthbuf_pars_vertex>
+attribute vec4 elems0; // a (km), e, i (rad), node (rad)
+attribute vec4 elems1; // argPeri (rad), M0 (rad), n (rad/s), brightness
+uniform float uTime;   // seconds since J2000
+uniform vec3 uSunPos;  // camera-relative
+uniform float uPixelRatio;
+uniform mat3 uBasis;   // orbit reference plane → scene (identity = ecliptic)
+uniform float uStarScale; // object size setting: 1 = plain
+varying float vBright;
+varying float vFade;
+
+void main() {
+  float a = elems0.x, e = elems0.y, inc = elems0.z, node = elems0.w;
+  float w = elems1.x, M0 = elems1.y, n = elems1.z;
+  float M = M0 + n * uTime;
+  M = mod(M, 6.28318530718);
+  // Kepler (Newton): starting from π converges for any e < 1 (NEOs and comets reach 0.99)
+  float E = e > 0.8 ? 3.14159265 : M + e * sin(M);
+  for (int k = 0; k < 8; k++) {
+    E = E - (E - e * sin(E) - M) / (1.0 - e * cos(E));
+  }
+  float P = a * (cos(E) - e);
+  float Q = a * sqrt(1.0 - e * e) * sin(E);
+  float cw = cos(w), sw = sin(w), cO = cos(node), sO = sin(node), ci = cos(inc), si = sin(inc);
+  float xw = P * cw - Q * sw;
+  float yw = P * sw + Q * cw;
+  vec3 m = vec3(xw * cO - yw * ci * sO, xw * sO + yw * ci * cO, yw * si);
+  vec3 scenePos = uBasis * vec3(m.x, m.z, -m.y) + uSunPos;
+
+  vec4 mv = modelViewMatrix * vec4(scenePos, 1.0);
+  gl_Position = projectionMatrix * mv;
+  float dist = length(mv.xyz);
+  // Points shrink when very close (they are km-scale rocks) and stay ~1px far away
+  float px = clamp(1.6 - dist / a * 0.6, 0.6, 1.8) * (0.7 + 0.6 * abs(elems1.w));
+  gl_PointSize = px * uStarScale * uPixelRatio;
+  vBright = abs(elems1.w);
+  // fade out when the camera is far outside the belt so it doesn't become a solid disc; drawn
+  // larger, each particle is dimmed so thousands of them do not pile up into one either
+  float camToStar = length(uSunPos);
+  vFade = (1.0 - smoothstep(a * 15.0, a * 80.0, camToStar)) / uStarScale;
+  // crowding: from far away the belt's screen area shrinks as 1/ratio² while the particle count
+  // does not, and the additive points pile up into a solid white ring; scale each one down by the
+  // same factor so the band keeps its surface brightness (a faint haze, as it should be)
+  float ratio = camToStar / a;
+  vFade *= min(1.0, pow(2.5 / max(ratio, 2.5), 2.0));
+  // negative brightness = the particle has been turned into a real body (discovered asteroid)
+  if (vFade <= 0.0 || elems1.w < 0.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  #include <logdepthbuf_vertex>
+}

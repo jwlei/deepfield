@@ -1,0 +1,131 @@
+import {
+  ACESFilmicToneMapping, Color, DepthTexture, HalfFloatType, PerspectiveCamera, SRGBColorSpace, Scene, ShaderMaterial, UnsignedIntType, Vector2, WebGLRenderTarget, WebGLRenderer,
+} from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { CAMERA_FAR_KM, CAMERA_NEAR_KM } from './constants';
+import { BlackHolePass } from '../render/BlackHolePass';
+import { AutoExposurePass } from '../render/AutoExposurePass';
+import { GodRaysPass } from '../render/GodRaysPass';
+import { initProgramPins } from '../render/ProgramPins';
+
+/** Renderer + camera + post-processing. Camera stays at the origin (floating origin). */
+export class Engine {
+  readonly renderer: WebGLRenderer;
+  readonly scene = new Scene();
+  readonly camera: PerspectiveCamera;
+  readonly composer: EffectComposer;
+  readonly bloom: UnrealBloomPass;
+  /** gravitational lensing (enabled only while a black hole is resolvable) */
+  readonly blackHole: BlackHolePass;
+  /** eye adaptation (before the bloom, so a bright sky does not bloom into a haze) */
+  readonly autoExposure: AutoExposurePass;
+  /** crepuscular rays of the star in view (in an atmosphere) */
+  readonly godRays: GodRaysPass;
+  width = 1;
+  height = 1;
+  pixelRatio = 1;
+  useComposer = true;
+  /** user render-resolution scale (1 = device pixels, capped) */
+  renderScale = 1;
+  /** coarse-pointer devices (phones/tablets): cheaper defaults */
+  readonly mobile = window.matchMedia('(pointer: coarse)').matches;
+
+  constructor(canvas: HTMLCanvasElement) {
+    this.renderer = new WebGLRenderer({
+      canvas,
+      antialias: true,
+      logarithmicDepthBuffer: true,
+      powerPreference: 'high-performance',
+      alpha: false,
+    });
+    initProgramPins(this.renderer);
+    this.renderer.outputColorSpace = SRGBColorSpace;
+    this.renderer.toneMapping = ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.setClearColor(new Color(0x000000), 1);
+    this.renderer.autoClear = true;
+
+    this.camera = new PerspectiveCamera(50, 1, CAMERA_NEAR_KM, CAMERA_FAR_KM);
+    this.camera.position.set(0, 0, 0);
+
+    // HDR scene buffer with hardware MSAA: the composer's default target is single-sampled, which
+    // left every limb and ring edge aliased however the canvas was created
+    // the depth is resolved into a texture as well: the light-shaft pass reads it for occlusion
+    const target = new WebGLRenderTarget(1, 1, { type: HalfFloatType, samples: this.msaaSamples(1, 1), depthTexture: new DepthTexture(1, 1, UnsignedIntType) });
+    this.composer = new EffectComposer(this.renderer, target);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.blackHole = new BlackHolePass();
+    this.blackHole.quality = this.mobile ? 0.5 : 1;
+    this.composer.addPass(this.blackHole);
+    this.godRays = new GodRaysPass();
+    this.godRays.attach(this.scene, this.camera);
+    this.composer.addPass(this.godRays);
+    this.autoExposure = new AutoExposurePass();
+    this.composer.addPass(this.autoExposure);
+    this.bloom = new UnrealBloomPass(new Vector2(1, 1), 0.35, 0.4, 0.92);
+    // one NaN texel in the scene (a shader blowing up at an extreme distance) would otherwise be
+    // smeared by the blur chain into a sharp black rectangle the size of the coarsest mip
+    const hp = this.bloom.materialHighPassFilter as ShaderMaterial;
+    hp.fragmentShader = hp.fragmentShader.replace(
+      'vec4 texel = texture2D( tDiffuse, vUv );',
+      'vec4 texel = texture2D( tDiffuse, vUv );\n\t\t\tif ( any( isnan( texel ) ) || any( isinf( texel ) ) ) texel = vec4( 0.0, 0.0, 0.0, 1.0 );',
+    );
+    hp.needsUpdate = true;
+    this.composer.addPass(this.bloom);
+    const output = new OutputPass();
+    this.autoExposure.bindOutput(output);
+    this.composer.addPass(output);
+
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  }
+
+  resize(): void {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    // phones have DPR 3 and small GPUs: cap lower than on desktop, then apply the user's scale
+    const cap = this.mobile ? 1.5 : 2;
+    this.pixelRatio = Math.max(0.25, Math.min(window.devicePixelRatio || 1, cap) * this.renderScale);
+    this.renderer.setPixelRatio(this.pixelRatio);
+    this.renderer.setSize(this.width, this.height, false);
+    this.composer.setPixelRatio(this.pixelRatio);
+    this.composer.setSize(this.width, this.height);
+    const samples = this.msaaSamples(this.width * this.pixelRatio, this.height * this.pixelRatio);
+    for (const rt of [this.composer.renderTarget1, this.composer.renderTarget2]) {
+      if (rt.samples !== samples) { rt.samples = samples; rt.dispose(); }
+    }
+    this.camera.aspect = this.width / this.height;
+    this.camera.updateProjectionMatrix();
+  }
+
+  /** MSAA level of the scene buffer: 4× on desktop, 2× once the frame is huge (4K), none on phones */
+  private msaaSamples(w: number, h: number): number {
+    if (this.mobile) return 0;
+    // a GPU that already had its resolution cut by the governor gets the cheaper level too
+    return w * h > 5.5e6 || this.renderScale < 0.7 ? 2 : 4;
+  }
+
+  setRenderScale(scale: number): void {
+    if (scale === this.renderScale) return;
+    this.renderScale = scale;
+    this.resize();
+  }
+
+  /** Device-pixel cap applied before the user's scale (phones: 1.5, desktop: 2) */
+  static dprCap(mobile: boolean): number {
+    return Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
+  }
+
+  setFov(deg: number): void {
+    this.camera.fov = deg;
+    this.camera.updateProjectionMatrix();
+  }
+
+  render(): void {
+    if (this.useComposer) this.composer.render();
+    else this.renderer.render(this.scene, this.camera);
+  }
+}

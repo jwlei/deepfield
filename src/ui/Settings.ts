@@ -1,0 +1,230 @@
+export interface Settings {
+  /** clean view: every marker, label and name off the screen at once (N); the bodies stay clickable */
+  cleanView: boolean;
+  orbits: boolean;
+  moonOrbits: boolean;
+  labels: boolean;
+  markers: boolean;
+  /** the Sun marked on the sky with its distance (and a compass when off-screen) once we have left the planets */
+  sunMarker: boolean;
+  starNames: boolean;
+  galaxyNames: boolean;
+  /** camera distance appended to labels ("Mars · 1.2 AU", "Sirius · 8.6 ly") */
+  distances: boolean;
+  galaxies: boolean;
+  /** dwarf planets (with their moons) in the planetary system */
+  dwarfs: boolean;
+  /** asteroids and comets */
+  minorBodies: boolean;
+  /** human-made objects: probes, rovers, telescopes, stations */
+  spacecraft: boolean;
+  eclipticGrid: boolean;
+  equatorialGrid: boolean;
+  atmospheres: boolean;
+  clouds: boolean;
+  rings: boolean;
+  /** boulder layer when flying through a ring system */
+  ringParticles: boolean;
+  shadows: boolean;
+  /** close to a body, a soft lamp from the camera lifts the night side (0 = physical darkness, 1 = lit as in tours) */
+  nightLight: number;
+  /** lens flare and glare of the star in view */
+  lensFlare: boolean;
+  /** motion blur of the stars: flying fast between them, they stretch into streaks */
+  starTrails: boolean;
+  /**
+   * how large the point-sized objects are drawn (the stars of the sky, planets, moons, asteroids and
+   * comets too far to show a disc): 1 = the plain magnitude-to-size scale (the faintest a pixel or
+   * so), up to 10. A drawing aid, not physics: every one of them is far smaller than a pixel.
+   */
+  objectSize: number;
+  /** crepuscular rays: the star's light shafts in an atmosphere, carved by the horizon and the clouds */
+  lightShafts: boolean;
+  /** NASA satellite imagery on Earth / Moon / Mars (streamed) */
+  imagery: boolean;
+  belts: boolean;
+  /** the ~2.8 million fainter real stars (Gaia nearby-star census + Tycho-2 / Gaia DR3), streamed after start-up */
+  deepCatalog: boolean;
+  milkyWay: boolean;
+  /** raymarched galaxies and nebulae (dust lanes, glowing gas); off: point clouds only */
+  volumetrics: boolean;
+  /** Nebula Engine 2.0: nebulae as a gas + dust medium lit by their stars (off: the original per-kind shader) */
+  nebulaEngine: boolean;
+  /** generated content beyond the catalogues: procedural stars, galaxies and the far cosmic web */
+  procedural: boolean;
+  /** labels on generated stars ("YE 6LCRMG"); the dots stay clickable without them */
+  proceduralNames: boolean;
+  /** tint procedurally generated stars / galaxies green so they can be told from catalogue objects */
+  highlightProcedural: boolean;
+  bloom: boolean;
+  /** eye adaptation: a sky full of glow (a galaxy's heart, a nebula from inside) is exposed down to a readable scene */
+  autoExposure: boolean;
+  /** render resolution relative to the (capped) device pixel ratio */
+  renderScale: number;
+  /** drop the render resolution on its own while the frame rate is low, and bring it back when it recovers */
+  autoResolution: boolean;
+  fov: number;
+  exposure: number;
+  mouseSensitivity: number;
+  invertY: boolean;
+  /** background music under the tours and the welcome */
+  music: boolean;
+  /** radio: the library keeps playing, shuffled, outside the tours and the welcome */
+  radio: boolean;
+  /** music volume 0…1 (the radio widget's slider) */
+  musicVolume: number;
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  cleanView: false,
+  orbits: true,
+  moonOrbits: true,
+  labels: true,
+  markers: true,
+  sunMarker: true,
+  starNames: false,
+  galaxyNames: true,
+  distances: false,
+  galaxies: true,
+  dwarfs: true,
+  minorBodies: true,
+  spacecraft: true,
+  eclipticGrid: false,
+  equatorialGrid: false,
+  atmospheres: true,
+  clouds: true,
+  rings: true,
+  ringParticles: true,
+  shadows: true,
+  nightLight: 0.12,
+  lensFlare: true,
+  starTrails: true,
+  objectSize: 1,
+  lightShafts: true,
+  imagery: true,
+  belts: false,
+  deepCatalog: true,
+  milkyWay: true,
+  volumetrics: true,
+  nebulaEngine: true,
+  procedural: true,
+  proceduralNames: false,
+  highlightProcedural: true,
+  bloom: true,
+  autoExposure: true,
+  renderScale: 1,
+  autoResolution: true,
+  fov: 50,
+  exposure: 1.0,
+  mouseSensitivity: 1.0,
+  invertY: false,
+  music: true,
+  radio: false,
+  musicVolume: 0.64,
+};
+
+export type GraphicsPreset = 'low' | 'medium' | 'high';
+export const GRAPHICS_PRESET_ORDER: GraphicsPreset[] = ['low', 'medium', 'high'];
+
+/** what is on screen is the same at every level; the levels differ in rendering cost */
+const PRESET_DISPLAY: Partial<Settings> = {
+  cleanView: false,
+  orbits: false,
+  moonOrbits: false,
+  labels: true,
+  markers: false,
+  sunMarker: false,
+  starNames: true,
+  galaxyNames: true,
+  distances: false,
+  eclipticGrid: false,
+  equatorialGrid: false,
+  dwarfs: true,
+  minorBodies: true,
+  spacecraft: true,
+  belts: false,
+  milkyWay: true,
+  volumetrics: true,
+  galaxies: true,
+  procedural: true,
+  proceduralNames: false,
+  highlightProcedural: true,
+};
+
+const PRESET_RENDER: Partial<Settings> = {
+  atmospheres: true,
+  clouds: true,
+  rings: true,
+  ringParticles: true,
+  shadows: true,
+  nightLight: 1,
+  lensFlare: true,
+  lightShafts: true,
+  imagery: true,
+  deepCatalog: true,
+  bloom: true,
+  autoExposure: true,
+  exposure: 1,
+  renderScale: 1,
+  autoResolution: true,
+};
+
+export const GRAPHICS_PRESETS: Record<GraphicsPreset, Partial<Settings>> = {
+  high: { ...PRESET_DISPLAY, ...PRESET_RENDER },
+  medium: { ...PRESET_DISPLAY, ...PRESET_RENDER, ringParticles: false, renderScale: 0.75 },
+  low: {
+    ...PRESET_DISPLAY, ...PRESET_RENDER,
+    volumetrics: false, ringParticles: false, shadows: false, lensFlare: false, lightShafts: false, bloom: false, imagery: false, deepCatalog: false,
+    renderScale: 0.6,
+  },
+};
+
+/** the preset the settings currently match, if any */
+export function matchPreset(s: Settings): GraphicsPreset | null {
+  return GRAPHICS_PRESET_ORDER.find((p) => Object.entries(GRAPHICS_PRESETS[p]).every(([k, v]) => s[k as keyof Settings] === v)) ?? null;
+}
+
+const KEY = 'yeits.settings.v1';
+const PROBE_KEY = 'yeits.gfxProbe.v1';
+
+const isMobile = (): boolean => window.matchMedia('(pointer: coarse)').matches;
+
+/**
+ * Phones and tablets start at the highest level too; the first seconds after load are measured
+ * once, and a device that cannot keep up drops to the lowest level (see App.probeGraphics).
+ */
+export function graphicsProbePending(): boolean {
+  try {
+    return isMobile() && localStorage.getItem(PROBE_KEY) === null;
+  } catch {
+    return false;
+  }
+}
+export function finishGraphicsProbe(): void {
+  try { localStorage.setItem(PROBE_KEY, '1'); } catch { /* ignore */ }
+}
+
+function firstVisit(): Settings {
+  return { ...DEFAULT_SETTINGS, ...GRAPHICS_PRESETS.high };
+}
+
+export function loadSettings(): Settings {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return firstVisit();
+    const s: Settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    // phones used to be put on the lowest level unasked; they get measured instead
+    if (graphicsProbePending() && matchPreset(s) === 'low') Object.assign(s, GRAPHICS_PRESETS.high);
+    return s;
+  } catch {
+    return firstVisit();
+  }
+}
+
+export function saveSettings(s: Settings): void {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "deepfield",
+  "private": true,
+  "version": "0.6.0",
+  "description": "Deep Field: a web-native universe explorer (Solar System to the edge of the observable universe). Fork of Your Eyes In Space by BigBrains.",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jwlei/deepfield.git"
+  },
+  "homepage": "https://www.jleiros.com/deepfield/",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:stream": "vite --host --port 5180",
+    "build": "tsc --noEmit && vite build && node scripts/ssg/build.mjs",
+    "build:app": "tsc --noEmit && vite build",
+    "ssg": "node scripts/ssg/build.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "qrcode-generator": "^2.0.4",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  }
+}

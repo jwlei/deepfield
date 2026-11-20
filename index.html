@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#090b0f" />
+    <!-- Static head text is English for crawlers / link previews (no JS); applyDom() rewrites it
+         per locale at runtime using the Turkish source key in data-i18n-content. -->
+    <title>Deep Field — Explore the observable universe in your browser</title>
+    <meta name="description" data-i18n-content="Güneş Sistemi'nden gözlemlenebilir evrenin sınırına: 2,8 milyon gerçek yıldız, 6 400 ötegezegen, 284 000 asteroit ve kuyruklu yıldız, 44 000 galaksi, 14 kara delik, NASA uydu görüntüleri ve uzay araçları. NASA/JPL, ESA Hipparcos, Gaia, NED ve SIMBAD verileriyle, tarayıcıda, açık kaynak." content="From the Solar System to the edge of the observable universe: 2.8 million real stars, 6,400 exoplanets, 284,000 asteroids and comets, 44,000 galaxies, 14 black holes, NASA satellite imagery and spacecraft. Built on NASA/JPL, ESA Hipparcos, Gaia, NED and SIMBAD data — in the browser, open source." />
+    <link rel="canonical" href="https://www.jleiros.com/deepfield/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Deep Field" />
+    <meta property="og:title" data-i18n-content="Deep Field — Gözlemlenebilir evreni tarayıcıda gez" content="Deep Field — Explore the observable universe in your browser" />
+    <meta property="og:description" data-i18n-content="Dünya'dan Andromeda'ya, Sagittarius A* kara deliğinden Tarantula Bulutsusu'na gerçek verilerle uçun. Kurulum yok, açık kaynak." content="Fly from Earth to Andromeda, from the black hole Sagittarius A* to the Tarantula Nebula, on real data. No install, open source." />
+    <meta property="og:url" content="https://www.jleiros.com/deepfield/" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Deep Field" />
+    <meta name="twitter:description" data-i18n-content="Gözlemlenebilir evreni gerçek verilerle tarayıcıda gezin." content="Explore the observable universe in your browser, on real data." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <canvas id="overlay"></canvas>
+    <!-- letterbox bars while an event scene plays (between the scene and the UI) -->
+    <div id="cine" aria-hidden="true"></div>
+
+    <div id="ui">
+      <!-- Top bar -->
+      <header id="topbar">
+        <div class="brand">
+          <img id="brand-logo" class="brand-mark" src="/logo.svg" alt="Deep Field" role="button" tabindex="0" title="About" />
+          <span class="brand-name">DEEP FIELD</span>
+          <button class="brand-version" data-changelog data-i18n-title title="Yenilikler">v 0.9.4</button>
+          <span id="brand-sub" class="brand-sub" data-i18n>Güneş Sistemi</span>
+        </div>
+        <div id="search" class="panel-inline">
+          <input id="search-input" type="search" data-i18n-placeholder placeholder="Ara… (Titan, Sirius, Andromeda)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" />
+          <ul id="search-results" hidden></ul>
+        </div>
+        <div class="topbar-right">
+          <div id="places" class="dropdown">
+            <button id="btn-places" class="text-btn" data-i18n-title title="Seçili hedefe otomatik uçuş" aria-haspopup="listbox" aria-expanded="false"><span class="long" data-i18n>Görmeye değecek yerler</span><span class="short" data-i18n>Yerler</span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
+            <div id="places-menu" class="dropdown-menu" role="listbox" hidden></div>
+          </div>
+          <button id="btn-tours" class="text-btn" data-i18n data-i18n-title title="Sesli rehberli turlar: kamera uçar, anlatıcı anlatır">Turlar</button>
+          <button id="btn-academy" class="text-btn" data-i18n data-i18n-title title="Akademi: bölüm bölüm ilerleyen etkileşimli astrofizik dersleri">Akademi</button>
+          <button id="btn-mission" class="text-btn" data-i18n data-i18n-title title="Görev planlayıcı: gerçek ya da hayali bir araçla rota hesapla, fırlat, canlı izle (U)">Görev</button>
+          <button id="btn-events" class="text-btn" data-i18n data-i18n-title title="Olaylar: yaklaşan gök ve uzay olaylarını simülasyonda izleyin, paylaşın, sitenize gömün">Olaylar</button>
+          <button id="btn-roam" class="text-btn" data-i18n data-i18n-title title="Serbest dolaşım: fare ile bak, WASD ile uç (V)">Serbest dolaşım</button>
+          <button id="btn-wiki" class="icon-btn" data-i18n-title title="Ansiklopedi (yeni sekmede açılır)" aria-label="Encyclopedia"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4C6.6 3 4.3 2.7 1.5 3.2v9.6C4.3 12.3 6.6 12.6 8 13.6c1.4-1 3.7-1.3 6.5-.8V3.2C11.7 2.7 9.4 3 8 4zM8 4v9.6" /></svg></button>
+          <button id="btn-help" class="icon-btn" data-i18n-title title="Yardım (F1)">?</button>
+          <button id="btn-give" class="icon-btn btn-give" data-i18n-title title="Projeyi destekle" aria-label="Donate"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2.4 10.2 2.4 6.1A3 3 0 0 1 8 4.6a3 3 0 0 1 5.6 1.5c0 4.1-5.6 7.5-5.6 7.5z" /></svg></button>
+          <button id="btn-settings" class="icon-btn" data-i18n-title title="Ayarlar" aria-label="Settings"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 4h14M1 8h14M1 12h14" /><path d="M10 2.5v3M5 6.5v3M11 10.5v3" /></svg></button>
+        </div>
+      </header>
+
+      <!-- Left: info panel -->
+      <aside id="info" class="panel" hidden>
+        <div class="info-head">
+          <div>
+            <div id="info-type" class="info-type"></div>
+            <h2 id="info-name"></h2>
+            <div id="info-parent" class="info-parent"></div>
+          </div>
+          <div class="info-head-btns">
+            <button id="info-expand" class="icon-btn small" data-i18n-title title="Ayrıntıları aç/kapat">⌄</button>
+            <button id="info-close" class="icon-btn small" data-i18n-title title="Kapat (Esc)">✕</button>
+          </div>
+        </div>
+        <div class="info-actions seg">
+          <button id="act-goto" data-i18n data-i18n-title title="Nesneye uç (G)">Git</button>
+          <button id="act-center" data-i18n data-i18n-title title="Nesneye bak (C)">Ortala</button>
+          <button id="act-follow" data-i18n data-i18n-title title="Yörünge/takip modu (F)">Takip</button>
+          <button id="act-land" data-i18n data-i18n-title title="Yüzeye in (I)" hidden>İn</button>
+          <button id="act-share" data-i18n data-i18n-title title="Bu görünümün bağlantısını kopyala (hedef, zaman ve kamera)">Bağlantı</button>
+        </div>
+        <section id="info-scope" class="info-scope" hidden>
+          <button id="info-scope-btn" class="info-scope-btn" type="button"></button>
+          <div id="info-scope-view"></div>
+        </section>
+        <button id="info-euv" class="info-scope-btn info-euv" type="button" data-i18n-title title="Yıldızı aşırı morötesinde, SDO uydusunun 304 Å kanalındaki gibi göster (X)" hidden></button>
+        <button id="info-core" class="info-scope-btn info-euv" type="button" hidden></button>
+        <dl id="info-body" class="info-grid"></dl>
+        <p id="info-desc" class="info-desc"></p>
+        <a id="info-wiki" class="info-wiki" target="_blank" rel="noopener" data-i18n hidden>Ansiklopedide oku →</a>
+      </aside>
+
+      <!-- Right edge: the stars and planets of the current system as small icons -->
+      <nav id="system-strip" class="system-strip" hidden></nav>
+
+      <!-- Right, under the settings button: the radio (only while the radio setting is on) -->
+      <div id="radio" class="radio" hidden>
+        <button id="radio-disc" class="radio-disc" data-i18n-title title="Radyo" aria-expanded="false">
+          <span class="radio-platter"><span class="radio-vinyl"></span><span class="radio-sheen"></span></span>
+        </button>
+        <div class="radio-body">
+          <div class="radio-meta">
+            <div class="radio-kicker" data-i18n>Radyo</div>
+            <div id="radio-title" class="radio-title"></div>
+            <div id="radio-artist" class="radio-artist"></div>
+          </div>
+          <div class="radio-ctrl">
+            <button id="radio-play" class="radio-btn" data-i18n-title title="Duraklat / sürdür">
+              <svg class="ic-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2v8M8.5 2v8" /></svg>
+              <svg class="ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2v8l6-4z" /></svg>
+            </button>
+            <button id="radio-next" class="radio-btn" data-i18n-title title="Sonraki şarkı"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2v8l5.5-4z" /><path d="M9.5 2v8" /></svg></button>
+            <input id="radio-vol" class="radio-vol" type="range" min="0" max="1" step="0.02" data-i18n-title title="Ses düzeyi" aria-label="Volume" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: settings -->
+      <aside id="settings" class="panel" hidden>
+        <div class="panel-title" data-i18n>Ayarlar</div>
+        <div id="settings-body"></div>
+      </aside>
+
+      <!-- Right: mission planner -->
+      <aside id="mission" class="panel" hidden>
+        <div class="panel-title"><span data-i18n>Görev Planlayıcı</span> <button id="mission-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+        <div class="m-form">
+          <label class="m-row"><span data-i18n>Kalkış</span><select id="m-origin"></select></label>
+          <label class="m-row"><span data-i18n>Hedef</span><select id="m-target"></select></label>
+          <div class="m-row m-sub"><button id="m-use-selected" class="small-btn" data-i18n data-i18n-title title="Sahnede seçili nesneyi hedef yap">Seçili nesneyi hedef yap</button></div>
+          <label class="m-row"><span data-i18n>Araç</span><select id="m-ship"></select></label>
+          <div id="m-ship-info" class="m-info muted"></div>
+          <div class="m-row"><span data-i18n>Kalkış zamanı</span><span id="m-depart" class="m-val" data-i18n-title title="Simülasyon saati – alt bardan değiştirin">—</span></div>
+          <label class="m-row" id="m-window-row"><span data-i18n>Kalkış penceresi</span>
+            <select id="m-window">
+              <option value="0" data-i18n>Hemen (sabit)</option>
+              <option value="180" data-i18n>6 ay içinde en iyi</option>
+              <option value="365" data-i18n>1 yıl içinde en iyi</option>
+              <option value="800" data-i18n>26 ay içinde en iyi</option>
+              <option value="1500" data-i18n>4 yıl içinde en iyi</option>
+            </select>
+          </label>
+          <label class="m-row" id="m-flyby-row"><span data-i18n>Sapan (slingshot)</span><select id="m-flyby"></select></label>
+          <label class="m-row" id="m-speed-row"><span data-i18n>Sürüş</span><select id="m-speed"></select></label>
+          <label class="m-row" id="m-arrival-row"><span data-i18n>Varış</span>
+            <select id="m-arrival"><option value="orbit" data-i18n>Yörüngeye gir</option><option value="flyby" data-i18n>Yakın geçiş</option></select>
+          </label>
+          <label class="m-row" id="m-opt-row"><span data-i18n>Öncelik</span>
+            <select id="m-opt"><option value="dv" data-i18n>En az Δv</option><option value="time" data-i18n>En hızlı (bütçe içinde)</option></select>
+          </label>
+          <label class="m-row"><span data-i18n>İzleme hızı</span>
+            <select id="m-fit" data-i18n-title title="Fırlatınca simülasyon zamanı yolculuk bu kadar sürecek şekilde hızlandırılır">
+              <option value="0" data-i18n>Gerçek zaman (1×)</option>
+              <option value="60" selected data-i18n>Yolculuk ≈ 1 dakika</option>
+              <option value="180" data-i18n>Yolculuk ≈ 3 dakika</option>
+              <option value="600" data-i18n>Yolculuk ≈ 10 dakika</option>
+            </select>
+          </label>
+          <div class="m-actions"><button id="m-compute" data-i18n>Hesapla</button><button id="m-launch" class="primary" disabled data-i18n>Fırlat ve izle</button></div>
+        </div>
+        <div id="m-result" class="m-result" hidden></div>
+        <div id="m-active" class="m-active"></div>
+      </aside>
+
+      <!-- Right: guided tours -->
+      <aside id="tours" class="panel" hidden>
+        <div class="panel-title"><span data-i18n>Rehberli Turlar</span> <button id="tours-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+        <p class="tours-intro" data-i18n>Bir konu seçin: kamera gök cisimlerine uçar, anlatıcı onları sırayla anlatır. Sürükleyerek etrafa bakabilirsiniz; tur devam eder.</p>
+        <div id="tours-list" class="tours-list"></div>
+      </aside>
+
+      <!-- Right: events (upcoming / recent sky & space events) -->
+      <aside id="events" class="panel" hidden>
+        <div class="panel-title"><span data-i18n>Olaylar</span> <button id="events-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+        <p class="tours-intro" data-i18n>Yaklaşan gök ve uzay olayları, simülasyonda kısa birer sahne olarak. Uzay aracı yörüngeleri NASA/JPL Horizons'tan alınmıştır; bu bir simülasyondur, canlı telemetri değildir. Tarihler ajans planlarına göre değişebilir.</p>
+        <div id="events-list" class="events-list"></div>
+      </aside>
+
+      <!-- Main screen: next event chip (while the panel is closed) -->
+      <button id="next-event" class="next-event" hidden>
+        <span id="next-event-text"></span>
+        <span id="next-event-close" class="next-event-close" role="button" data-i18n-title title="Gizle" aria-label="Gizle">✕</span>
+      </button>
+
+      <!-- Embed code dialog -->
+      <div id="embed-dialog" class="modal" hidden>
+        <div class="modal-card embed-card">
+          <div class="panel-title"><span data-i18n>Sitenize gömün</span> <button id="embed-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+          <div id="embed-title" class="embed-title"></div>
+          <p class="embed-help" data-i18n>Aşağıdaki kodu sayfanıza yapıştırın. Gömülü görünüm 16:9 oranında, sayfa kaydırmasını engellemez (yakınlaştırma için önce tıklanır) ve anlatım sessiz başlar.</p>
+          <textarea id="embed-code" rows="4" readonly spellcheck="false"></textarea>
+          <div class="embed-actions">
+            <button id="embed-copy" class="text-btn primary" data-i18n>Kodu kopyala</button>
+          </div>
+          <div class="embed-preview-wrap"><iframe id="embed-preview" title="Preview" allow="fullscreen" allowfullscreen></iframe></div>
+          <p class="embed-note" data-i18n>Gömülü içerik Deep Field'e bağlantı verir; NASA/ESA verileri ve görselleri kendi atıf kurallarına tabidir.</p>
+        </div>
+      </div>
+
+      <!-- Right: academy (lessons) -->
+      <aside id="academy" class="panel" hidden lang="en"></aside>
+
+      <!-- Cinematic tour stage: vignette, chapter title, facts strip, subtitle, HUD -->
+      <div id="tour-bar" class="tour-bar" hidden>
+        <div class="tour-vignette"></div>
+        <div id="tour-chapter" class="tour-chapter" aria-live="polite">
+          <div id="tour-chapter-kicker" class="tour-chapter-kicker"></div>
+          <div id="tour-chapter-title" class="tour-chapter-title"></div>
+          <div class="tour-chapter-rule"></div>
+          <div id="tour-chapter-sub" class="tour-chapter-sub"></div>
+        </div>
+        <dl id="tour-facts" class="tour-facts"></dl>
+        <div id="tour-subtitle" class="tour-subtitle"></div>
+        <div class="tour-hud">
+          <div class="tour-head">
+            <span id="tour-title" class="tour-title"></span>
+            <span id="tour-step" class="tour-step"></span>
+            <span id="tour-dots" class="tour-dots"></span>
+          </div>
+          <div class="tour-controls">
+            <button id="tour-prev" data-i18n-title title="Önceki durak">◀&#xFE0E;</button>
+            <button id="tour-pause" data-i18n-title title="Duraklat / sürdür">❚❚</button>
+            <button id="tour-next" data-i18n-title title="Sonraki durak">▶&#xFE0E;</button>
+            <button id="tour-music" class="tour-music" data-music-toggle data-i18n-title title="Fon müziği" hidden>♪</button>
+            <button id="tour-stop" class="tour-stop" data-i18n data-i18n-title title="Turu bitir (Esc)">Bitir</button>
+          </div>
+        </div>
+        <div class="tour-progress"><div id="tour-progress-fill"></div></div>
+      </div>
+
+      <!-- Top-right: tour inset (photograph / trivia card) -->
+      <figure id="tour-card" class="tour-card" aria-live="polite">
+        <img id="tour-card-img" alt="" hidden />
+        <figcaption>
+          <div id="tour-card-title" class="tour-card-title"></div>
+          <div id="tour-card-big" class="tour-card-big"></div>
+          <div id="tour-card-text" class="tour-card-text"></div>
+          <div id="tour-card-source" class="tour-card-source"></div>
+        </figcaption>
+      </figure>
+
+      <!-- Bottom: time & nav -->
+      <div id="surface-bar" hidden>
+        <span id="surface-where" class="surface-where">—</span>
+        <span class="seg">
+          <button id="sf-down" data-i18n-title title="Alçal (F · basılı tut)">▼</button>
+          <button id="sf-up" data-i18n-title title="Yüksel (R · basılı tut)">▲</button>
+        </span>
+        <button id="sf-takeoff" data-i18n data-i18n-title title="Yörüngeye geri çık (I)">Kalk</button>
+      </div>
+      <footer id="bottombar">
+        <div class="time-block">
+          <div id="time-date" class="time-date">—</div>
+          <div class="time-controls">
+            <span class="seg">
+              <button id="t-rev" data-i18n-title title="Geri hızlandır (J)">◀&#xFE0E;◀&#xFE0E;</button>
+              <button id="t-slow" data-i18n-title title="Yavaşlat">−</button>
+              <button id="t-pause" data-i18n-title title="Duraklat (K)">❚❚</button>
+              <button id="t-fast" data-i18n-title title="Hızlandır">+</button>
+              <button id="t-fwd" data-i18n-title title="İleri hızlandır (L)">▶&#xFE0E;▶&#xFE0E;</button>
+            </span>
+            <button id="t-now" data-i18n data-i18n-title title="Gerçek zamana dön (\\)">Şimdi</button>
+            <div id="time-presets" class="dropdown">
+              <button id="time-rate" class="time-rate" data-i18n-title title="Zaman hızını seç" aria-haspopup="listbox" aria-expanded="false">1×<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
+              <div id="time-menu" class="dropdown-menu up" role="listbox" hidden></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-block">
+          <div class="nav-row"><span class="k" data-i18n>Mod</span><span id="nav-mode" data-i18n>Serbest</span></div>
+          <div class="nav-row"><span class="k" data-i18n>Referans</span><span id="nav-ref">—</span></div>
+          <div class="nav-row"><span class="k" data-i18n>Hız</span><span id="nav-speed">—</span></div>
+          <div class="nav-row"><span class="k" data-i18n>Yükseklik</span><span id="nav-alt">—</span></div>
+          <div class="nav-row" title="Keşifleriniz · sıradaki: en yakın keşfedilmemiş nesne" data-i18n-title><span class="k" data-i18n>Keşif</span><span id="nav-disc">0</span></div>
+          <div class="nav-row" id="nav-place-row" hidden><span class="k" data-i18n>Konum</span><span id="nav-place">—</span></div>
+          <div class="nav-row" id="nav-clock-row" hidden><span class="k" data-i18n>Yerel güneş saati</span><span id="nav-clock">—</span></div>
+          <div class="nav-row"><span class="k">FPS</span><span id="nav-fps">—</span></div>
+        </div>
+      </footer>
+      <div id="imagery-credit" hidden></div>
+      <div id="corner-links">
+        <button id="btn-about" class="corner-link" data-i18n data-i18n-title title="Hakkında, yazar ve geri bildirim">Hakkında</button>
+        <a id="copyright" href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">Source (AGPL-3.0) · based on Your Eyes In Space by BigBrains</a>
+      </div>
+
+      <!-- Embed (iframe) chrome: shown only with ?embed=1 -->
+      <div id="embed-ui" hidden>
+        <div id="embed-head">
+          <span id="embed-head-title"></span>
+          <span id="embed-head-date"></span>
+        </div>
+        <div id="embed-controls">
+          <button id="embed-play" data-i18n-title title="Duraklat / sürdür">❚❚</button>
+          <button id="embed-slower" data-i18n-title title="Yavaşlat">−</button>
+          <span id="embed-rate" class="time-rate">1×</span>
+          <button id="embed-faster" data-i18n-title title="Hızlandır">+</button>
+          <button id="embed-mute" data-i18n-title title="Anlatım sesi">🔇</button>
+          <button id="embed-replay" data-i18n-title title="Sahneyi baştan oynat">↻</button>
+        </div>
+        <a id="embed-open" target="_blank" rel="noopener"><span data-i18n>Deep Field'te aç</span> ↗</a>
+      </div>
+
+      <!-- About card -->
+      <div id="about" class="modal" hidden>
+        <div class="modal-card about-card">
+          <div class="panel-title"><span data-i18n>Hakkında</span> <button id="about-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+          <div class="about-head">
+            <img class="about-mark" src="/logo.svg" alt="Deep Field" />
+            <div>
+              <div class="about-name">DEEP FIELD <button class="brand-version" data-changelog data-i18n-title title="Yenilikler">v 0.9.4</button></div>
+              <div class="about-tag">An open-source universe explorer: the Solar System to the edge of the observable universe, on real data, in the browser.</div>
+              <div id="about-stats" class="about-stats" hidden></div>
+            </div>
+          </div>
+          <p>Deep Field is a fork of <a href="https://github.com/berkcomba/youreyesinspace" target="_blank" rel="noopener noreferrer">Your Eyes In Space</a> by Berk Comba / <a href="https://bigbrains.com.tr" target="_blank" rel="noopener noreferrer">BigBrains</a>, hosted by Joachim Leiros. It is not affiliated with or endorsed by BigBrains. This fork leaves out the original's guided tours, Academy lessons, events and narration (not covered by the code licence), and its streamer and multiplayer modes (which run on the original's servers). For those, visit <a href="https://www.youreyesinspace.com" target="_blank" rel="noopener noreferrer">youreyesinspace.com</a>.</p>
+          <div class="about-grid">
+            <div class="about-k">Original</div>
+            <div><strong>Berk Comba</strong> · <a href="https://bigbrains.com.tr" target="_blank" rel="noopener noreferrer">BigBrains</a> · <a href="https://github.com/berkcomba/youreyesinspace" target="_blank" rel="noopener noreferrer">source</a></div>
+            <div class="about-k">This fork</div>
+            <div><a href="https://www.jleiros.com" target="_blank" rel="noopener noreferrer">Joachim Leiros</a> · <a href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">source</a> · <a href="https://github.com/jwlei/deepfield/issues" target="_blank" rel="noopener noreferrer">issues</a></div>
+          </div>
+          <div class="about-actions">
+            <a id="about-wiki" class="text-btn" href="#" hidden>Encyclopedia</a>
+            <a class="text-btn" href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <button id="about-help" class="text-btn" data-i18n>Kontroller ve kaynaklar</button>
+          </div>
+          <p class="about-foot">Code © 2026 BigBrains, modified by Joachim Leiros, under the GNU AGPL-3.0. "Your Eyes In Space" and its logo are trademarks of BigBrains.</p>
+        </div>
+      </div>
+
+      <!-- Release notes (behind the version badge) -->
+      <div id="changelog" class="modal" hidden>
+        <div class="modal-card changelog-card">
+          <div class="panel-title"><span data-i18n>Yenilikler</span> <button id="changelog-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+          <div id="changelog-body" class="changelog-body"></div>
+          <p class="about-foot"><a href="https://github.com/berkcomba/youreyesinspace/commits/main" target="_blank" rel="noopener noreferrer" data-i18n>Tüm değişiklikler GitHub'da</a></p>
+        </div>
+      </div>
+
+      <!-- Support: pick where to give (behind every "Projeyi destekle" link) -->
+      <div id="sponsor" class="modal sponsor-modal" hidden>
+        <div class="modal-card sponsor-card" role="dialog" aria-labelledby="sponsor-title">
+          <div class="panel-title"><span id="sponsor-title" data-i18n>Projeyi destekle</span> <button id="sponsor-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+          <p class="sponsor-lead" data-i18n>Your Eyes In Space ücretsiz ve reklamsız; öyle kalacak. Sunucu, uydu görüntüsü akışı ve seslendirme masraflarına küçük bir katkı bile yeter.</p>
+          <div class="sponsor-options">
+            <a class="sponsor-option" href="https://github.com/sponsors/berkcomba" target="_blank" rel="noopener noreferrer">
+              <svg class="sponsor-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+              <span class="sponsor-name">GitHub Sponsors</span>
+              <span class="sponsor-hint" data-i18n>GitHub hesabınız varsa</span>
+            </a>
+            <a class="sponsor-option" href="https://buymeacoffee.com/berkcomba" target="_blank" rel="noopener noreferrer">
+              <svg class="sponsor-logo sponsor-logo-cup" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 14.5Z" /><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16" /><path d="M3.5 21.5h14" /><path d="M8 5.5c0-1 .8-1.2.8-2.2M11 5.5c0-1 .8-1.2.8-2.2" /></svg>
+              <span class="sponsor-name">Buy Me a Coffee</span>
+              <span class="sponsor-hint" data-i18n>GitHub hesabınız yoksa</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help -->
+      <div id="help" class="modal" hidden>
+        <div class="modal-card">
+          <div class="panel-title"><span data-i18n>Kontroller</span> <button id="help-close" class="icon-btn small" data-i18n-title title="Kapat">✕</button></div>
+          <div class="help-grid help-touch">
+            <div><kbd data-i18n>Tek parmak</kbd> <span data-i18n>Bak / yörüngede dön</span></div>
+            <div><kbd data-i18n>İki parmak aç-kapa</kbd> <span data-i18n>Yaklaş-uzaklaş (takip) · ileri-geri uç (serbest)</span></div>
+            <div><kbd data-i18n>İki parmak sürükle</kbd> <span data-i18n>Yana / yukarı kay</span></div>
+            <div><kbd data-i18n>Dokun</kbd> <span data-i18n>Seç</span> &nbsp; <kbd data-i18n>Çift dokun</kbd> <span data-i18n>Seç ve git</span></div>
+            <div><kbd data-i18n>Git</kbd> <span data-i18n>Seçili hedefe otopilot</span> &nbsp; <kbd data-i18n>Takip</kbd> <span data-i18n>Yörünge modu</span> &nbsp; <kbd data-i18n>İn</kbd> <span data-i18n>Yüzeyden gökyüzünü izle</span></div>
+            <div><kbd data-i18n>Ara</kbd> <span data-i18n>ve</span> <kbd data-i18n>Yerler</kbd> <span data-i18n>menüsüyle tek dokunuşla uçuş</span></div>
+            <div><kbd data-i18n>Görev</kbd> <span data-i18n>Rota hesapla, fırlat, aracı canlı izle</span></div>
+          </div>
+          <div class="help-grid help-desktop">
+            <div><kbd data-i18n>Sol tık + sürükle</kbd> <span data-i18n>Bak / yörünge</span></div>
+            <div><kbd>V</kbd> <span data-i18n>Serbest dolaşım (fare kilitli, sürüklemeden bak)</span> &nbsp; <kbd>Esc</kbd> <span data-i18n>Çık</span></div>
+            <div><kbd>W A S D</kbd> <span data-i18n>Hareket</span> &nbsp; <kbd>R F</kbd> <span data-i18n>Yukarı/aşağı</span> &nbsp; <kbd>Q E</kbd> <span data-i18n>Yatış</span></div>
+            <div><kbd data-i18n>Tekerlek</kbd> <span data-i18n>Hız (serbest) / mesafe (takip)</span></div>
+            <div><kbd>Shift</kbd> <span data-i18n>10× hız</span> &nbsp; <kbd>Ctrl</kbd> <span data-i18n>0.1× hız</span></div>
+            <div><kbd data-i18n>Tık</kbd> <span data-i18n>Seç</span> &nbsp; <kbd data-i18n>Çift tık</kbd> <span data-i18n>Seç ve git</span></div>
+            <div><kbd>G</kbd> <span data-i18n>Git</span> &nbsp; <kbd>C</kbd> <span data-i18n>Ortala</span> &nbsp; <kbd>T</kbd> <span data-i18n>Takip modu</span></div>
+            <div><kbd>I</kbd> <span data-i18n>Katı bir gezegene / uyduya in · kalk</span> &nbsp; <kbd data-i18n>Yüzeyde</kbd> <span data-i18n>fare bak · W A S D yürü · R F yüksel/alçal · tekerlek yakınlaştır</span></div>
+            <div><kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> <span data-i18n>Zaman geri / durdur / ileri</span> &nbsp; <kbd>\</kbd> <span data-i18n>Şimdi</span></div>
+            <div><kbd>O</kbd> <span data-i18n>Yörüngeler</span> &nbsp; <kbd>N</kbd> <span data-i18n>İşaretler ve isimler</span> &nbsp; <kbd>;</kbd> <span data-i18n>Izgara</span></div>
+            <div><kbd>1–9, 0</kbd> <span data-i18n>Gezegenlere git</span> &nbsp; <kbd>H</kbd> <span data-i18n>Dünya</span></div>
+            <div><kbd data-i18n>Yıldıza tık</kbd> <span data-i18n>Seç</span> &nbsp; <kbd>G</kbd> <span data-i18n>Yıldızlar arası uçuş</span> &nbsp; <kbd>Home</kbd> <span data-i18n>Güneş Sistemi</span></div>
+            <div><kbd data-i18n>Galaksiye tık</kbd> <span data-i18n>Seç</span> &nbsp; <kbd>G</kbd> <span data-i18n>Galaksiler arası uçuş</span> &nbsp; <kbd>M</kbd> <span data-i18n>Samanyolu'na dışarıdan bak</span></div>
+            <div><kbd data-i18n>Ara</kbd> <span data-i18n>Sirius, HIP 71683, Andromeda, M87, Sagittarius A*, Tarantula… (2,8 milyon gerçek yıldız, 6 400 ötegezegen, 284 000 asteroit ve kuyruklu yıldız, 44 000 gerçek galaksi, 14 kara delik, 4 300 pulsar, 6 000 bulutsu ve küme + prosedürel evren)</span></div>
+            <div><kbd>U</kbd> <span data-i18n>Görev planlayıcı: kalkış–hedef–araç seç, Lambert/Hohmann transferi ve isteğe bağlı sapan (gravity assist) hesaplanır, Δv bütçesiyle karşılaştırılır;</span> <kbd data-i18n>Fırlat</kbd> <span data-i18n>ile aracı canlı izle. Star Trek / Star Wars / The Expanse gemileri warp, hiperuzay ve sürekli ivmeyle yıldızlararası hedeflere gider</span></div>
+            <div><kbd>X</kbd> <span data-i18n>Yıldızlara aşırı morötesinde bak (SDO 304 Å): kromosfer, filamentler, çıkıntılar</span></div>
+            <div><kbd>Tab</kbd> <span data-i18n>Arayüzü ve yörüngeleri gizle</span> &nbsp; <kbd>P</kbd> <span data-i18n>Ekran görüntüsü</span> &nbsp; <kbd>Esc</kbd> <span data-i18n>Seçimi bırak</span></div>
+            <div><kbd data-i18n>Görmeye değecek yerler</kbd> <span data-i18n>Uzay araçları (Voyager, JWST, ISS…), kara delikler (Sgr A*, Cygnus X-1…), pulsarlar (Yengeç, Vela, Hulse–Taylor…), bulutsular ve kümeler (Orion, Tarantula, Ülker…), gezegenler, yıldızlar ve galaksilere tek tıkla uçuş</span></div>
+          </div>
+          <div class="help-credits">
+            <div class="panel-title small" data-i18n>Veri kaynakları ve lisanslar</div>
+            <p>
+              <span data-i18n>Yıldız kataloğu:</span> <a href="https://github.com/astronexus/HYG-Database" target="_blank" rel="noopener noreferrer">HYG v4.1</a>, <a href="https://codeberg.org/astronexus/athyg" target="_blank" rel="noopener noreferrer">AT-HYG v4.0</a> (David Nash, Astronexus) —
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>; <span data-i18n>Hipparcos, Yale BSC, Gliese ve Tycho-2 kataloglarından derlenmiştir. Yakın yıldızlar: Gaia Yakın Yıldızlar Kataloğu (GCNS, Gaia EDR3). Bu çalışma, Avrupa Uzay Ajansı (ESA) Gaia görevinin Gaia DPAC tarafından işlenmiş verilerini kullanır. Ötegezegenler: NASA Exoplanet Archive (PSCompPars); arşiv, NASA Ötegezegen Keşif Programı kapsamında Caltech tarafından işletilir. Ötegezegen yüzeyleri ölçülen yarıçap, kütle ve sıcaklığa dayanan temsillerdir.</span>
+              <span data-i18n>Gezegen yörünge elemanları: NASA/JPL (Standish, Keplerian Elements). Uzay aracı konumları: JPL Horizons (yaklaşık, Ekim 2026).</span>
+              <span data-i18n>Uzay aracı 3B modelleri:</span> <a href="https://science.nasa.gov/3d-resources/" target="_blank" rel="noopener noreferrer">NASA 3D Resources</a> <span data-i18n>(kamu malı). Görev planlayıcı: patched-conic yaklaşımı (Lambert, Hohmann, tek sapan); bilim kurgu gemileri ilgili eserlerin hayranlık amaçlı, isimle anılan temsilleridir; modeller özgün ve şematiktir.</span>
+              <span data-i18n>Yüzey görüntüleri: Dünya —</span> <a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noopener noreferrer">NASA GIBS</a> (Blue Marble Next Generation, VIIRS Black Marble);
+              <span data-i18n>Ay —</span> <a href="https://trek.nasa.gov/moon/" target="_blank" rel="noopener noreferrer">NASA Moon Trek</a> <span data-i18n>(LRO WAC mozaiği); Mars —</span> <a href="https://trek.nasa.gov/mars/" target="_blank" rel="noopener noreferrer">NASA Mars Trek</a> (Viking MDIM 2.1); <span data-i18n>Merkür, Venüs, Jüpiter ve Satürn uyduları, Ceres ve Vesta —</span> <a href="https://trek.nasa.gov/" target="_blank" rel="noopener noreferrer">NASA Solar System Treks</a> <span data-i18n>(MESSENGER, Magellan, Galileo, Cassini ve Dawn mozaikleri; Venüs yüzeyi radar görüntüsüdür).</span> <span data-i18n>Tümü NASA kamu malıdır ve doğrudan NASA sunucularından akıtılır.</span>
+              <span data-i18n>Galaksi kataloğu: NED / literatür değerleri. Kara delikler: literatür değerleri (GRAVITY, EHT, Gaia DR3 vb.); görüntüleme Schwarzschild metriğinde gerçek zamanlı ışın izlemedir. Bulutsu, küme ve kalıntı yer imleri gerçek konumlarında, NASA/ESA Hubble (kamu malı) ve ESO (CC BY 4.0) fotoğraflarından türetilmiş üç boyutlu bulutlar olarak gösterilir; fotoğrafı olmayanlar prosedürel temsildir. Pulsarlar: ATNF Pulsar Kataloğu değerleri; ışın geometrisi temsilîdir. Prosedürel yıldızlar, galaksiler ve kozmik ağ deterministik olarak üretilir; gerçek kataloglarla karıştırılmamalıdır.</span>
+              <span data-i18n>Bilimsel kataloglar: asteroit ve kuyruklu yıldızlar — NASA/JPL Small-Body Database; pulsarlar — ATNF Pulsar Kataloğu (Manchester ve ark. 2005); açık kümeler — MWSC (Kharchenko ve ark. 2013); küresel kümeler — Harris (2010 sürümü); gezegenimsi bulutsular — Strasbourg–ESO kataloğu (Acker ve ark. 1992); süpernova kalıntıları — Green (2019); H II bölgeleri — WISE H II kataloğu (Anderson ve ark. 2014); yakın galaksiler — Updated Nearby Galaxy Catalog (Karachentsev ve ark. 2013); galaksi taraması — 2MASS Redshift Survey (Huchra ve ark. 2012); kahverengi cüceler — UltracoolSheet (Best ve ark. 2024); çoklu yıldızlar — Multiple Star Catalogue (Tokovinin 2018) ve USNO Altıncı Görsel Çift Yıldız Yörüngeleri Kataloğu (ORB6). Kataloglara NASA HEASARC ve CDS VizieR üzerinden erişildi.</span>
+            </p>
+            <p>Deep Field is a modified fork of <a href="https://github.com/berkcomba/youreyesinspace" target="_blank" rel="noopener noreferrer">Your Eyes In Space</a> (© 2026 BigBrains), released under the GNU AGPL-3.0; source of this fork: <a href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">github.com/jwlei/deepfield</a>. "Your Eyes In Space" and its logo are trademarks of BigBrains; this fork is not affiliated with or endorsed by BigBrains.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- First visit: the product in five chapters, each over a live shot of the simulation -->
+      <div id="welcome" class="welcome" hidden>
+        <button id="welcome-skip" class="welcome-skip" data-i18n>Atla</button>
+        <div class="welcome-panel">
+          <div class="welcome-pages">
+            <section class="welcome-page" data-shot="saturn">
+              <div class="welcome-head"><span class="welcome-num">I</span><span class="welcome-label">Deep Field</span></div>
+              <h1 class="welcome-title" data-i18n>Evren, olduğu gibi.</h1>
+              <p class="welcome-text" data-i18n>Güneş Sistemi'nden gözlemlenebilir evrenin kıyısına kadar her şey gerçek verilerle, gerçek ölçekte ve şu anki hâliyle. Tarayıcınızda, ücretsiz.</p>
+              <p class="welcome-live" data-i18n>Arkadaki Satürn, bu dakikada bulunduğu yerde.</p>
+            </section>
+            <section class="welcome-page" data-shot="moon" hidden>
+              <div class="welcome-head"><span class="welcome-num">II</span><span class="welcome-label" data-i18n>Veri</span></div>
+              <h2 class="welcome-title" data-i18n>Hiçbir şey uydurma değil.</h2>
+              <p class="welcome-text" data-i18n>Gezegenler NASA/JPL efemerislerinin koyduğu yerde durur. Yıldızlar Hipparcos ve Gaia'dan, galaksiler NED ve SIMBAD'dan gelir. Saati ileri sarın; gökyüzü, gerçekte döneceği gibi döner.</p>
+              <dl class="welcome-stats">
+                <div><dt data-i18n>2,8 milyon</dt><dd data-i18n>gerçek yıldız</dd></div>
+                <div><dt data-i18n>6 400</dt><dd data-i18n>ötegezegen</dd></div>
+                <div><dt data-i18n>284 000</dt><dd data-i18n>küçük cisim</dd></div>
+                <div><dt data-i18n>44 000</dt><dd data-i18n>galaksi</dd></div>
+              </dl>
+            </section>
+            <section class="welcome-page" data-shot="io" hidden>
+              <div class="welcome-head"><span class="welcome-num">III</span><span class="welcome-label" data-i18n>Yolculuk</span></div>
+              <h2 class="welcome-title" data-i18n>Bakmak yetmez. Gidin.</h2>
+              <p class="welcome-text" data-i18n>Bir gezegene çift tıklayın, oraya uçun. Yüzeyine inin; gökyüzünü oradan izleyin. Saati hızlandırın; bir tutulmayı tam zamanında yakalayın.</p>
+              <ul class="welcome-list">
+                <li data-i18n>Görevler: rota, fırlatma, canlı izleme</li>
+                <li data-i18n>Her yıldız, galaksi ve küçük cisim bir arama uzağınızda</li>
+              </ul>
+            </section>
+            <section class="welcome-page" data-shot="sun" hidden>
+              <div class="welcome-head"><span class="welcome-num">IV</span><span class="welcome-label">Origin</span></div>
+              <h2 class="welcome-title">Built on open source.</h2>
+              <p class="welcome-text">Deep Field is a fork of <a href="https://github.com/berkcomba/youreyesinspace" target="_blank" rel="noopener noreferrer">Your Eyes In Space</a> by Berk Comba / BigBrains, released under the GNU AGPL-3.0. It is not affiliated with or endorsed by BigBrains.</p>
+              <p class="welcome-text">The original's guided tours, Academy, events and narration are not part of this fork. You can find them at <a href="https://www.youreyesinspace.com" target="_blank" rel="noopener noreferrer">youreyesinspace.com</a>.</p>
+            </section>
+            <section class="welcome-page" data-shot="system" hidden>
+              <div class="welcome-head"><span class="welcome-num">V</span><span class="welcome-label">Source</span></div>
+              <h2 class="welcome-title">Free, and open.</h2>
+              <p class="welcome-text">No ads, no accounts. The full source of this fork, with its changes, is on GitHub under the same licence.</p>
+              <div class="welcome-support">
+                <a class="welcome-link" href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+              </div>
+            </section>
+          </div>
+          <div class="welcome-nav">
+            <button id="welcome-back" class="welcome-step" data-i18n>Geri</button>
+            <button id="welcome-music" class="welcome-step welcome-music" data-music-toggle data-i18n-title title="Fon müziği" hidden>♪</button>
+            <div id="welcome-dots" class="welcome-bars" aria-hidden="true"></div>
+            <button id="welcome-next" class="welcome-step next"><span data-i18n>Devam</span><span class="welcome-arrow">→</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast" hidden></div>
+    </div>
+
+    <div id="loader">
+      <div class="loader-mark"></div>
+      <div class="loader-text" data-i18n>Evren hazırlanıyor…</div>
+    </div>
+
+    <!-- Bottom-right: the background-music credit, shown for a few seconds when a track starts -->
+    <div id="music-now" class="music-now" hidden aria-live="polite">
+      <span class="music-now-note">♪</span>
+      <span class="music-now-text"><span id="music-now-title" class="music-now-title"></span><span id="music-now-artist" class="music-now-artist"></span></span>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

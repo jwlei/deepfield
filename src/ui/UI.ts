@@ -1,0 +1,1634 @@
+import type { CelestialBody } from '../core/CelestialBody';
+import { MissionPanel, type MissionPanelHost } from './MissionPanel';
+import { TourPanel } from './TourPanel';
+import { RadioWidget } from './RadioWidget';
+import { SystemStrip } from './SystemStrip';
+import { EventPanel } from './EventPanel';
+import type { SkyEvent } from '../data/events';
+import type { SmallBodyCatalog } from '../data/SmallBodies';
+import { copyText, viewUrl } from '../app/share';
+import { wikiHome, wikiPage } from '../app/wiki';
+import { LessonPanel } from './LessonPanel';
+import { ScopeCard, scopeTargetFor } from './ScopeCard';
+import type { TourPlayer } from '../core/TourPlayer';
+import type { LessonPlayer } from '../core/LessonPlayer';
+import { phaseLabel } from '../astro/mission';
+import { binaryPartner } from '../astro/binary';
+import { _, fixed, fmtNum, LOCALES, currentLocale, localeTag, setLocale, type Locale } from '../i18n';
+import { RATE_PRESETS, type TimeSystem } from '../core/TimeSystem';
+import type { Universe } from '../core/Universe';
+import type { CameraController } from '../camera/CameraController';
+import type { StarPoints } from '../render/StarPoints';
+import type { GalaxySprites } from '../render/GalaxySprites';
+import type { LandmarkSprites } from '../render/LandmarkSprites';
+import { LANDMARK_KIND_LABEL } from '../data/landmarks';
+import { HYDROGEN_BURNING_LIMIT } from '../data/BrownDwarfs';
+import { colouredDwarf } from '../data/colouredDwarfs';
+import { AU_KM, LIGHT_YEAR_KM, PARSEC_KM, RAD } from '../core/constants';
+import { LUM_CLASS_DESC, SUN_MASS_KG } from '../astro/stellar';
+import { GALAXY_TYPE_LABEL } from '../galaxy/GalaxyModel';
+import { farKey, type FarRef } from '../galaxy/FarClusters';
+import { TYPE_BY_CODE } from '../galaxy/galaxies';
+import { catalogIndexOf, type StarId } from '../core/Universe';
+import { GRAPHICS_PRESET_ORDER, GRAPHICS_PRESETS, matchPreset, type GraphicsPreset, type Settings } from './Settings';
+import {
+  fmtDeg, fmtDistance, fmtSolarMass, fmtDuration, fmtLightYears, fmtMass, fmtRadius, fmtScaleDistance, fmtSci, fmtSpeed, fmtTemp, TYPE_LABELS, typeLabel,
+} from './format';
+import { PLACES } from './places';
+import { exoBodyId } from '../gen/RealSystem';
+import type { Music } from '../audio/Music';
+import { CHANGELOG, CURRENT_VERSION } from '../data/changelog';
+import { Vector3 } from 'three';
+import { fmtGalactic, fmtRaDec, parseSkyQuery, sceneToGalactic, sceneToRaDec } from './coords';
+
+/** body types that act as the light source / primary of a system */
+function isPrimaryType(t: string): boolean {
+  return t === 'star' || t === 'pulsar' || t === 'blackhole' || t === 'barycenter';
+}
+
+export interface DiscoveryEntry {
+  id: string;
+  name: string;
+  /** kind label (Turkish source string) */
+  kind: string;
+  /** discovery time (ms since epoch) */
+  t: number;
+}
+
+export interface UIHost extends MissionPanelHost {
+  universe: Universe;
+  time: TimeSystem;
+  camera: CameraController;
+  settings: Settings;
+  /** size of the frame actually rendered, in pixels (after the resolution scale and the automatic drop) */
+  renderSize(): [number, number];
+  tours: TourPlayer;
+  lessons: LessonPlayer;
+  music: Music;
+  /** flip the background-music setting (saved) */
+  toggleMusic(): void;
+  starPoints: StarPoints;
+  galaxySprites: GalaxySprites;
+  landmarkSprites: LandmarkSprites;
+  readonly selected: CelestialBody | null;
+  /** selected star (universal id) when no body is selected */
+  readonly selectedStar: StarId | null;
+  /** selected galaxy (index) when nothing else is selected */
+  readonly selectedGalaxy: number | null;
+  /** selected deep-sky landmark (index) when nothing else is selected */
+  readonly selectedLandmark: number | null;
+  /** selected far-universe knot / member galaxy when nothing else is selected */
+  readonly selectedFar: FarRef | null;
+  goToFar(ref: FarRef): void;
+  centerFar(ref: FarRef): void;
+  farInfo(ref: FarRef): { name: string; kind: string; distKm: number; distSunPc: number; radiusPc: number; absMag: number; luminosity: number; massSolar: number; richness: number; typeCode: number | null; resolved: boolean; apparentMag: number; coreMassSolar: number };
+  /** far-universe clusters / member galaxies by id (`f…`) or name code (`YE-…`) */
+  findFar(query: string, limit?: number): FarRef[];
+  farPositionPc(ref: FarRef, out?: Vector3): Vector3;
+  select(b: CelestialBody | null): void;
+  selectStar(id: StarId | null): void;
+  selectGalaxy(i: number | null): void;
+  selectLandmark(i: number | null): void;
+  goToLandmark(i: number): void;
+  centerLandmark(i: number): void;
+  goTo(b: CelestialBody): void;
+  goToStar(id: StarId): void;
+  goToGalaxy(i: number): void;
+  center(b: CelestialBody): void;
+  centerStar(id: StarId): void;
+  centerGalaxy(i: number): void;
+  /** apparent magnitude of a star from the camera (null if not currently generated) */
+  starApparentMag(id: StarId): number | null;
+  toggleFollow(): void;
+  /** landing: solid worlds the visitor can stand on, descend to the selection, climb back up */
+  canLand(b: CelestialBody | null): boolean;
+  land(b?: CelestialBody | null): void;
+  takeOff(): void;
+  readonly landedOn: CelestialBody | null;
+  surfaceStatus(): { place: string; clock: string } | null;
+  /** fly to a Solar-System body by id (switching back to the Solar System frame if needed) */
+  goToBodyId(id: string): void;
+  /** fly to a body of any system (switching the reference frame to that system first) */
+  goToSystemBody(starId: StarId, bodyId: string): void;
+  /** real asteroids and comets (JPL SBDB), once loaded */
+  readonly smallBodies: SmallBodyCatalog | null;
+  goToSmallBody(k: number): void;
+  /** fly to a black hole by universal id (`b0`, `cygx1`, …), switching frames if needed */
+  goToBlackHole(id: string): void;
+  centerBlackHole(id: string): void;
+  /** turn the camera toward a sky direction (scene frame, unit) */
+  lookToward(dir: Vector3): void;
+  /** fly to a point given in parsecs from the Sun (scene frame) */
+  goToSkyPoint(positionPc: Vector3, label: string): void;
+  /** free roam: pointer-locked mouse look + WASD flight */
+  toggleFreeRoam(): void;
+  /** play an event scene (Events tab) */
+  playEvent(e: SkyEvent): void;
+  /** the Solar System catalogue has this body */
+  hasBody(id: string): boolean;
+  /** camera direction from the selected body (scene axes, unit) and distance in radii, for share links */
+  viewOf(b: CelestialBody): { dir: [number, number, number]; radii: number };
+  readonly freeRoam: boolean;
+  /** the visitor's discoveries (generated objects approached, asteroids found), newest first */
+  discoveryLog(): DiscoveryEntry[];
+  /** nearest generated object not discovered yet */
+  nextDiscovery(): { name: string; distKm: number } | null;
+  goToDiscovery(id: string): void;
+  /** @param byUser  changed in the settings panel (the visitor's choice wins over the startup probe) */
+  applySettings(byUser?: boolean): void;
+  screenshot(): void;
+  toggleUI(): void;
+  /** stars shown in extreme ultraviolet (SDO/AIA 304 Å) */
+  readonly euv: boolean;
+  toggleEUV(): void;
+}
+
+/** RA/Dec, galactic l/b and (for generated objects) the id to search for, of a position in parsecs from the Sun */
+function coordRows(posPc: Vector3, id: string | null): Array<[string, string]> {
+  if (posPc.lengthSq() === 0) return [];
+  const [ra, dec] = sceneToRaDec(posPc), [l, b] = sceneToGalactic(posPc);
+  const rows: Array<[string, string]> = [['Koordinat (J2000)', fmtRaDec(ra, dec)], ['Galaktik koordinat', fmtGalactic(l, b)]];
+  if (id) rows.push(['Kimlik (aranabilir)', id]);
+  return rows;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+}
+
+function $<T extends HTMLElement>(id: string): T {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`Missing element #${id}`);
+  return el as T;
+}
+
+interface SettingDef {
+  key: keyof Settings;
+  label: string;
+  kind: 'bool' | 'range';
+  min?: number;
+  max?: number;
+  step?: number;
+  group?: string;
+  /** readout beside a range slider (default: the raw value) */
+  format?: (v: number, host: UIHost) => string;
+}
+
+const SETTING_DEFS: SettingDef[] = [
+  { key: 'cleanView', label: 'Temiz görünüm: tüm işaretleri ve isimleri gizle (N)', kind: 'bool', group: 'Görüntü' },
+  { key: 'orbits', label: 'Yörüngeler', kind: 'bool' },
+  { key: 'moonOrbits', label: 'Uydu yörüngeleri', kind: 'bool' },
+  { key: 'labels', label: 'Etiketler', kind: 'bool' },
+  { key: 'markers', label: 'İşaretçiler', kind: 'bool' },
+  { key: 'sunMarker', label: 'Güneş işareti ve pusulası', kind: 'bool' },
+  { key: 'starNames', label: 'Yıldız isimleri', kind: 'bool' },
+  { key: 'galaxyNames', label: 'Galaksi isimleri', kind: 'bool' },
+  { key: 'distances', label: 'Etiketlerde uzaklık', kind: 'bool' },
+  { key: 'eclipticGrid', label: 'Ekliptik ızgara', kind: 'bool' },
+  { key: 'equatorialGrid', label: 'Ekvatoral ızgara', kind: 'bool' },
+  { key: 'dwarfs', label: 'Cüce gezegenler', kind: 'bool' },
+  { key: 'minorBodies', label: 'Asteroitler ve kuyruklu yıldızlar', kind: 'bool' },
+  { key: 'spacecraft', label: 'İnsan yapımı nesneler (uzay araçları)', kind: 'bool' },
+  { key: 'belts', label: 'Asteroit / Kuiper kuşağı', kind: 'bool' },
+  { key: 'deepCatalog', label: 'Derin yıldız kataloğu (Gaia + Tycho-2, ~2,8 milyon yıldız; ~60 MB indirme)', kind: 'bool' },
+  { key: 'milkyWay', label: 'Galaksi yıldız bulutları', kind: 'bool' },
+  { key: 'volumetrics', label: 'Hacimsel galaksiler ve bulutsular (toz, parlayan gaz)', kind: 'bool' },
+  { key: 'galaxies', label: 'Uzak galaksiler', kind: 'bool' },
+  { key: 'procedural', label: 'Prosedürel nesneler (üretilmiş yıldızlar, galaksiler, kozmik ağ)', kind: 'bool' },
+  { key: 'proceduralNames', label: 'Prosedürel yıldız isimleri (YE …)', kind: 'bool' },
+  { key: 'highlightProcedural', label: 'Prosedürel nesneleri yeşile boya', kind: 'bool' },
+  { key: 'atmospheres', label: 'Atmosferler', kind: 'bool', group: 'Render' },
+  { key: 'clouds', label: 'Bulutlar', kind: 'bool' },
+  { key: 'rings', label: 'Halkalar', kind: 'bool' },
+  { key: 'ringParticles', label: 'Halka parçacıkları', kind: 'bool' },
+  { key: 'shadows', label: 'Tutulma / halka gölgeleri', kind: 'bool' },
+  { key: 'nightLight', label: 'Gece tarafı dolgu ışığı (yakındayken)', kind: 'range', min: 0, max: 1, step: 0.05 },
+  { key: 'lensFlare', label: 'Yıldız parlaması (lens flare)', kind: 'bool' },
+  { key: 'starTrails', label: 'Yıldız izleri (yüksek hızda yıldızlar çizgiye uzar)', kind: 'bool' },
+  { key: 'objectSize', label: 'Nesne boyutu (yıldızları, gezegenleri ve asteroitleri büyüt)', kind: 'range', min: 1, max: 10, step: 0.1, format: (v) => `${fixed(v, 1)}×` },
+  { key: 'lightShafts', label: 'Işık huzmeleri (atmosferde güneş ışınları)', kind: 'bool' },
+  { key: 'imagery', label: 'Uydu görüntüleri (NASA)', kind: 'bool' },
+  { key: 'bloom', label: 'Bloom (parıltı)', kind: 'bool' },
+  { key: 'autoExposure', label: 'Göz uyumu (parlak gökyüzünde otomatik pozlama)', kind: 'bool' },
+  { key: 'exposure', label: 'Pozlama', kind: 'range', min: 0.3, max: 2.5, step: 0.05 },
+  { key: 'renderScale', label: 'Render çözünürlüğü', kind: 'range', min: 0.25, max: 1, step: 0.05, format: (_v, h) => h.renderSize().join('×') },
+  { key: 'autoResolution', label: 'Otomatik çözünürlük (takılınca düşür)', kind: 'bool' },
+  { key: 'fov', label: 'Görüş açısı', kind: 'range', min: 20, max: 110, step: 1, group: 'Kamera' },
+  { key: 'mouseSensitivity', label: 'Fare hassasiyeti', kind: 'range', min: 0.2, max: 3, step: 0.1 },
+  { key: 'invertY', label: 'Y eksenini ters çevir', kind: 'bool' },
+  { key: 'music', label: 'Fon müziği (turlarda ve karşılamada; anlatıcı konuşurken kısılır)', kind: 'bool', group: 'Ses' },
+  { key: 'radio', label: 'Radyo: turların dışında da şarkılar karışık sırayla çalsın', kind: 'bool' },
+];
+
+/** Info-grid rows → HTML; labels and plain-text values are run through the dictionary */
+function rowsHtml(rows: Array<[string, string] | 'sep'>): string {
+  return rows
+    .map((r) => (r === 'sep' ? '<div class="sep"></div>' : `<dt>${_(r[0])}</dt><dd>${_(r[1])}</dd>`))
+    .join('');
+}
+
+/** A time-warp multiplier as a short figure: 60, 3.6k, 86k, 31.6M … */
+function fmtRateMult(r: number): string {
+  if (r < 1e3) return `${Math.round(r)}`;
+  if (r < 1e6) return `${(r / 1e3).toPrecision(r < 1e4 ? 2 : 3).replace(/\.0+$/, '')}k`;
+  if (r < 1e9) return `${(r / 1e6).toPrecision(3).replace(/\.0+$/, '')}M`;
+  return `${(r / 1e9).toPrecision(3).replace(/\.0+$/, '')}G`;
+}
+
+export class UI {
+  private readonly info = $('info');
+  private readonly infoName = $('info-name');
+  private readonly infoType = $('info-type');
+  private readonly infoParent = $('info-parent');
+  private readonly infoBody = $('info-body');
+  private readonly infoDesc = $('info-desc');
+  private readonly infoWiki = $<HTMLAnchorElement>('info-wiki');
+  private readonly scope = new ScopeCard($('info-scope'), $<HTMLButtonElement>('info-scope-btn'), $('info-scope-view'));
+  private readonly settingsPanel = $('settings');
+  private readonly help = $('help');
+  private readonly about = $('about');
+  private readonly toast = $('toast');
+  private readonly searchInput = $<HTMLInputElement>('search-input');
+  private readonly searchResults = $<HTMLUListElement>('search-results');
+  private readonly followBtn = $<HTMLButtonElement>('act-follow');
+  private readonly landBtn = $<HTMLButtonElement>('act-land');
+  private readonly shareBtn = $<HTMLButtonElement>('act-share');
+  private readonly euvBtn = $<HTMLButtonElement>('info-euv');
+  private readonly coreBtn = $<HTMLButtonElement>('info-core');
+  private readonly brandSub = $('brand-sub');
+  private readonly pauseBtn = $<HTMLButtonElement>('t-pause');
+  private readonly roamBtn = $<HTMLButtonElement>('btn-roam');
+  private readonly placesBtn = $<HTMLButtonElement>('btn-places');
+  private readonly placesMenu = $('places-menu');
+  readonly missionPanel: MissionPanel;
+  readonly tourPanel: TourPanel;
+  /** the record under the settings button (radio setting) */
+  readonly radio: RadioWidget;
+  readonly eventPanel: EventPanel;
+  readonly lessonPanel: LessonPanel;
+  private readonly systemStrip: SystemStrip;
+  private lastInfoUpdate = 0;
+  private toastTimer = 0;
+  private searchIndex = -1;
+  private fpsAcc = 0;
+  private fpsCount = 0;
+  private hudAt = -Infinity;
+  private discAt = -Infinity;
+  private fps = 0;
+
+  constructor(private readonly host: UIHost) {
+    this.bindTime();
+    this.bindActions();
+    this.bindSearch();
+    this.buildSettings();
+    this.buildPlaces();
+    this.roamBtn.addEventListener('click', () => host.toggleFreeRoam());
+    $('btn-wiki').addEventListener('click', () => window.open(wikiHome(), '_blank', 'noopener'));
+    $('about-wiki').addEventListener('click', (e) => { e.preventDefault(); window.open(wikiHome(), '_blank', 'noopener'); });
+    $('btn-help').addEventListener('click', () => this.toggleHelp());
+    $('help-close').addEventListener('click', () => this.toggleHelp(false));
+    this.help.addEventListener('click', (e) => { if (e.target === this.help) this.toggleHelp(false); });
+    $('btn-about').addEventListener('click', () => this.toggleAbout());
+    const logo = $('brand-logo');
+    logo.addEventListener('click', () => this.toggleAbout());
+    logo.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.toggleAbout(); } });
+    $('about-close').addEventListener('click', () => this.toggleAbout(false));
+    $('about-help').addEventListener('click', () => { this.toggleAbout(false); this.toggleHelp(true); });
+    this.about.addEventListener('click', (e) => { if (e.target === this.about) this.toggleAbout(false); });
+    // the version badge (top bar and About card) opens the release notes
+    document.querySelectorAll<HTMLElement>('[data-changelog]').forEach((el) => {
+      el.textContent = `v ${CURRENT_VERSION}`;
+      el.addEventListener('click', (e) => { e.stopPropagation(); this.toggleChangelog(true); });
+    });
+    $('changelog-close').addEventListener('click', () => this.toggleChangelog(false));
+    this.changelog.addEventListener('click', (e) => { if (e.target === this.changelog) this.toggleChangelog(false); });
+    // every "support the project" link opens the chooser (GitHub Sponsors / Buy Me a Coffee); the
+    // href stays as the no-script fallback
+    document.querySelectorAll<HTMLElement>('[data-sponsor]').forEach((el) => {
+      el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSponsor(true); });
+    });
+    $('sponsor-close').addEventListener('click', () => this.toggleSponsor(false));
+    this.sponsor.addEventListener('click', (e) => { if (e.target === this.sponsor) this.toggleSponsor(false); });
+    this.sponsor.querySelectorAll<HTMLAnchorElement>('.sponsor-option').forEach((a) => a.addEventListener('click', () => this.toggleSponsor(false)));
+    $('btn-settings').addEventListener('click', () => this.toggleSettings());
+    this.missionPanel = new MissionPanel(host);
+    $('btn-mission').addEventListener('click', () => this.toggleMission());
+    this.tourPanel = new TourPanel(host.tours, (show) => { if (show) { this.toggleSettings(false); this.missionPanel.toggle(false); this.lessonPanel.toggle(false); this.eventPanel.toggle(false); } }, {
+      get available() { return host.music.available; },
+      get enabled() { return host.music.enabled; },
+      get pending() { return host.music.pending; },
+      toggle: () => host.toggleMusic(),
+      onChange: (fn) => host.music.onChange(fn),
+    });
+    $('btn-tours').addEventListener('click', () => this.toggleTours());
+    this.radio = new RadioWidget(host);
+    this.systemStrip = new SystemStrip(host);
+    this.eventPanel = new EventPanel(
+      { playEvent: (e) => host.playEvent(e), showToast: (m, ms) => this.showToast(m, ms), hasBody: (id) => host.hasBody(id) },
+      (show) => { if (show) { this.toggleSettings(false); this.missionPanel.toggle(false); this.tourPanel.toggle(false); this.lessonPanel.toggle(false); } },
+    );
+    this.lessonPanel = new LessonPanel(host.lessons, (show) => { if (show) { this.toggleSettings(false); this.missionPanel.toggle(false); this.tourPanel.toggle(false); this.eventPanel.toggle(false); } });
+    // phones: the info sheet starts folded (name + actions) so the view stays visible
+    if (window.matchMedia('(max-width: 700px)').matches) this.info.classList.add('collapsed');
+    $('info-expand').addEventListener('click', () => this.info.classList.toggle('collapsed'));
+    $('info-close').addEventListener('click', () => { host.select(null); host.selectStar(null); host.selectGalaxy(null); host.selectLandmark(null); });
+  }
+
+  /* ---------------- Time ---------------- */
+  private bindTime(): void {
+    const t = this.host.time;
+    $('t-rev').addEventListener('click', () => t.reverseWarp());
+    $('t-slow').addEventListener('click', () => t.slower());
+    $('t-pause').addEventListener('click', () => t.togglePause());
+    $('t-fast').addEventListener('click', () => t.faster());
+    $('t-fwd').addEventListener('click', () => t.forwardWarp());
+    $('t-now').addEventListener('click', () => { t.setNow(); this.showToast(_('Gerçek zamana dönüldü')); });
+    $('time-date').addEventListener('click', () => {
+      const cur = t.date.toISOString().slice(0, 16);
+      const v = window.prompt(_('Tarih/saat (UTC, ISO 8601):'), cur);
+      if (!v) return;
+      const d = new Date(v.endsWith('Z') ? v : v + 'Z');
+      if (Number.isFinite(d.getTime())) t.setDate(d);
+      else this.showToast(_('Geçersiz tarih'));
+    });
+    $('time-date').style.cursor = 'pointer';
+    $('time-date').title = _('Tarih ayarlamak için tıkla');
+    this.buildTimeMenu();
+  }
+
+  private readonly timeMenu = $('time-menu');
+  private readonly timeRateBtn = $<HTMLButtonElement>('time-rate');
+  private timeItems: Array<{ rate: number; el: HTMLElement }> = [];
+  private timeDirBtns: HTMLButtonElement[] = [];
+
+  /** The preset ladder behind the rate readout (direction, then one row per preset) */
+  private buildTimeMenu(): void {
+    const t = this.host.time;
+    const menu = this.timeMenu;
+    menu.innerHTML = '';
+    const dir = document.createElement('div');
+    dir.className = 'time-dir';
+    this.timeDirBtns = ([[-1, '◀\uFE0E ' + _('Geri')], [1, _('İleri') + ' ▶\uFE0E']] as Array<[1 | -1, string]>).map(([d, label]) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.dataset.dir = String(d);
+      b.addEventListener('click', (e) => { e.stopPropagation(); t.setDirection(d); this.refreshTimeMenu(); });
+      dir.appendChild(b);
+      return b;
+    });
+    menu.appendChild(dir);
+    this.timeItems = RATE_PRESETS.map((p) => {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.setAttribute('role', 'option');
+      const name = document.createElement('span');
+      name.textContent = p.label();
+      const n = document.createElement('span');
+      n.className = 'n';
+      n.textContent = p.rate === 1 ? '1×' : `${fmtRateMult(p.rate)}×`;
+      item.append(name, n);
+      item.addEventListener('click', () => { t.setRate(p.rate, t.dir < 0 ? -1 : 1); this.toggleTimeMenu(false); });
+      menu.appendChild(item);
+      return { rate: p.rate, el: item };
+    });
+    this.timeRateBtn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleTimeMenu(); });
+    document.addEventListener('pointerdown', (e) => {
+      if (!menu.hidden && !menu.contains(e.target as Node) && !this.timeRateBtn.contains(e.target as Node)) this.toggleTimeMenu(false);
+    });
+  }
+
+  private toggleTimeMenu(show = this.timeMenu.hidden): void {
+    this.timeMenu.hidden = !show;
+    this.timeRateBtn.setAttribute('aria-expanded', String(show));
+    if (show) this.refreshTimeMenu();
+  }
+
+  private refreshTimeMenu(): void {
+    const t = this.host.time;
+    for (const b of this.timeDirBtns) b.classList.toggle('active', Number(b.dataset.dir) === t.dir);
+    for (const it of this.timeItems) it.el.classList.toggle('active', !t.paused && Math.abs(Math.log(it.rate / t.rate)) < 0.01);
+  }
+
+  /* ---------------- Actions ---------------- */
+  private bindActions(): void {
+    const h = this.host;
+    $('act-goto').addEventListener('click', () => {
+      if (h.selected) h.goTo(h.selected);
+      else if (h.selectedStar !== null) h.goToStar(h.selectedStar);
+      else if (h.selectedGalaxy !== null) h.goToGalaxy(h.selectedGalaxy);
+      else if (h.selectedLandmark !== null) h.goToLandmark(h.selectedLandmark);
+      else if (h.selectedFar !== null) h.goToFar(h.selectedFar);
+    });
+    this.euvBtn.addEventListener('click', () => this.host.toggleEUV());
+    this.coreBtn.addEventListener('click', () => {
+      const g = this.host.selectedGalaxy;
+      const bh = g !== null ? this.host.universe.galaxyCore(g) : undefined;
+      if (bh) this.host.goToBlackHole(bh.entry.id);
+    });
+    $('act-share').addEventListener('click', () => {
+      const b = this.host.selected;
+      if (!b) return;
+      const url = viewUrl(b.id, this.host.time.date, this.host.viewOf(b), this.host.time.rate);
+      void copyText(url).then((ok) => this.showToast(ok ? _('Görünümün bağlantısı kopyalandı') : url, ok ? 1800 : 5000));
+    });
+    $('act-center').addEventListener('click', () => {
+      if (h.selected) h.center(h.selected);
+      else if (h.selectedStar !== null) h.centerStar(h.selectedStar);
+      else if (h.selectedGalaxy !== null) h.centerGalaxy(h.selectedGalaxy);
+      else if (h.selectedLandmark !== null) h.centerLandmark(h.selectedLandmark);
+      else if (h.selectedFar !== null) h.centerFar(h.selectedFar);
+    });
+    this.followBtn.addEventListener('click', () => h.toggleFollow());
+    this.landBtn.addEventListener('click', () => { if (h.landedOn) h.takeOff(); else h.land(h.selected); });
+    $('sf-takeoff').addEventListener('click', () => h.takeOff());
+    // hold to climb / descend (mouse or touch)
+    for (const [id, dir] of [['sf-up', 1], ['sf-down', -1]] as const) {
+      const el = $(id);
+      const start = (e: Event) => { e.preventDefault(); h.camera.liftInput = dir; };
+      const stop = () => { if (h.camera.liftInput === dir) h.camera.liftInput = 0; };
+      el.addEventListener('pointerdown', start);
+      el.addEventListener('pointerup', stop);
+      el.addEventListener('pointerleave', stop);
+      el.addEventListener('pointercancel', stop);
+    }
+  }
+
+  /* ---------------- "Görmeye değecek yerler" ---------------- */
+  private buildPlaces(): void {
+    const h = this.host;
+    const u = h.universe;
+    const menu = this.placesMenu;
+    menu.innerHTML = '';
+    this.discoveriesGroup = document.createElement('div');
+    this.discoveriesGroup.className = 'dropdown-discoveries';
+    menu.appendChild(this.discoveriesGroup);
+    const resolveGalaxy = (ref: string): number | null => {
+      if (ref.startsWith('#')) return parseInt(ref.slice(1), 10);
+      const i = u.galaxies.findHandmade(ref);
+      return i < 0 ? null : i;
+    };
+    for (const group of PLACES) {
+      const head = document.createElement('div');
+      head.className = 'dropdown-group';
+      head.textContent = _(group.title);
+      menu.appendChild(head);
+      for (const p of group.items) {
+        // skip destinations this build cannot resolve
+        if (p.kind === 'galaxy' && resolveGalaxy(p.ref) === null) continue;
+        // the colourful white dwarfs live in the background-loaded Gaia tier
+        if (p.kind === 'star' && !colouredDwarf(p.ref) && u.catalog.search(p.ref, 1).length === 0) continue;
+        if (p.kind === 'blackhole' && !u.blackHole(p.ref)) continue;
+        if (p.kind === 'landmark' && !u.landmark(p.ref)) continue;
+        if (p.kind === 'exoplanet' && !u.exoplanets.byName(p.ref)) continue;
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.setAttribute('role', 'option');
+        item.innerHTML = `<span>${_(p.label)}</span>${p.note ? `<span class="n">${_(p.note)}</span>` : ''}`;
+        item.addEventListener('click', () => {
+          this.togglePlaces(false);
+          if (p.kind === 'body') h.goToBodyId(p.ref);
+          else if (p.kind === 'blackhole') h.goToBlackHole(p.ref);
+          else if (p.kind === 'landmark') h.goToLandmark(u.landmarks.indexOf(u.landmark(p.ref)!));
+          else if (p.kind === 'exoplanet') {
+            const hit = u.exoplanets.byName(p.ref)!;
+            h.goToSystemBody(`c${hit.host.i}`, exoBodyId(hit.host.i, hit.planet.name));
+          } else if (p.kind === 'star') {
+            const go = (): void => { const hits = u.catalog.search(p.ref, 1); if (hits.length) h.goToStar(`c${hits[0]}`); };
+            if (colouredDwarf(p.ref)) void u.catalog.loadTiers().then(go);
+            else go();
+          } else {
+            const gi = resolveGalaxy(p.ref);
+            if (gi !== null) h.goToGalaxy(gi);
+          }
+        });
+        menu.appendChild(item);
+      }
+    }
+    this.placesBtn.addEventListener('click', (e) => { e.stopPropagation(); this.togglePlaces(); });
+    document.addEventListener('pointerdown', (e) => {
+      if (!menu.hidden && !menu.contains(e.target as Node) && e.target !== this.placesBtn) this.togglePlaces(false);
+    });
+  }
+
+  private discoveriesGroup!: HTMLElement;
+
+  /** "Keşiflerim": the visitor's own finds, rebuilt every time the menu opens */
+  private fillDiscoveries(): void {
+    const h = this.host;
+    const box = this.discoveriesGroup;
+    box.innerHTML = '';
+    const log = h.discoveryLog();
+    const head = document.createElement('div');
+    head.className = 'dropdown-group';
+    head.textContent = log.length ? `${_('Keşiflerim')} (${log.length})` : _('Keşiflerim');
+    box.appendChild(head);
+    if (!log.length) {
+      const empty = document.createElement('div');
+      empty.className = 'dropdown-item muted';
+      empty.innerHTML = `<span>${_('Henüz keşif yok · ◇ işaretli nesnelere yaklaşın, kuşaklardaki kayalara tıklayın')}</span>`;
+      box.appendChild(empty);
+      return;
+    }
+    for (const d of log.slice(0, 14)) {
+      const item = document.createElement('div');
+      item.className = 'dropdown-item';
+      item.setAttribute('role', 'option');
+      item.innerHTML = `<span>${d.name}</span><span class="n">${_(d.kind)}</span>`;
+      item.addEventListener('click', () => { this.togglePlaces(false); h.goToDiscovery(d.id); });
+      box.appendChild(item);
+    }
+  }
+
+  togglePlaces(force?: boolean): void {
+    const show = force ?? this.placesMenu.hidden === true;
+    if (show) this.fillDiscoveries();
+    this.placesMenu.hidden = !show;
+    this.placesBtn.classList.toggle('active', show);
+    this.placesBtn.setAttribute('aria-expanded', String(show));
+  }
+
+  /* ---------------- Search ---------------- */
+  private bindSearch(): void {
+    const input = this.searchInput;
+    const list = this.searchResults;
+    const render = () => {
+      const q = input.value.trim().toLowerCase();
+      list.innerHTML = '';
+      this.searchIndex = -1;
+      if (!q) { list.hidden = true; return; }
+      const norm = (s: string) => s.toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const nq = norm(q);
+      const u = this.host.universe;
+      const add = (name: string, tag: string, onClick: () => void) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${escapeHtml(name)}</span><span class="t">${escapeHtml(tag)}</span>`;
+        li.addEventListener('click', onClick);
+        list.appendChild(li);
+      };
+      const extra = this.searchIdsAndCoords(input.value.trim(), add);
+      const hits = u.bodies
+        .filter((b) => norm(b.name).includes(nq) || norm(b.data.name).includes(nq) || b.id.includes(nq) || norm(typeLabel(b.data.type)).includes(nq) || (TYPE_LABELS[b.data.type] ?? '').toLowerCase().includes(q))
+        .slice(0, 8);
+      for (const b of hits) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${b.name}</span><span class="t">${typeLabel(b.data.type)}${b.parent ? ' · ' + b.parent.name : ''}</span>`;
+        li.addEventListener('click', () => { this.pick(b); });
+        list.appendChild(li);
+      }
+      // Real asteroids and comets not turned into bodies yet (the hand-made ones are bodies already)
+      const sb = this.host.smallBodies;
+      const small = (sb?.search(q, 8) ?? []).filter((k) => !(sb!.flags[k] & 4) && !(u.current.catalogIndex === 0 && u.get(sb!.bodyId(k)))).slice(0, 6);
+      for (const k of small) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${sb!.label(k)}</span><span class="t">${_(sb!.className(k))} · ${fixed(sb!.a[k], sb!.a[k] < 10 ? 2 : 0)} AU</span>`;
+        li.addEventListener('click', () => { this.host.goToSmallBody(k); this.closeSearch(); });
+        list.appendChild(li);
+      }
+      // Bodies of other systems (the Solar System from elsewhere, companion stars, pulsar planets …)
+      const foreign = u.searchForeignBodies(q, 6);
+      for (const f of foreign) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${f.name}</span><span class="t">${typeLabel(f.body.type)} · ${f.systemName}</span>`;
+        li.addEventListener('click', () => { this.host.goToSystemBody(f.starId, f.body.id); this.closeSearch(); });
+        list.appendChild(li);
+      }
+      // Confirmed exoplanets of other systems
+      const exo = u.exoplanets.search(q, 6).filter((x) => x.host.i !== u.current.catalogIndex);
+      for (const { host, planet } of exo) {
+        const li = document.createElement('li');
+        const ly = u.catalog.distancePc(host.i) * 3.26156;
+        li.innerHTML = `<span>${planet.name}</span><span class="t">${_('Ötegezegen')} · ${u.catalog.nameOf(host.i)} · ${fixed(ly, ly < 100 ? 1 : 0)} ly</span>`;
+        li.addEventListener('click', () => { this.host.goToSystemBody(`c${host.i}`, exoBodyId(host.i, planet.name)); this.closeSearch(); });
+        list.appendChild(li);
+      }
+      // Catalogue stars (other systems)
+      const stars = u.catalog.search(q, 8).filter((i) => i !== u.current.catalogIndex);
+      for (const i of stars) {
+        const li = document.createElement('li');
+        const spect = u.catalog.catalogSpectral(i);
+        const ly = u.catalog.distancePc(i) * 3.26156;
+        li.innerHTML = `<span>${u.catalog.nameOf(i)}</span><span class="t">${_('Yıldız')}${spect ? ' · ' + spect : ''} · ${fixed(ly, 1)} ly</span>`;
+        li.addEventListener('click', () => { this.pickStar(`c${i}`); });
+        list.appendChild(li);
+      }
+      // Black holes (other systems)
+      const bhs = u.searchBlackHoles(q, 5).filter((b) => b.systemStarId !== u.current.starId);
+      for (const b of bhs) {
+        const li = document.createElement('li');
+        const dist = fmtLightYears(b.positionPc.length() * PARSEC_KM);
+        li.innerHTML = `<span>${b.entry.name}</span><span class="t">${_('Kara Delik')} · ${fmtSolarMass(b.entry.massSolar)} · ${dist}</span>`;
+        li.addEventListener('click', () => { this.host.goToBlackHole(b.entry.id); this.closeSearch(); });
+        list.appendChild(li);
+      }
+      // Deep-sky landmarks
+      const lms = u.searchLandmarks(q, 8);
+      for (const i of lms) {
+        const l = u.landmarks[i];
+        const li = document.createElement('li');
+        const where = u.galaxies.name(l.galaxy);
+        li.innerHTML = `<span>${l.def.name}</span><span class="t">${_(LANDMARK_KIND_LABEL[l.def.kind]).split(' /')[0]} · ${where} · ${fmtLightYears(l.positionPc.length() * PARSEC_KM)}</span>`;
+        li.addEventListener('click', () => { this.host.goToLandmark(i); this.closeSearch(); });
+        list.appendChild(li);
+      }
+      // Galaxies
+      const gals = u.galaxies.search(q, 6);
+      for (const i of gals) {
+        const li = document.createElement('li');
+        const dist = fmtLightYears(u.galaxies.distancePc(i) * PARSEC_KM);
+        li.innerHTML = `<span>${u.galaxies.name(i)}</span><span class="t">${_('Galaksi')} · ${_(u.galaxies.typeLabel(i))} · ${dist}</span>`;
+        li.addEventListener('click', () => { this.host.selectGalaxy(i); this.host.goToGalaxy(i); this.closeSearch(); });
+        list.appendChild(li);
+      }
+      list.hidden = extra + hits.length + small.length + foreign.length + exo.length + stars.length + bhs.length + lms.length + gals.length === 0;
+    };
+    input.addEventListener('input', render);
+    input.addEventListener('focus', render);
+    input.addEventListener('keydown', (e) => {
+      const items = Array.from(list.children) as HTMLLIElement[];
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!items.length) return;
+        this.searchIndex = (this.searchIndex + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        items.forEach((li, i) => li.classList.toggle('active', i === this.searchIndex));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const li = items[this.searchIndex >= 0 ? this.searchIndex : 0];
+        li?.click();
+      } else if (e.key === 'Escape') {
+        input.blur();
+        list.hidden = true;
+      }
+    });
+    document.addEventListener('pointerdown', (e) => {
+      if (!(e.target as HTMLElement).closest('#search')) list.hidden = true;
+    });
+  }
+
+  private pick(b: CelestialBody): void {
+    this.host.select(b);
+    this.host.goTo(b);
+    this.closeSearch();
+  }
+
+  /**
+   * Generated objects by id (`q…` nebulae and clusters, `p…` stars, `bg…` galactic nuclei, `c…`
+   * catalogue stars) and sky positions (RA/Dec, galactic l/b, optionally a distance): what lies in
+   * that direction, a "look there" and, with a distance, a "fly there". Returns the rows added.
+   */
+  /**
+   * Fly to a landmark by id, resolved when clicked: the generated neighbourhood is rebuilt as the
+   * camera moves, and an object restored from its id (another galaxy's) drops out of the list
+   * again unless it is selected, so an index taken while the list was drawn may be stale.
+   */
+  private goLandmarkById(id: string): void {
+    const u = this.host.universe;
+    const l = u.landmark(id);
+    const i = l ? u.landmarks.indexOf(l) : -1;
+    if (i >= 0) { this.host.selectLandmark(i); this.host.goToLandmark(i); }
+    this.closeSearch();
+  }
+
+  private searchIdsAndCoords(raw: string, add: (name: string, tag: string, onClick: () => void) => void): number {
+    const u = this.host.universe;
+    let n = 0;
+    const id = raw.replace(/\s+/g, '');
+    if (/^q(g?)\d+:-?\d+:-?\d+:-?\d+:\d+$/i.test(id)) {
+      const l = u.landmark(id.toLowerCase());
+      const i = l ? u.landmarks.indexOf(l) : -1;
+      if (l && i >= 0) { add(l.def.name, `${_(LANDMARK_KIND_LABEL[l.def.kind]).split(' /')[0]} · ${id}`, () => this.goLandmarkById(l.def.id)); n++; }
+    } else if (/^bg\d+$/i.test(id)) {
+      const bh = u.blackHole(id.toLowerCase());
+      if (bh) { add(bh.entry.name, `${_('Kara Delik')} · ${fmtSolarMass(bh.entry.massSolar)}`, () => { this.host.goToBlackHole(bh.entry.id); this.closeSearch(); }); n++; }
+    } else if (/^(p\d+(:-?\d+){5}|c\d+)$/i.test(id)) {
+      try {
+        const sid = id.toLowerCase() as StarId;
+        const info = u.starInfo(sid);
+        if (info && Number.isFinite(info.distancePc)) { add(info.name, `${_('Yıldız')} · ${info.spectral} · ${fmtLightYears(info.distancePc * PARSEC_KM)}`, () => this.pickStar(sid)); n++; }
+      } catch { /* not a star id after all */ }
+    }
+    // a world of another system: `{star id}/{body id}`, as its card shows it
+    const path = /^(.+)\/([a-z0-9:_-]+)$/i.exec(id);
+    if (path) {
+      const sid = path[1].toLowerCase() as StarId, bid = path[2];
+      try {
+        const info = u.starInfo(sid);
+        if (info) { add(bid, `${info.name} · ${sid}`, () => { this.host.goToSystemBody(sid, bid); this.closeSearch(); }); n++; }
+      } catch { /* not a system id */ }
+    }
+    // the far universe: galaxy clusters and their member galaxies
+    for (const ref of this.host.findFar(raw)) {
+      const f = this.host.farInfo(ref);
+      add(f.name, `${f.kind} · ${fmtLightYears(f.distSunPc * PARSEC_KM)} · ${farKey(ref)}`, () => { this.host.goToFar(ref); this.closeSearch(); });
+      n++;
+    }
+    const sky = parseSkyQuery(raw);
+    if (!sky) return n;
+    const where = `${fmtRaDec(sky.ra, sky.dec)} · ${fmtGalactic(sky.l, sky.b)}`;
+    add(_('Bu yöne bak'), where, () => { this.host.lookToward(sky.dir.clone()); this.closeSearch(); }); n++;
+    if (sky.distPc !== null) {
+      const p = sky.dir.clone().multiplyScalar(sky.distPc);
+      add(_('Bu noktaya uç'), `${fmtLightYears(sky.distPc * PARSEC_KM)} · ${where}`, () => { this.host.goToSkyPoint(p, _('Koordinat')); this.closeSearch(); }); n++;
+    }
+    // what lies along that sightline: deep-sky objects (real and the generated neighbourhood),
+    // black holes and galaxies, nearest in angle first (and in distance, when one was given)
+    type Hit = { score: number; name: string; tag: string; go: () => void };
+    const found: Hit[] = [];
+    const tol = 1.5 * Math.PI / 180;
+    const consider = (pos: Vector3, radiusPc: number, name: string, tag: string, go: () => void) => {
+      const d = pos.length();
+      if (d <= 0) return;
+      const sep = Math.acos(Math.max(-1, Math.min(1, pos.dot(sky.dir) / d)));
+      const reach = Math.max(tol, Math.atan(radiusPc / d));
+      if (sep > reach) return;
+      let score = sep / reach;
+      if (sky.distPc !== null) score += Math.abs(Math.log(d / sky.distPc)) * 2;
+      found.push({ score, name, tag, go });
+    };
+    for (let i = 0; i < u.landmarks.length; i++) {
+      const l = u.landmarks[i];
+      consider(l.positionPc, l.def.radiusPc, l.def.name, `${_(LANDMARK_KIND_LABEL[l.def.kind]).split(' /')[0]} · ${fmtLightYears(l.positionPc.length() * PARSEC_KM)}`, () => this.goLandmarkById(l.def.id));
+    }
+    for (const b of u.blackHoles) {
+      consider(b.positionPc, 0, b.entry.name, `${_('Kara Delik')} · ${fmtLightYears(b.positionPc.length() * PARSEC_KM)}`, () => { this.host.goToBlackHole(b.entry.id); this.closeSearch(); });
+    }
+    const g = u.galaxies, gp = new Vector3();
+    for (let i = 1; i < g.count; i++) {
+      g.position(i, gp);
+      consider(gp.clone(), g.radius[i], g.name(i), `${_('Galaksi')} · ${fmtLightYears(g.distancePc(i) * PARSEC_KM)}`, () => { this.host.selectGalaxy(i); this.host.goToGalaxy(i); this.closeSearch(); });
+    }
+    found.sort((a, b) => a.score - b.score);
+    for (const h of found.slice(0, 8)) { add(h.name, h.tag, h.go); n++; }
+    return n;
+  }
+
+  private pickStar(id: StarId): void {
+    this.host.selectStar(id);
+    this.host.goToStar(id);
+    this.closeSearch();
+  }
+
+  private closeSearch(): void {
+    this.searchInput.value = '';
+    this.searchResults.hidden = true;
+    this.searchInput.blur();
+  }
+
+  /* ---------------- Settings ---------------- */
+  private buildSettings(): void {
+    const body = $('settings-body');
+    body.innerHTML = '';
+    const s = this.host.settings;
+    // graphics level: sets every display / render switch below at once
+    const presetRow = document.createElement('div');
+    presetRow.className = 'setting-row';
+    const presetLabel = document.createElement('span');
+    presetLabel.textContent = _('Grafik');
+    presetLabel.style.flex = '1';
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    this.presetButtons.clear();
+    // "Orta" alone is already the key of an unrelated "moderate"
+    const names: Record<GraphicsPreset, string> = { low: _('En düşük'), medium: currentLocale() === 'tr' ? 'Orta' : _('Orta grafik düzeyi'), high: _('En yüksek') };
+    for (const p of GRAPHICS_PRESET_ORDER) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = names[p];
+      b.addEventListener('click', () => {
+        Object.assign(s, GRAPHICS_PRESETS[p]);
+        this.host.applySettings(true);
+      });
+      this.presetButtons.set(p, b);
+      seg.appendChild(b);
+    }
+    presetRow.append(presetLabel, seg);
+    body.appendChild(presetRow);
+    this.syncPreset();
+    // language
+    const langRow = document.createElement('div');
+    langRow.className = 'setting-row';
+    const langLabel = document.createElement('label');
+    langLabel.textContent = _('Dil');
+    langLabel.htmlFor = 'set-lang';
+    const langSel = document.createElement('select');
+    langSel.id = 'set-lang';
+    langSel.className = 'lang-select';
+    for (const l of LOCALES) {
+      const o = document.createElement('option');
+      o.value = l.code;
+      o.textContent = l.label;
+      o.selected = l.code === currentLocale();
+      langSel.appendChild(o);
+    }
+    langSel.addEventListener('change', () => setLocale(langSel.value as Locale));
+    langRow.append(langLabel, langSel);
+    body.appendChild(langRow);
+    for (const def of SETTING_DEFS) {
+      if (def.group) {
+        const g = document.createElement('div');
+        g.className = 'setting-group';
+        g.textContent = _(def.group);
+        body.appendChild(g);
+      }
+      const row = document.createElement('div');
+      row.className = 'setting-row';
+      const label = document.createElement('label');
+      label.textContent = _(def.label);
+      const id = `set-${def.key}`;
+      label.htmlFor = id;
+      row.appendChild(label);
+      if (def.kind === 'bool') {
+        // a <label> wrapping the input so clicking the knob itself toggles it
+        const sw = document.createElement('label');
+        sw.className = 'switch';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.id = id;
+        input.checked = s[def.key] as boolean;
+        input.addEventListener('change', () => {
+          (s as unknown as Record<string, unknown>)[def.key] = input.checked;
+          this.host.applySettings(true);
+        });
+        const knob = document.createElement('span');
+        sw.appendChild(input);
+        sw.appendChild(knob);
+        row.appendChild(sw);
+      } else {
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.id = id;
+        input.min = String(def.min);
+        input.max = String(def.max);
+        input.step = String(def.step);
+        input.value = String(s[def.key]);
+        const val = document.createElement('span');
+        val.style.fontFamily = 'var(--mono)';
+        val.style.fontSize = '11px';
+        val.style.minWidth = '34px';
+        val.style.textAlign = 'right';
+        const show = (v: number): string => (def.format ? def.format(v, this.host) : String(v));
+        val.textContent = show(s[def.key] as number);
+        input.addEventListener('input', () => {
+          (s as unknown as Record<string, unknown>)[def.key] = parseFloat(input.value);
+          val.textContent = show(parseFloat(input.value));
+          this.host.applySettings(true);
+        });
+        row.appendChild(input);
+        row.appendChild(val);
+        this.rangeReadouts.set(def.key, () => { val.textContent = show(s[def.key] as number); });
+      }
+      body.appendChild(row);
+    }
+  }
+
+  /** value readouts of the range rows, re-rendered on sync (the resolution one depends on live state) */
+  private readonly rangeReadouts = new Map<keyof Settings, () => void>();
+
+  private readonly presetButtons = new Map<GraphicsPreset, HTMLButtonElement>();
+  private syncPreset(): void {
+    const active = matchPreset(this.host.settings);
+    for (const [p, b] of this.presetButtons) b.classList.toggle('active', p === active);
+  }
+
+  /** Reflect programmatic setting changes (hotkeys) into the panel */
+  syncSettings(): void {
+    this.syncPreset();
+    const s = this.host.settings;
+    for (const def of SETTING_DEFS) {
+      const el = document.getElementById(`set-${def.key}`) as HTMLInputElement | null;
+      if (!el) continue;
+      if (def.kind === 'bool') el.checked = s[def.key] as boolean;
+      else { el.value = String(s[def.key]); this.rangeReadouts.get(def.key)?.(); }
+    }
+  }
+
+  private creditText: string | null = null;
+  private readonly creditEl = $('imagery-credit');
+
+  /** Bottom-left credit for streamed imagery (null hides it) */
+  setImageryCredit(text: string | null, translated = false): void {
+    if (text === this.creditText) return;
+    this.creditText = text;
+    this.creditEl.hidden = text === null;
+    if (text !== null) this.creditEl.textContent = translated ? text : _(text);
+  }
+
+  toggleEvents(force?: boolean): void {
+    const show = force ?? this.eventPanel.panel.hidden === true;
+    this.eventPanel.toggle(show);
+  }
+
+  toggleMission(force?: boolean): void {
+    const show = force ?? this.missionPanel.panel.hidden === true;
+    if (show) { this.toggleSettings(false); this.tourPanel.toggle(false); this.lessonPanel.toggle(false); this.eventPanel.toggle(false); }
+    this.missionPanel.toggle(show);
+  }
+
+  toggleTours(force?: boolean): void {
+    const show = force ?? this.tourPanel.panel.hidden === true;
+    this.tourPanel.toggle(show);
+  }
+
+  toggleAcademy(force?: boolean): void {
+    const show = force ?? this.lessonPanel.panel.hidden === true;
+    this.lessonPanel.toggle(show);
+  }
+
+  toggleSettings(force?: boolean): void {
+    const show = force ?? this.settingsPanel.hidden === true;
+    if (show) { this.missionPanel.toggle(false); this.tourPanel.toggle(false); this.lessonPanel.toggle(false); this.eventPanel.toggle(false); }
+    this.settingsPanel.hidden = !show;
+    $('btn-settings').classList.toggle('active', show);
+  }
+
+  toggleHelp(force?: boolean): void {
+    const show = force ?? this.help.hidden === true;
+    this.help.hidden = !show;
+    if (show) this.about.hidden = true;
+  }
+
+  toggleAbout(force?: boolean): void {
+    const show = force ?? this.about.hidden === true;
+    this.about.hidden = !show;
+    if (show) { this.help.hidden = true; this.changelog.hidden = true; void this.loadAboutStats(); }
+  }
+
+  private readonly sponsor = $('sponsor');
+
+  /** Where to give: GitHub Sponsors or Buy Me a Coffee, side by side */
+  toggleSponsor(force?: boolean): void {
+    const show = force ?? this.sponsor.hidden === true;
+    this.sponsor.hidden = !show;
+  }
+
+  private readonly changelog = $('changelog');
+  private changelogBuilt = false;
+
+  /** Release notes behind the version badge (built on first open, in the UI language) */
+  toggleChangelog(force?: boolean): void {
+    const show = force ?? this.changelog.hidden === true;
+    this.changelog.hidden = !show;
+    if (!show) return;
+    this.about.hidden = true;
+    this.help.hidden = true;
+    if (this.changelogBuilt) return;
+    this.changelogBuilt = true;
+    const body = $('changelog-body');
+    const fmtDate = (iso: string): string => new Date(iso + 'T00:00:00Z').toLocaleDateString(localeTag(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    for (const r of CHANGELOG) {
+      const sec = document.createElement('section');
+      const head = document.createElement('div');
+      head.className = 'release-head';
+      const v = document.createElement('span');
+      v.className = 'release-version' + (r.version === CURRENT_VERSION ? ' current' : '');
+      v.textContent = `v ${r.version}`;
+      if (r.version === CURRENT_VERSION) v.dataset.current = _('güncel');
+      const d = document.createElement('span');
+      d.className = 'release-date';
+      d.textContent = fmtDate(r.date);
+      const t = document.createElement('div');
+      t.className = 'release-title';
+      t.textContent = _(r.title);
+      head.append(v, d, t);
+      const ul = document.createElement('ul');
+      ul.className = 'release-items';
+      for (const it of r.items) {
+        const li = document.createElement('li');
+        li.textContent = _(it.text);
+        ul.appendChild(li);
+      }
+      sec.append(head, ul);
+      body.appendChild(sec);
+    }
+  }
+
+  private aboutStatsLoaded = false;
+  /** "N visits since launch" line in the About panel, from /stats.json (regenerated daily). */
+  private async loadAboutStats(): Promise<void> {
+    if (this.aboutStatsLoaded) return;
+    this.aboutStatsLoaded = true;
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}stats.json`);
+      if (!res.ok) return;
+      const s = (await res.json()) as { since: string; updatedAt: string; visits: number };
+      if (!(s.visits > 0)) return;
+      const el = $('about-stats');
+      const since = new Date(s.since + 'T00:00:00Z').toLocaleDateString(localeTag(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+      el.textContent = _('{n} ziyaret · {date} tarihinden bu yana', { n: fmtNum(s.visits), date: since });
+      el.hidden = false;
+    } catch { /* offline or blocked: the line simply stays hidden */ }
+  }
+
+  showToast(msg: string, ms = 1800, link?: { label: string; href: string; action?: () => void }): void {
+    this.toast.textContent = msg;
+    if (link) {
+      const a = document.createElement('a');
+      a.className = 'toast-link';
+      a.href = link.href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = link.label;
+      if (link.action) a.addEventListener('click', (e) => { e.preventDefault(); link.action!(); });
+      this.toast.append(' · ', a);
+    }
+    this.toast.hidden = false;
+    window.clearTimeout(this.toastTimer);
+    this.toastTimer = window.setTimeout(() => { this.toast.hidden = true; }, ms);
+  }
+
+  private nowTimer = 0;
+  /** Bottom-right credit when a background track starts: title and artist, gone after a few seconds */
+  showNowPlaying(track: { title: string; artist?: string }): void {
+    const box = document.getElementById('music-now');
+    if (!box) return;
+    (document.getElementById('music-now-title') as HTMLElement).textContent = track.title;
+    (document.getElementById('music-now-artist') as HTMLElement).textContent = track.artist ?? '';
+    // restart the fade animation when a new track follows an old one
+    box.hidden = true;
+    void box.offsetWidth;
+    box.hidden = false;
+    window.clearTimeout(this.nowTimer);
+    this.nowTimer = window.setTimeout(() => { box.hidden = true; }, 7000);
+  }
+
+  /* ---------------- Per-frame ---------------- */
+  update(now: number, dt: number, camDistanceToSelected: number): void {
+    const { time, camera, selected } = this.host;
+    this.fpsAcc += dt;
+    this.fpsCount++;
+    if (this.fpsAcc >= 0.5) {
+      this.fps = this.fpsCount / this.fpsAcc;
+      this.fpsAcc = 0;
+      this.fpsCount = 0;
+    }
+
+    // the readouts: text set into the DOM is a style / layout pass whether it changed or not, and
+    // the locale number formatting is not free either — 15 Hz reads as live
+    if (now - this.hudAt >= 66) {
+      this.hudAt = now;
+      $('time-date').textContent = time.formatDate();
+      const rateText = time.rateLabel();
+      if (this.timeRateBtn.firstChild?.textContent !== rateText) {
+        this.timeRateBtn.firstChild!.textContent = rateText;
+        if (!this.timeMenu.hidden) this.refreshTimeMenu();
+      }
+      this.pauseBtn.textContent = time.paused ? '▶\uFE0E' : '❚❚';
+      this.pauseBtn.classList.toggle('active', time.paused);
+
+      const onFoot = camera.mode === 'surface';
+      $('nav-mode').textContent = camera.autopilot ? (camera.autopilot.kind === 'land' ? _('İniş') : _('Otopilot')) : onFoot ? _('Yüzey') : camera.mode === 'orbit' ? _('Takip / Yörünge') : this.host.freeRoam ? _('Serbest dolaşım') : _('Serbest uçuş');
+      this.roamBtn.classList.toggle('active', this.host.freeRoam);
+      $('nav-ref').textContent = camera.reference?.name ?? camera.anchor?.name ?? '—';
+      $('nav-speed').textContent = camera.mode === 'free' ? `${fmtSpeed(camera.speed)}  (×${camera.speedMultiplier.toPrecision(2)})` : onFoot ? (camera.speed > 0 ? fmtSpeed(camera.speed) : '—') : '—';
+      $('nav-alt').textContent = camera.nearest ? `${fmtDistance(camera.altitude)} · ${camera.nearest.name}` : '—';
+      const status = onFoot ? this.host.surfaceStatus() : null;
+      $('nav-place-row').hidden = !status;
+      $('nav-clock-row').hidden = !status;
+      const bar = $('surface-bar');
+      bar.hidden = !this.host.landedOn;
+      if (status) {
+        $('nav-place').textContent = status.place + (camera.surface && camera.surface.zoom > 1.01 ? ` · ${camera.surface.zoom.toFixed(1)}×` : '');
+        $('nav-clock').textContent = status.clock;
+        $('surface-where').textContent = `${this.host.landedOn!.name} · ${fmtDistance(camera.altitude)} · ${status.clock}`;
+      } else if (!bar.hidden) $('surface-where').textContent = this.host.landedOn!.name;
+      $('nav-fps').textContent = fixed(this.fps, 0);
+      if (now - this.discAt >= 500) {
+        this.discAt = now;
+        const n = this.host.discoveryLog().length;
+        const next = this.host.nextDiscovery();
+        $('nav-disc').textContent = next ? `${n} · ${_('sıradaki')} ${fmtScaleDistance(next.distKm)}` : String(n);
+      }
+    }
+    this.missionPanel.update(now);
+    this.systemStrip.update(now);
+
+    const pointSel = this.host.selectedGalaxy !== null || this.host.selectedLandmark !== null || this.host.selectedFar !== null;
+    this.followBtn.classList.toggle('active', camera.mode === 'orbit' && (selected ? camera.target === selected : pointSel && camera.anchor !== null));
+    this.followBtn.disabled = !selected && !pointSel;
+    const landed = this.host.landedOn;
+    const landHere = landed !== null && landed === selected;
+    this.landBtn.hidden = !landHere && !this.host.canLand(selected);
+    const landLabel = landHere ? _('Kalk') : _('İn');
+    if (this.landBtn.textContent !== landLabel) { this.landBtn.textContent = landLabel; this.landBtn.title = landHere ? _('Yörüngeye geri çık (I)') : _('Yüzeye in (I)'); }
+    this.landBtn.classList.toggle('active', landHere);
+
+    const u = this.host.universe;
+    const sys = u.current;
+    const sysLabel = sys.catalogIndex === 0 ? _('Güneş Sistemi') : _('{name} sistemi', { name: sys.star.name });
+    const gal = u.currentGalaxy;
+    const dSunPc = this.host.camera.position.length() / PARSEC_KM;
+    const scaleLabel = dSunPc > 3.0e9 ? _('Gözlemlenebilir evren') : dSunPc > 3.0e8 ? _('Süperküme ölçeği') : _('Galaksiler arası uzay');
+    const label = gal === null ? `${scaleLabel} · ${sysLabel}` : gal === 0 ? sysLabel : `${u.galaxies.name(gal)} · ${sysLabel}`;
+    if (this.brandSub.textContent !== label) this.brandSub.textContent = label;
+
+    this.shareBtn.hidden = !(selected && sys.catalogIndex === 0);
+    const isStar = selected?.data.type === 'star';
+    if (this.euvBtn.hidden !== !isStar) this.euvBtn.hidden = !isStar;
+    if (isStar && this.euvBtn.classList.contains('active') !== this.host.euv) {
+      this.euvBtn.classList.toggle('active', this.host.euv);
+      this.euvBtn.textContent = this.host.euv ? _('Görünür ışığa dön') : _('Aşırı morötesinde bak (SDO)');
+    } else if (isStar && !this.euvBtn.textContent) {
+      this.euvBtn.textContent = _('Aşırı morötesinde bak (SDO)');
+    }
+    const galaxyOnly = !selected && this.host.selectedStar === null && this.host.selectedGalaxy !== null;
+    if (this.coreBtn.hidden !== !galaxyOnly) this.coreBtn.hidden = !galaxyOnly;
+    if (selected) {
+      this.info.hidden = false;
+      if (now - this.lastInfoUpdate > 120) {
+        this.lastInfoUpdate = now;
+        this.renderInfo(selected, camDistanceToSelected);
+      }
+    } else if (this.host.selectedStar !== null) {
+      this.info.hidden = false;
+      if (now - this.lastInfoUpdate > 250) {
+        this.lastInfoUpdate = now;
+        this.renderStarInfo(this.host.selectedStar);
+      }
+    } else if (this.host.selectedGalaxy !== null) {
+      this.info.hidden = false;
+      if (now - this.lastInfoUpdate > 250) {
+        this.lastInfoUpdate = now;
+        this.renderGalaxyInfo(this.host.selectedGalaxy);
+      }
+    } else if (this.host.selectedLandmark !== null) {
+      this.info.hidden = false;
+      if (now - this.lastInfoUpdate > 250) {
+        this.lastInfoUpdate = now;
+        this.renderLandmarkInfo(this.host.selectedLandmark);
+      }
+    } else if (this.host.selectedFar !== null) {
+      this.info.hidden = false;
+      if (now - this.lastInfoUpdate > 250) {
+        this.lastInfoUpdate = now;
+        this.renderFarInfo(this.host.selectedFar);
+      }
+    } else {
+      this.info.hidden = true;
+    }
+    if (!this.info.hidden) {
+      const page = wikiPage(this.wikiKey(selected));
+      if (page) { if (this.infoWiki.getAttribute('href') !== page) this.infoWiki.href = page; }
+      if (this.infoWiki.hidden !== !page) this.infoWiki.hidden = !page;
+    }
+    const h = this.host;
+    const scopeKey = this.info.hidden ? null
+      : `${h.universe.current.catalogIndex}|${selected?.id ?? ''}|${h.selectedStar ?? ''}|${h.selectedGalaxy ?? ''}|${h.selectedLandmark ?? ''}`;
+    this.scope.sync(scopeKey, () => scopeTargetFor({
+      universe: h.universe, selected, star: h.selectedStar, galaxy: h.selectedGalaxy, landmark: h.selectedLandmark,
+    }), h.time.jd, now);
+  }
+
+  /** the `?open=` key of the selection, which the encyclopedia index maps to a page */
+  private wikiKey(selected: CelestialBody | null): string | null {
+    const u = this.host.universe;
+    if (selected) {
+      const sys = u.current;
+      if (sys.catalogIndex === 0) return `target:${selected.id}`;
+      if (selected === sys.star) return `star:c${sys.catalogIndex}`;
+      return `planet:c${sys.catalogIndex}/${selected.name}`;
+    }
+    const star = this.host.selectedStar;
+    if (star !== null) {
+      const bh = u.blackHoles.find((b) => b.systemStarId === star);
+      return bh ? `bh:${bh.entry.id}` : `star:${star}`;
+    }
+    if (this.host.selectedGalaxy !== null) return `galaxy:${u.galaxies.name(this.host.selectedGalaxy)}`;
+    if (this.host.selectedLandmark !== null) return `landmark:${u.landmarks[this.host.selectedLandmark].def.id}`;
+    return null;
+  }
+
+  private renderGalaxyInfo(i: number): void {
+    const u = this.host.universe;
+    const g = u.galaxies;
+    const core = u.galaxyCore(i);
+    const coreLabel = core ? _('Merkezdeki kara deliğe uç: {name}', { name: core.entry.name }) : '';
+    if (this.coreBtn.textContent !== coreLabel) this.coreBtn.textContent = coreLabel;
+    const type = g.typeOf(i);
+    this.infoName.textContent = g.name(i);
+    this.infoType.textContent = `${_('Galaksi')} · ${_(g.typeLabel(i))}`;
+    const source = g.sourceOf(i);
+    const peculiar = !!g.handmade(i)?.pec;
+    this.infoParent.textContent = i === 0 ? _('Ev galaksimiz') : g.isReal(i) ? _('Gerçek galaksi kataloğu') : _('Prosedürel kozmik ağ');
+
+    const rel = u.galaxyRelative(i, this.host.camera.position);
+    const camDist = rel.length();
+    const distSunKm = g.distancePc(i) * PARSEC_KM;
+    const R = g.radius[i];
+    const absMag = g.absMag[i];
+    const lum = Math.pow(10, (4.83 - absMag) / 2.5);
+    const rows: Array<[string, string] | 'sep'> = [];
+    rows.push(['Uzaklık', `${fmtLightYears(camDist)} (${fmtDistance(camDist)})`]);
+    rows.push(['Kadir (buradan)', fixed(this.host.galaxySprites.apparentMag(i), 1)]);
+    rows.push(['Görünür yarıçap', fmtDeg(this.host.galaxySprites.apparent(i).angRad * RAD, 2)]);
+    rows.push('sep');
+    rows.push(['Güneş\'e uzaklık', `${fmtLightYears(distSunKm)} (${fixed((g.distancePc(i) / 1e6), 3)} Mpc)`]);
+    if (i !== 0) rows.push(...coordRows(g.position(i), null));
+    rows.push(['Hubble tipi', g.typeGuessed(i) ? `${_(GALAXY_TYPE_LABEL[type])} (${_('tahmini')})` : _(GALAXY_TYPE_LABEL[type])]);
+    rows.push(['Çap', `${fixed(((R * 2) / 1000), 1)} kpc (${fmtLightYears(R * 2 * PARSEC_KM)})`]);
+    rows.push(['Mutlak kadir', fixed(absMag, 1)]);
+    rows.push(['Parlaklık', `${lum.toExponential(2)} L☉`]);
+    rows.push(['Yıldız sayısı (tahmini)', `~${(lum * 3).toExponential(1).replace('e+', '×10^')}`]);
+    if (core) rows.push(['Merkez kara delik', `~${core.entry.massSolar.toExponential(1).replace('e+', '×10^')} M☉`]);
+    if (peculiar) rows.push(['Kaynak', 'Yayımlanmış görüntülere göre elle çizildi (yaklaşık)']);
+    else if (source === 'handmade') rows.push(['Kaynak', 'Messier / NGC (yaklaşık parametreler)']);
+    else if (source === 'ungc') rows.push(['Kaynak', 'Updated Nearby Galaxy Catalog (Karachentsev+ 2013)']);
+    else if (source === '2mrs' || source === '2mrs-cluster') rows.push(['Kaynak', '2MASS Redshift Survey (Huchra+ 2012)']);
+    rows.push(['Işık gecikmesi', fmtDuration(camDist / 299_792.458)]);
+    this.infoBody.innerHTML = rowsHtml(rows);
+    const desc = g.model(i).p.description ?? '';
+    this.infoDesc.textContent = g.isReal(i) ? desc : `${desc} ${_('Gözlemlenmiş bir nesne değil: kataloglar arasındaki boşluğu doldurmak için deterministik olarak üretildi.')}`.trim();
+  }
+
+  private renderFarInfo(ref: FarRef): void {
+    const f = this.host.farInfo(ref);
+    const member = ref.member >= 0;
+    this.infoName.textContent = f.name;
+    this.infoType.textContent = member && f.typeCode !== null ? `${_('Galaksi')} · ${_(GALAXY_TYPE_LABEL[TYPE_BY_CODE[f.typeCode]])}` : f.kind;
+    this.infoParent.textContent = member ? `${this.host.farInfo({ ...ref, member: -1 }).name} · ${_('Prosedürel kozmik ağ')}` : _('Prosedürel kozmik ağ');
+    const rows: Array<[string, string] | 'sep'> = [];
+    rows.push(['Uzaklık', `${fmtLightYears(f.distKm)} (${fmtDistance(f.distKm)})`]);
+    rows.push(['Kadir (buradan)', fixed(f.apparentMag, 1)]);
+    rows.push(['Görünür yarıçap', fmtDeg((f.radiusPc * PARSEC_KM / Math.max(f.distKm, 1)) * RAD, 2)]);
+    rows.push('sep');
+    rows.push(['Güneş\'e uzaklık', `${fmtLightYears(f.distSunPc * PARSEC_KM)} (${fixed(f.distSunPc / 1e6, 1)} Mpc)`]);
+    rows.push(...coordRows(this.host.farPositionPc(ref), farKey(ref)));
+    if (f.coreMassSolar > 0) rows.push([member ? 'Merkez kara delik' : 'En parlak üyenin kara deliği', `~${f.coreMassSolar.toExponential(1).replace('e+', '×10^')} M☉`]);
+    if (member) {
+      rows.push(['Hubble tipi', f.typeCode !== null ? _(GALAXY_TYPE_LABEL[TYPE_BY_CODE[f.typeCode]]) : '—']);
+      rows.push(['Çap', `${fixed((f.radiusPc * 2) / 1000, 1)} kpc (${fmtLightYears(f.radiusPc * 2 * PARSEC_KM)})`]);
+      rows.push(['Mutlak kadir', fixed(f.absMag, 1)]);
+      rows.push(['Parlaklık', `${f.luminosity.toExponential(2)} L☉`]);
+      rows.push(['Yıldız sayısı (tahmini)', `~${(f.luminosity * 3).toExponential(1).replace('e+', '×10^')}`]);
+    } else {
+      rows.push(['Yarıçap', `${fixed(f.radiusPc / 1e6, 2)} Mpc (${fmtLightYears(f.radiusPc * PARSEC_KM)})`]);
+      rows.push(['Üye galaksi (tahmini)', `~${f.richness}`]);
+      rows.push(['Toplam parlaklık', `${f.luminosity.toExponential(2)} L☉`]);
+      rows.push(['Kütle (tahmini)', `~${f.massSolar.toExponential(1).replace('e+', '×10^')} M☉`]);
+      rows.push(['Üyeler', f.resolved ? _('çözümlendi · tıklanabilir') : _('yaklaşınca çözümlenir')]);
+    }
+    rows.push(['Işık gecikmesi', fmtDuration(f.distKm / 299_792.458)]);
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = member
+      ? _('Uzak bir kümenin üye galaksisi: konumu, tipi ve parlaklığı kümenin zenginliğinden türetildi. Gözlemlenmiş bir nesne değil.')
+      : _('Yerel galaksi kataloğunun ötesindeki kozmik ağın bir düğümü: zenginliği ve kütlesi tutarlı istatistiklerle üretildi, bir katalog kaydına karşılık gelmez. Yaklaşınca üye galaksilerine ayrışır.');
+  }
+
+  private renderLandmarkInfo(i: number): void {
+    const u = this.host.universe;
+    const l = u.landmarks[i];
+    const d = l.def;
+    this.infoName.textContent = d.name;
+    this.infoType.textContent = _(LANDMARK_KIND_LABEL[d.kind]);
+    this.infoParent.textContent = `${u.galaxies.name(l.galaxy)} · ${d.procedural ? _('prosedürel keşif') : _('gerçek nesne')}`;
+    const rel = u.landmarkRelative(i, this.host.camera.position);
+    const camDist = rel.length();
+    const rows: Array<[string, string] | 'sep'> = [];
+    rows.push(['Uzaklık', `${fmtLightYears(camDist)} (${fmtDistance(camDist)})`]);
+    rows.push(['Görünür yarıçap', fmtDeg(this.host.landmarkSprites.angularRadius(i) * RAD, 2)]);
+    const appMag = d.absMag + 5 * Math.log10(Math.max(camDist / PARSEC_KM, 1e-7)) - 5;
+    rows.push(['Kadir (buradan)', fixed(appMag, 1)]);
+    rows.push('sep');
+    rows.push(['Güneş\'e uzaklık', fmtLightYears(l.positionPc.length() * PARSEC_KM)]);
+    rows.push(...coordRows(l.positionPc, d.procedural ? d.id : null));
+    rows.push(['Yarıçap (görsel)', fmtLightYears(d.radiusPc * PARSEC_KM)]);
+    rows.push(['Mutlak kadir', fixed(d.absMag, 1)]);
+    rows.push('sep');
+    for (const [k, v] of Object.entries(d.facts)) rows.push([k, v]);
+    rows.push(['Işık gecikmesi', fmtDuration(camDist / 299_792.458)]);
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = d.procedural
+      ? `${d.description} ${_('Gözlemlenmiş bir nesne değil: galaksi modelinden deterministik olarak üretildi; bu id ile her zaman aynı yerde bulunur.')}`
+      : `${d.description} ${_('(Görsel: gerçek konum ve boyutta prosedürel bir temsil; fotoğraf değildir.)')}`;
+  }
+
+  private renderStarInfo(id: StarId): void {
+    const u = this.host.universe;
+    const s = u.starInfo(id);
+    const ci = catalogIndexOf(id);
+    const isBH = u.blackHole(id) !== undefined;
+    const isExtra = u.extraSystem(id) !== undefined;
+    const isProc = ci < 0 && !isExtra;
+    const bd = u.brownDwarf(id);
+    const dwarf = ci >= 0 ? u.catalog.colouredDwarf(ci) : undefined;
+    this.infoName.textContent = s.name;
+    this.infoType.textContent = isBH
+      ? _('Kara delik sistemi')
+      : bd
+        ? s.massSolar < HYDROGEN_BURNING_LIMIT ? _('Kahverengi cüce') : _('Ultra soğuk cüce')
+        : _('Yıldız') + ' · ' + (s.isWhiteDwarf ? _('Beyaz cüce') : _(LUM_CLASS_DESC[s.lumClass] ?? ''));
+    const galName = ci < 0 ? u.galaxies.name(u.galaxyOfStar(id)) : '';
+    this.infoParent.textContent = isExtra ? `${_('Gerçek nesne')} · ${galName}` : isProc ? `${_('Prosedürel yıldız')} · ${galName}` : s.names?.constellation ? _('{name} takımyıldızı', { name: s.names.constellation }) : _('Yıldız kataloğu (HYG)');
+
+    const rel = u.starRelative(id, this.host.camera.position);
+    const camDist = rel.length();
+    const rows: Array<[string, string] | 'sep'> = [];
+    rows.push(['Uzaklık', fmtDistance(camDist)]);
+    const appMag = this.host.starApparentMag(id) ?? (s.absMag + 5 * Math.log10(Math.max(camDist / PARSEC_KM, 1e-7)) - 5);
+    rows.push(['Kadir (buradan)', fixed(appMag, 2)]);
+    rows.push('sep');
+    rows.push(['Güneş\'e uzaklık', isProc ? fmtLightYears(s.distancePc * PARSEC_KM) : `${fixed((s.distancePc * PARSEC_KM / LIGHT_YEAR_KM), 2)} ly (${fixed(s.distancePc, 2)} pc)`]);
+    if (s.distancePc > 0) rows.push(...coordRows(u.starPositionPc(id), isProc || isBH ? id : null));
+    rows.push(['Spektral sınıf', s.catalogSpectral || s.spectral]);
+    if (!isProc) rows.push(['Kadir (Dünya\'dan)', fixed(s.mag, 2)]);
+    rows.push(['Mutlak kadir', fixed(s.absMag, 2)]);
+    rows.push(['B−V renk', fixed(s.bv, 2)]);
+    if (dwarf) rows.push(['Algılanan renk', `${_(dwarf.label)} (${dwarf.hex})`]);
+    rows.push('sep');
+    rows.push(['Sıcaklık*', `${fixed(s.temperature, 0)} K`]);
+    rows.push(['Parlaklık*', `${s.luminosity >= 1 ? fixed(s.luminosity, 2) : s.luminosity.toPrecision(3)} L☉`]);
+    rows.push(['Yarıçap*', `${fixed(s.radiusSolar, 2)} R☉`]);
+    rows.push(['Kütle*', `${fixed(s.massSolar, 2)} M☉`]);
+    if (s.hip) rows.push(['Hipparcos', `HIP ${s.hip}`]);
+    if (s.names?.bayer) rows.push(['Bayer / Flamsteed', s.names.bayer]);
+    if (s.names?.gliese) rows.push(['Gliese', s.names.gliese]);
+    if (bd?.young) rows.push(['Yaş', _('Genç (düşük yüzey çekimi)')]);
+    rows.push('sep');
+    const sys = u.system(id);
+    // companions: "İkili sistem · B: beyaz cüce (DA)"
+    const comps = sys.bodies.filter((b) => b !== sys.star && (b.data.type === 'star' || b.data.type === 'pulsar' || b.data.type === 'blackhole') && b.data.orbit);
+    if (comps.length) {
+      const order = comps.length === 1 ? 'İkili sistem' : comps.length === 2 ? 'Üçlü sistem' : comps.length === 3 ? 'Dörtlü sistem' : 'Çoklu sistem';
+      const list = comps.map((b) => {
+        const f = b.data.facts ?? {};
+        const label = b.name.startsWith(sys.star.name.replace(/ [A-Z]$/, '')) ? b.name.slice(b.name.lastIndexOf(' ') + 1) : b.name;
+        const cls = f['Sınıf'] ? _(f['Sınıf']).toLocaleLowerCase(localeTag()) : b.data.type === 'blackhole' ? _('kara delik') : b.data.type === 'pulsar' ? _('nötron yıldızı') : '';
+        return `${label}: ${cls}${f['Spektral sınıf'] ? ` (${f['Spektral sınıf']})` : ''}`;
+      });
+      rows.push(['Yoldaş yıldızlar', `${_(order)} · ${list.join(' · ')}`]);
+    }
+    const planets = sys.bodies.filter((b) => b.data.type === 'planet' || b.data.type === 'dwarf').length;
+    const moons = sys.bodies.filter((b) => b.data.type === 'moon').length;
+    rows.push(['Gezegenler', planets ? `${planets}${moons ? ` ${_('(+{n} uydu)', { n: moons })}` : ''}` : 'Yok']);
+    if (sys.belts.length) rows.push(['Kuşaklar', sys.belts.map((b) => _(b.name)).join(', ')]);
+    rows.push(['Işık gecikmesi', fmtDuration(camDist / 299_792.458)]);
+
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = isProc
+      ? `${_(sys.star.data.description ?? '')} ${_('Gözlemlenmiş bir nesne değil: kataloglar arasındaki boşluğu doldurmak için deterministik olarak üretildi.')} ${_('(* Bu yıldız {galaxy} galaksisinin yoğunluk modelinden deterministik olarak üretilmiştir; kimliği kalıcıdır, aynı yere dönünce aynı yıldızı bulursunuz.)', { galaxy: galName })}`
+      : bd && !u.exoplanets.host(ci)
+        ? `${_(sys.star.data.description ?? '')} ${_('(* Sıcaklık, kütle ve yarıçap ölçülmüş tayf türünden türetildi (UltracoolSheet); kütle yaşa bağlıdır, belirsizliği büyüktür.)')}`
+        : u.hasMeasuredInfo(id)
+        ? `${_(sys.star.data.description ?? '')} ${_('(* Tayf ve yörünge ölçümlerinden gelen değerler; katalog tahminlerinin yerini alır.)')}`
+        : `${_(sys.star.data.description ?? '')} ${_('(* Kadir, uzaklık ve B−V renginden türetilen tahminler.)')}`;
+    if (dwarf) this.infoDesc.textContent = `${_(dwarf.note)} ${this.infoDesc.textContent}`;
+  }
+
+  private renderInfo(b: CelestialBody, camDist: number): void {
+    const u = this.host.universe;
+    const star = u.star;
+    const starTemp = u.current.starTemperature;
+    this.infoName.textContent = b.name;
+    this.infoType.textContent = typeLabel(b.data.type);
+    const partner = binaryPartner(b);
+    this.infoParent.textContent = partner
+      ? _('{name} ile çift sistem', { name: partner.name })
+      : b.parent ? _('{name} sisteminde', { name: b.parent.name }) : _('Sistem merkezi');
+
+    const rows: Array<[string, string] | 'sep'> = [];
+    if (b.data.type === 'spacecraft') {
+      this.renderSpacecraftInfo(b, camDist, rows);
+      return;
+    }
+    if (b.data.type === 'barycenter') {
+      this.renderBarycenterInfo(b, camDist, rows);
+      return;
+    }
+    if (b.data.type === 'blackhole') {
+      this.renderBlackHoleInfo(b, camDist, rows);
+      return;
+    }
+    if (b.data.type === 'pulsar') {
+      this.renderPulsarInfo(b, camDist, rows);
+      return;
+    }
+    rows.push(['Kameraya uzaklık', fmtDistance(camDist)]);
+    rows.push(['Yüzeye uzaklık', fmtDistance(this.host.landedOn === b ? this.host.camera.altitude : Math.max(0, camDist - b.radius))]);
+    rows.push('sep');
+    // beyond the Solar System: where the world is on the sky, and its id (`star/body`, searchable)
+    if (u.current.starId !== 'c0') {
+      const posPc = new Vector3().copy(u.current.origin).add(b.position).multiplyScalar(1 / PARSEC_KM);
+      const coords = coordRows(posPc, `${u.current.starId}/${b.id}`);
+      if (coords.length) rows.push(...coords, 'sep');
+    }
+    rows.push(['Ortalama yarıçap', fmtRadius(b.radius, b.data.type !== 'star')]);
+    if (b.data.flattening) rows.push(['Basıklık', fixed(b.data.flattening, 4)]);
+    rows.push(['Kütle', fmtMass(b.data.mass)]);
+    rows.push(['Yoğunluk', `${fixed(b.density, 2)} g/cm³`]);
+    rows.push(['Yüzey çekimi', `${fixed(b.surfaceGravity, 2)} m/s² (${fixed((b.surfaceGravity / 9.80665), 2)} g)`]);
+    rows.push(['Kaçış hızı', `${fixed(b.escapeVelocity, 2)} km/s`]);
+    if (b.data.albedo !== undefined) rows.push(['Albedo', fixed(b.data.albedo, 2)]);
+    const temp = b.data.temperature ?? (b.parent ? b.equilibriumTemperature(star.radius, starTemp) : 0);
+    rows.push([b.data.temperature ? 'Yüzey sıcaklığı' : 'Denge sıcaklığı', fmtTemp(temp)]);
+    rows.push('sep');
+    if (b.resolved && b.parent) {
+      const r = b.resolved;
+      rows.push(['Yörünge periyodu', b.periodDisplay()]);
+      rows.push(['Yarı-büyük eksen', isPrimaryType(b.parent.data.type) ? `${fixed((r.a / AU_KM), 4)} AU` : fmtDistance(r.a)]);
+      rows.push(['Dış merkezlik', fixed(r.e, 4)]);
+      rows.push(['Eğiklik', fmtDeg(r.i * RAD)]);
+      rows.push(['Düğüm boylamı', fmtDeg(((r.node * RAD) % 360 + 360) % 360)]);
+      rows.push(['Perihelion', isPrimaryType(b.parent.data.type) ? `${fixed(((r.a * (1 - r.e)) / AU_KM), 4)} AU` : fmtDistance(r.a * (1 - r.e))]);
+      rows.push(['Aphelion', isPrimaryType(b.parent.data.type) ? `${fixed(((r.a * (1 + r.e)) / AU_KM), 4)} AU` : fmtDistance(r.a * (1 + r.e))]);
+      rows.push(['Anlık yörünge hızı', `${fixed(b.orbitalSpeed, 3)} km/s`]);
+      rows.push([_("{name}'a uzaklık", { name: b.parent.name }), fmtDistance(b.localPosition.length())]);
+      if (!isPrimaryType(b.parent.data.type)) rows.push([_("{name}'a uzaklık", { name: star.name }), `${fixed((b.distanceToStar / AU_KM), 4)} AU`]);
+      rows.push(['Etki küresi (SOI)', fmtDistance(b.soiRadius)]);
+      rows.push('sep');
+    }
+    rows.push(['Yıldız günü', b.data.rotationPeriod === 'sync' ? `${b.siderealDayDisplay} ${_('(kilitli)')}` : b.siderealDayDisplay]);
+    if (typeof b.data.rotationPeriod === 'number' && b.data.rotationPeriod < 0) rows.push(['Dönüş', 'Retrograd']);
+    if (b.parent) {
+      const tilt = Math.acos(Math.min(1, Math.max(-1, b.pole.dot(b.orbitNormal)))) * RAD;
+      rows.push(['Eksen eğikliği', fmtDeg(tilt, 1)]);
+    }
+    if (b.data.rings) rows.push(['Halkalar', `${fmtDistance(b.data.rings.inner)} – ${fmtDistance(b.data.rings.outer)}`]);
+    if (b.data.atmosphere) rows.push(['Atmosfer', b.data.atmosphere.density >= 1 ? 'Yoğun' : b.data.atmosphere.density > 0.3 ? 'Orta' : 'İnce']);
+    if (b.children.length) rows.push(['Uydular (katalog)', String(b.children.length)]);
+    if (b.data.facts) {
+      rows.push('sep');
+      for (const [k, v] of Object.entries(b.data.facts)) rows.push([k, v]);
+    }
+    if (b.parent && camDist > 0) {
+      const lightTime = camDist / 299_792.458;
+      rows.push(['Işık gecikmesi', fmtDuration(lightTime)]);
+    }
+
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = _(b.data.description ?? '');
+  }
+
+  private renderBarycenterInfo(b: CelestialBody, camDist: number, rows: Array<[string, string] | 'sep'>): void {
+    this.infoParent.textContent = _('Sistem merkezi');
+    rows.push(['Kameraya uzaklık', fmtDistance(camDist)]);
+    rows.push('sep');
+    rows.push(['Toplam kütle', fmtSolarMass(b.data.mass / SUN_MASS_KG)]);
+    const comps = b.children.filter((c) => c.resolved);
+    for (const c of comps) {
+      const frac = c.data.mass / b.data.mass;
+      rows.push([c.name, `${fmtSolarMass(c.data.mass / SUN_MASS_KG)} · ${_('%{n}', { n: fixed(frac * 100, 1) })}`]);
+    }
+    const first = comps[0];
+    if (first?.resolved) {
+      rows.push('sep');
+      rows.push(['Yörünge periyodu', first.periodDisplay()]);
+      const aTotal = comps.reduce((s, c) => s + (c.resolved?.a ?? 0), 0);
+      rows.push(['Bileşenler arası uzaklık', aTotal > AU_KM * 0.05 ? `${fixed(aTotal / AU_KM, 3)} AU` : fmtDistance(aTotal)]);
+      for (const c of comps) rows.push([_("{name}'ın yörünge yarıçapı", { name: c.name }), c.resolved!.a > AU_KM * 0.05 ? `${fixed(c.resolved!.a / AU_KM, 3)} AU` : fmtDistance(c.resolved!.a)]);
+      rows.push(['Dış merkezlik', fixed(first.resolved.e, 3)]);
+    }
+    rows.push(['Işık gecikmesi', fmtDuration(camDist / 299_792.458)]);
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = _('Çift sistemin ortak kütle merkezi: iki bileşen de bu görünmez noktanın etrafında, kütleleriyle ters orantılı yarıçaplarda ve her zaman karşılıklı konumlarda dolanır. Ağır bileşen küçük, hafif bileşen büyük bir yörünge çizer.');
+  }
+
+  private renderBlackHoleInfo(b: CelestialBody, camDist: number, rows: Array<[string, string] | 'sep'>): void {
+    const rs = b.radius;
+    const mSun = b.data.mass / SUN_MASS_KG;
+    const partner = binaryPartner(b) ?? b.parent;
+    this.infoParent.textContent = partner ? _('{name} ile çift sistem', { name: partner.name }) : _('Sistem merkezi');
+    rows.push(['Kameraya uzaklık', fmtDistance(camDist)]);
+    rows.push(['Olay ufkuna uzaklık', `${fmtDistance(Math.max(0, camDist - rs))} (${fixed((camDist / rs), 1)} r_s)`]);
+    rows.push('sep');
+    rows.push(['Kütle', fmtSolarMass(mSun)]);
+    rows.push(['Schwarzschild yarıçapı', fmtDistance(rs)]);
+    rows.push(['Foton küresi', `${fmtDistance(rs * 1.5)} (${fmtNum(1.5)} r_s)`]);
+    rows.push(['ISCO (en iç kararlı yörünge)', `${fmtDistance(rs * 3)} (3 r_s)`]);
+    rows.push(['Gölge çapı', `${fmtDistance(rs * 5.196)} (√27 r_s)`]);
+    const hawking = 6.17e-8 / mSun;
+    rows.push(['Hawking sıcaklığı', hawking >= 1e-3 ? `${hawking.toExponential(2)} K` : `${hawking.toExponential(1)} K`]);
+    const evap = 2.1e67 * mSun ** 3;
+    rows.push(['Buharlaşma süresi', _('{n} yıl', { n: evap.toExponential(1) })]);
+    if (b.data.appearance.kind === 'blackhole') {
+      const d = b.data.appearance.disk;
+      rows.push(['Akreasyon diski', d.brightness > 0 ? `${d.inner}–${d.outer} r_s · ~${fmtNum(d.temperature)} K` : 'Yok (uykuda)']);
+    }
+    rows.push('sep');
+    if (b.resolved && b.parent) {
+      const r = b.resolved;
+      rows.push(['Yörünge periyodu', b.periodDisplay()]);
+      rows.push(['Yarı-büyük eksen', `${fixed((r.a / AU_KM), 3)} AU`]);
+      rows.push(['Dış merkezlik', fixed(r.e, 3)]);
+      rows.push(['Anlık yörünge hızı', `${fixed(b.orbitalSpeed, 1)} km/s`]);
+      rows.push('sep');
+    } else if (b.children.length) {
+      rows.push(['Yörüngedeki yıldızlar', b.children.map((c) => c.name).join(', ')]);
+      rows.push('sep');
+    }
+    if (b.data.facts) for (const [k, v] of Object.entries(b.data.facts)) if (k !== 'Kütle') rows.push([k, v]);
+    rows.push(['Işık gecikmesi', fmtDuration(camDist / 299_792.458)]);
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = `${_(b.data.description ?? '')} ${_('Görüntü: Schwarzschild metriğinde ışık yollarının (null jeodezikler) ekran uzayında gerçek zamanlı izlenmesi; diskte Doppler ışıması ve kütleçekimsel kırmızıya kayma uygulanır.')}`;
+  }
+
+  private renderPulsarInfo(b: CelestialBody, camDist: number, rows: Array<[string, string] | 'sep'>): void {
+    const a = b.data.appearance.kind === 'pulsar' ? b.data.appearance : null;
+    const P = b.rotationPeriodS; // s
+    const mSun = b.data.mass / SUN_MASS_KG;
+    const partner = binaryPartner(b) ?? b.parent;
+    this.infoParent.textContent = partner ? _('{name} ile çift sistem', { name: partner.name }) : _('Sistem merkezi');
+    rows.push(['Kameraya uzaklık', fmtDistance(camDist)]);
+    rows.push(['Yüzeye uzaklık', fmtDistance(Math.max(0, camDist - b.radius))]);
+    rows.push('sep');
+    const periodTxt = P >= 1 ? `${fixed(P, 4)} s` : `${fixed((P * 1e3), 3)} ms`;
+    rows.push(['Dönme periyodu', `${periodTxt} (${fixed((1 / P), P >= 1 ? 3 : 1)} Hz)`]);
+    const vEq = (2 * Math.PI * b.radius) / P;
+    rows.push(['Ekvator hızı', `${fmtNum(vEq, { maximumFractionDigits: 0 })} km/s (${_('%{n} c', { n: fixed(vEq / 299_792.458 * 100, 1) })})`]);
+    if (a) rows.push(['Manyetik eksen eğikliği', a.quiet ? '— (ışın yok)' : fmtDeg(a.magneticTilt, 0)]);
+    rows.push('sep');
+    rows.push(['Kütle', fmtSolarMass(mSun)]);
+    rows.push(['Yarıçap', `${fixed(b.radius, 0)} km`]);
+    rows.push(['Yoğunluk', fmtSci(b.density * 1e3, 'kg/m³')]);
+    rows.push(['Yüzey çekimi', fmtSci(b.surfaceGravity / 9.80665, 'g')]);
+    rows.push(['Kaçış hızı', `${fmtNum(b.escapeVelocity, { maximumFractionDigits: 0 })} km/s (${_('%{n} c', { n: fixed(b.escapeVelocity / 299_792.458 * 100, 0) })})`]);
+    const rs = (2 * 6.674e-11 * b.data.mass) / (299_792_458 ** 2) / 1e3;
+    rows.push(['Schwarzschild yarıçapı', `${fixed(rs, 2)} km (R / r_s = ${fixed((b.radius / rs), 1)})`]);
+    if (b.data.temperature) rows.push(['Yüzey sıcaklığı', _('{n} milyon K', { n: fixed((b.data.temperature / 1e6), 1) })]);
+    rows.push('sep');
+    if (b.resolved && b.parent) {
+      const r = b.resolved;
+      rows.push(['Yörünge periyodu', b.periodDisplay()]);
+      rows.push(['Yarı-büyük eksen', fmtDistance(r.a)]);
+      rows.push(['Dış merkezlik', fixed(r.e, 3)]);
+      rows.push(['Anlık yörünge hızı', `${fixed(b.orbitalSpeed, 1)} km/s`]);
+      rows.push('sep');
+    } else if (b.children.length) {
+      rows.push(['Yörüngedekiler', b.children.map((c) => c.name).join(', ')]);
+      rows.push('sep');
+    }
+    if (b.data.facts) for (const [k, v] of Object.entries(b.data.facts)) if (k !== 'Kütle' && k !== 'Periyot') rows.push([k, v]);
+    rows.push(['Işık gecikmesi', fmtDuration(camDist / 299_792.458)]);
+    this.infoBody.innerHTML = rowsHtml(rows);
+    this.infoDesc.textContent = `${_(b.data.description ?? '')} ${_('Görüntü: dönme ekseninden eğik manyetik eksen boyunca iki ışın konisi; koni her dönüşte bakış doğrultusunu süpürdüğünde parlaklık atar (deniz feneri etkisi). Işın geometrisi temsilîdir.')}`;
+  }
+
+  private renderSpacecraftInfo(b: CelestialBody, camDist: number, rows: Array<[string, string] | 'sep'>): void {
+    const u = this.host.universe;
+    const star = u.star;
+    const earth = u.current.byId.get('earth');
+    const o = b.data.orbit;
+    const mission = o?.kind === 'trajectory' ? this.host.missions.byBody(b) : undefined;
+    this.infoParent.textContent = o?.kind === 'surface' ? _('{name} yüzeyinde', { name: b.parent!.name })
+      : o?.kind === 'lagrange' ? _('{a}–{b} {point} noktası', { a: star.name, b: b.parent!.name, point: o.point })
+      : o?.kind === 'linear' ? _('Yıldızlararası / hiperbolik yörünge')
+      : mission ? `${_('Görev')}: ${mission.plan.originName} → ${mission.plan.targetName}`
+      : b.parent ? _('{name} yörüngesinde', { name: b.parent.name }) : '';
+    if (mission) {
+      rows.push(['Evre', mission.phase ? phaseLabel(mission.phase, mission.plan) : '—']);
+      const jd = this.host.time.jd;
+      const eta = (mission.plan.arrivalJd - jd) * 86400;
+      rows.push(['Varış', eta > 0 ? _('{t} sonra', { t: fmtDuration(eta) }) : 'varıldı']);
+      rows.push([_('Hız ({name} referansı)', { name: star.name }), fmtSpeed(b.orbitalSpeed)]);
+      rows.push(['Kameraya uzaklık', fmtDistance(camDist)]);
+      rows.push('sep');
+      rows.push(['Yol / süre', `${fmtDistance(mission.plan.distanceKm)} · ${fmtDuration(mission.plan.durationS)}`]);
+      if (Number.isFinite(mission.plan.budget)) rows.push(['Δv toplam / bütçe', `${fixed(mission.plan.dvTotal, 2)} / ${fixed(mission.plan.budget, 2)} km/s`]);
+      if (b.data.facts) {
+        rows.push('sep');
+        for (const [k, v] of Object.entries(b.data.facts)) rows.push([k, v]);
+      }
+      this.infoBody.innerHTML = rowsHtml(rows);
+      const model = mission.plan.ship.model;
+      this.infoDesc.textContent = `${_(b.data.description ?? '')} ${model.kind === 'glb' ? `${_('3B model: NASA 3D Resources')}${model.representative ? ' ' + _('(temsilî)') : ''}.` : _('Model özgün, şematik bir temsildir.')} ${_('Rota patched-conic yaklaşımıyla hesaplanmıştır.')}`;
+      return;
+    }
+
+    rows.push(['Kameraya uzaklık', fmtDistance(camDist)]);
+    rows.push('sep');
+    const au = (km: number) => km > AU_KM * 0.05
+      ? `${fixed((km / AU_KM), km > AU_KM ? 2 : 4)} AU`
+      : `${fmtDistance(km)} (${fixed((km / AU_KM), 4)} AU)`;
+    rows.push([_("{name}'a uzaklık", { name: star.name }), au(b.distanceToStar)]);
+    if (earth && b !== earth) {
+      const dEarth = b.position.distanceTo(earth.position);
+      rows.push(['Dünya\'ya uzaklık', au(dEarth)]);
+      rows.push(['Işık gecikmesi (Dünya)', fmtDuration(dEarth / 299_792.458)]);
+    }
+    if (o?.kind === 'linear') {
+      rows.push([_('Hız ({name} referansı)', { name: star.name }), `${fixed(b.orbitalSpeed, 2)} km/s (${fixed((b.orbitalSpeed * 3600), 0)} ${_('km/sa')})`]);
+      rows.push(['Yörünge', 'Bağlı değil – Güneş Sistemi\'ni terk ediyor']);
+    } else if (o?.kind === 'surface') {
+      rows.push(['Konum', `${fixed(Math.abs(o.lat), 4)}° ${o.lat >= 0 ? _('K') : _('G')}, ${fixed(Math.abs(o.lon), 4)}° ${o.lon >= 0 ? _('D') : _('B')}`]);
+    } else if (b.parent && b.resolved) {
+      const r = b.resolved;
+      rows.push(['Yörünge periyodu', b.periodDisplay()]);
+      if (b.parent !== star) rows.push([_("{name}'a uzaklık", { name: b.parent.name }), fmtDistance(b.localPosition.length())]);
+      rows.push(['Periapsis / apoapsis', `${fmtDistance(r.a * (1 - r.e))} / ${fmtDistance(r.a * (1 + r.e))}`]);
+      rows.push(['Eğiklik', fmtDeg(r.i * RAD)]);
+      rows.push(['Anlık yörünge hızı', `${fixed(b.orbitalSpeed, 2)} km/s`]);
+    } else if (b.parent) {
+      rows.push([_("{name}'a uzaklık", { name: b.parent.name }), fmtDistance(b.localPosition.length())]);
+    }
+    rows.push('sep');
+    rows.push(['Kütle', b.data.mass >= 1000 ? `${fmtNum(b.data.mass / 1000, { maximumFractionDigits: 1 })} ${_('ton')}` : `${b.data.mass} kg`]);
+    rows.push(['Boyut (yarıçap)', `${fixed((b.radius * 1000), 1)} m`]);
+    if (b.data.facts) {
+      rows.push('sep');
+      for (const [k, v] of Object.entries(b.data.facts)) rows.push([k, v]);
+    }
+    this.infoBody.innerHTML = rowsHtml(rows);
+    const rep = b.data.appearance.kind === 'spacecraft' && b.data.appearance.representative;
+    const src = b.data.orbit?.kind === 'ephemeris'
+      ? _('Konum, JPL Horizons\'ın örneklenmiş yörünge tablosundan türetilmiştir (simülasyon, canlı telemetri değil);')
+      : _('Konum, Ekim 2026 JPL Horizons verilerinden yaklaşık olarak türetilmiştir;');
+    this.infoDesc.textContent = `${_(b.data.description ?? '')} ${src} ${_('3B model: NASA 3D Resources')}${rep ? ' ' + _('(temsilî)') : ''}.`;
+  }
+}

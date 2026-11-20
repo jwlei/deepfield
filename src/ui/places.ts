@@ -1,0 +1,173 @@
+/**
+ * "Görmeye değecek yerler" – curated destinations for the topbar dropdown.
+ * body: Solar-System body id · star: HYG proper name (resolved through the catalogue search)
+ * galaxy: substring of the galaxy catalogue name · index 0 = Milky Way overview.
+ * blackhole: universal black-hole id (see data/blackholes.ts) · landmark: id from data/landmarks.ts.
+ * exoplanet: planet name as in the NASA Exoplanet Archive.
+ */
+export interface Place {
+  label: string;
+  kind: 'body' | 'star' | 'galaxy' | 'blackhole' | 'landmark' | 'exoplanet';
+  ref: string;
+  note?: string;
+}
+
+export interface PlaceGroup {
+  title: string;
+  items: Place[];
+}
+
+export const PLACES: PlaceGroup[] = [
+  {
+    title: 'Uzay araçları',
+    items: [
+      { label: 'Voyager 1', kind: 'body', ref: 'voyager1', note: 'İnsan yapımı en uzak nesne' },
+      { label: 'Voyager 2', kind: 'body', ref: 'voyager2', note: 'Yıldızlararası uzay' },
+      { label: 'Pioneer 10', kind: 'body', ref: 'pioneer10', note: 'Sessiz, Aldebaran yönünde' },
+      { label: 'Pioneer 11', kind: 'body', ref: 'pioneer11', note: 'Satürn\'e ulaşan ilk araç' },
+      { label: 'New Horizons', kind: 'body', ref: 'newhorizons', note: 'Kuiper Kuşağı' },
+      { label: 'Parker Solar Probe', kind: 'body', ref: 'parker', note: 'Güneş koronası' },
+      { label: 'James Webb (JWST)', kind: 'body', ref: 'jwst', note: 'Güneş–Dünya L2' },
+      { label: 'Hubble', kind: 'body', ref: 'hubble', note: 'Alçak Dünya yörüngesi' },
+      { label: 'ISS – Uluslararası Uzay İstasyonu', kind: 'body', ref: 'iss', note: '~420 km irtifa' },
+      { label: 'Juno', kind: 'body', ref: 'juno', note: 'Jüpiter kutup yörüngesi' },
+      { label: 'Perseverance', kind: 'body', ref: 'perseverance', note: 'Mars – Jezero Krateri' },
+      { label: 'Curiosity', kind: 'body', ref: 'curiosity', note: 'Mars – Gale Krateri' },
+    ],
+  },
+  {
+    title: 'Kara delikler',
+    items: [
+      { label: 'Sagittarius A*', kind: 'blackhole', ref: 'b0', note: 'Samanyolu merkezi · 4,3 milyon M☉' },
+      { label: 'Cygnus X-1', kind: 'blackhole', ref: 'cygx1', note: 'İlk keşfedilen kara delik' },
+      { label: 'Gaia BH1', kind: 'blackhole', ref: 'b2', note: 'En yakın bilinen · uykuda' },
+      { label: 'V404 Cygni', kind: 'blackhole', ref: 'b3', note: 'X-ışını novası' },
+      { label: 'A0620-00', kind: 'blackhole', ref: 'b4', note: 'Tekboynuz\'da sessiz çift' },
+      { label: 'M87*', kind: 'blackhole', ref: 'b1', note: 'İlk fotoğraflanan · 6,5 milyar M☉' },
+      { label: 'M31*', kind: 'blackhole', ref: 'm31star', note: 'Andromeda merkezi · 140 milyon M☉' },
+      { label: 'LMC X-1', kind: 'blackhole', ref: 'lmcx1', note: 'Büyük Macellan Bulutu' },
+      { label: 'M33 X-7', kind: 'blackhole', ref: 'm33x7', note: 'Üçgen Galaksisi · tutulmalı' },
+      { label: 'Centaurus A*', kind: 'blackhole', ref: 'cenastar', note: 'En yakın aktif çekirdek' }
+    ],
+  },
+  {
+    title: 'Pulsarlar',
+    items: [
+      { label: 'Yengeç Pulsarı', kind: 'landmark', ref: 'l-crabpsr', note: '1054 süpernovası · 30 Hz' },
+      { label: 'Vela Pulsarı', kind: 'landmark', ref: 'l-vela', note: 'Glitch yapan pulsar' },
+      { label: 'PSR B1919+21', kind: 'landmark', ref: 'l-b1919', note: 'İlk pulsar · Bell Burnell, 1967' },
+      { label: 'PSR B1257+12 (Lich)', kind: 'landmark', ref: 'l-lich', note: 'İlk ötegezegenler' },
+      { label: 'PSR J1748-2446ad', kind: 'landmark', ref: 'l-j1748', note: 'En hızlı · 716 Hz' },
+      { label: 'Hulse–Taylor Çifti', kind: 'landmark', ref: 'l-hulsetaylor', note: 'Kütleçekim dalgası kanıtı' },
+      { label: 'Geminga', kind: 'landmark', ref: 'l-geminga', note: 'Radyo-sessiz gama pulsarı' },
+      { label: 'PSR J0437-4715', kind: 'landmark', ref: 'l-j0437', note: 'En yakın milisaniye pulsarı' },
+      { label: 'SGR 1806−20', kind: 'landmark', ref: 'l-sgr1806', note: 'Magnetar · 2004 dev patlaması' },
+    ],
+  },
+  {
+    title: 'Bulutsular, kümeler ve rekor yıldızlar',
+    items: [
+      { label: 'Orion Bulutsusu (M42)', kind: 'landmark', ref: 'l-m42', note: 'En yakın yıldız fabrikası' },
+      { label: 'Ülker (Pleiades)', kind: 'landmark', ref: 'l-pleiades', note: 'Yedi Kız Kardeş' },
+      { label: 'Karina Bulutsusu', kind: 'landmark', ref: 'l-carina', note: 'Eta Carinae\'nin evi' },
+      { label: 'Yengeç Bulutsusu (M1)', kind: 'landmark', ref: 'l-m1', note: '1054 süpernovası' },
+      { label: 'Omega Centauri', kind: 'landmark', ref: 'l-omegacen', note: 'En büyük küresel küme' },
+      { label: 'Tarantula Bulutsusu', kind: 'landmark', ref: 'l-30dor', note: 'Büyük Macellan Bulutu' },
+      { label: 'R136a1', kind: 'landmark', ref: 'l-r136a1', note: 'Bilinen en kütleli yıldız' },
+      { label: 'SN 1987A', kind: 'landmark', ref: 'l-sn1987a', note: 'Büyük Macellan Bulutu' },
+      { label: 'Mayall II (G1)', kind: 'landmark', ref: 'l-g1', note: 'Andromeda · dev küresel küme' },
+      { label: 'Hubble\'ın V1 Sefeidi', kind: 'landmark', ref: 'l-m31v1', note: 'Andromeda · 1923' },
+      { label: 'NGC 604', kind: 'landmark', ref: 'l-ngc604', note: 'Üçgen Galaksisi' },
+    ],
+  },
+  {
+    title: 'Gezegenler ve uydular',
+    items: [
+      { label: 'Dünya', kind: 'body', ref: 'earth' },
+      { label: 'Ay', kind: 'body', ref: 'moon' },
+      { label: 'Mars', kind: 'body', ref: 'mars' },
+      { label: 'Jüpiter', kind: 'body', ref: 'jupiter', note: 'Büyük Kırmızı Leke' },
+      { label: 'Europa', kind: 'body', ref: 'europa', note: 'Buz kabuğu altında okyanus' },
+      { label: 'Io', kind: 'body', ref: 'io', note: 'Volkanik uydu' },
+      { label: 'Satürn', kind: 'body', ref: 'saturn', note: 'Halkalar' },
+      { label: 'Titan', kind: 'body', ref: 'titan', note: 'Metan gölleri, yoğun atmosfer' },
+      { label: 'Enceladus', kind: 'body', ref: 'enceladus', note: 'Buz gayzerleri' },
+      { label: 'Uranüs', kind: 'body', ref: 'uranus', note: 'Yan yatmış gezegen' },
+      { label: 'Neptün', kind: 'body', ref: 'neptune' },
+      { label: 'Triton', kind: 'body', ref: 'triton', note: 'Retrograd uydu' },
+      { label: 'Plüton', kind: 'body', ref: 'pluto' },
+      { label: 'Güneş', kind: 'body', ref: 'sun' },
+      { label: '1P/Halley', kind: 'body', ref: 'halley', note: 'Kuyruklu yıldız' },
+    ],
+  },
+  {
+    title: 'Ötegezegenler',
+    items: [
+      { label: 'Proxima Centauri b', kind: 'exoplanet', ref: 'Proxima Cen b', note: 'En yakın ötegezegen · yaşanabilir bölgede' },
+      { label: 'TRAPPIST-1 e', kind: 'exoplanet', ref: 'TRAPPIST-1 e', note: 'Yedi Dünya boyutlu gezegenden biri' },
+      { label: '51 Pegasi b', kind: 'exoplanet', ref: '51 Peg b', note: 'Güneş benzeri yıldızda ilk keşif, 1995' },
+      { label: 'HD 209458 b', kind: 'exoplanet', ref: 'HD 209458 b', note: 'Geçişi gözlenen ilk gezegen' },
+      { label: 'HD 189733 b', kind: 'exoplanet', ref: 'HD 189733 b', note: 'Lacivert sıcak Jüpiter' },
+      { label: '55 Cancri e', kind: 'exoplanet', ref: '55 Cnc e', note: 'Magma okyanuslu süper-Dünya' },
+      { label: 'Kepler-186 f', kind: 'exoplanet', ref: 'Kepler-186 f', note: 'Yaşanabilir bölgede Dünya boyutlu' },
+      { label: 'K2-18 b', kind: 'exoplanet', ref: 'K2-18 b', note: 'Metan ve CO₂ bulunan mini-Neptün' },
+      { label: 'LHS 3844 b', kind: 'exoplanet', ref: 'LHS 3844 b', note: 'Atmosfersiz çıplak kaya' },
+      { label: 'KELT-9 b', kind: 'exoplanet', ref: 'KELT-9 b', note: 'Bilinen en sıcak gaz devi' },
+      { label: 'Beta Pictoris b', kind: 'exoplanet', ref: 'bet Pic b', note: 'Doğrudan görüntülenen genç dev' },
+      { label: 'HR 8799 e', kind: 'exoplanet', ref: 'HR 8799 e', note: 'Fotoğraflanan dört gezegenli sistem' },
+    ],
+  },
+  {
+    title: 'Yıldızlar',
+    items: [
+      { label: 'Proxima Centauri', kind: 'star', ref: 'Proxima Centauri', note: 'En yakın yıldız – 4,2 ıy' },
+      { label: 'Alpha Centauri (Rigil Kentaurus)', kind: 'star', ref: 'Rigil Kentaurus', note: 'Üçlü sistem – 4,4 ıy' },
+      { label: 'Sirius', kind: 'star', ref: 'Sirius', note: 'Gökyüzünün en parlak yıldızı' },
+      { label: 'Vega', kind: 'star', ref: 'Vega' },
+      { label: 'Betelgeuse', kind: 'star', ref: 'Betelgeuse', note: 'Kırmızı süperdev' },
+      { label: 'Rigel', kind: 'star', ref: 'Rigel', note: 'Mavi süperdev' },
+      { label: 'Polaris', kind: 'star', ref: 'Polaris', note: 'Kutup Yıldızı' },
+      { label: 'Aldebaran', kind: 'star', ref: 'Aldebaran' },
+      { label: 'Antares', kind: 'star', ref: 'Antares' },
+      { label: 'Deneb', kind: 'star', ref: 'Deneb', note: '~2600 ıy uzakta' },
+      { label: 'Yeşil yıldız (WD J1330+6435)', kind: 'star', ref: 'WD J1330+6435', note: 'Bilinen ilk yeşil yıldız – 280 ıy' },
+      { label: 'Pembe beyaz cüce (LHS 2229)', kind: 'star', ref: 'WD J1011+2845', note: 'Algılanan rengi en kırmızı yıldız' },
+      { label: 'Mavi beyaz cüce (WD J2356−2054)', kind: 'star', ref: 'WD J2356−2054', note: '4000 K ama canlı mavi' },
+    ],
+  },
+  {
+    title: 'Galaksiler',
+    items: [
+      { label: 'Samanyolu (dışarıdan)', kind: 'galaxy', ref: '#0', note: 'Galaksimize genel bakış' },
+      { label: 'Büyük Macellan Bulutu', kind: 'galaxy', ref: 'Büyük Macellan' },
+      { label: 'Küçük Macellan Bulutu', kind: 'galaxy', ref: 'Küçük Macellan' },
+      { label: 'Andromeda (M31)', kind: 'galaxy', ref: 'Andromeda' },
+      { label: 'Üçgen (M33)', kind: 'galaxy', ref: 'Üçgen' },
+      { label: 'Centaurus A', kind: 'galaxy', ref: 'Centaurus A' },
+      { label: 'Girdap (M51)', kind: 'galaxy', ref: 'Girdap' },
+      { label: 'Fırıldak (M101)', kind: 'galaxy', ref: 'Fırıldak (M101)' },
+      { label: 'Sombrero (M104)', kind: 'galaxy', ref: 'Sombrero' },
+      { label: 'Virgo A (M87)', kind: 'galaxy', ref: 'M87', note: 'İlk görüntülenen kara delik' },
+    ],
+  },
+  {
+    title: 'Tuhaf galaksiler',
+    items: [
+      { label: 'Hoag Nesnesi', kind: 'galaxy', ref: 'Hoag', note: 'Kusursuz halka' },
+      { label: 'Araba Tekerleği (ESO 350-40)', kind: 'galaxy', ref: 'Araba Tekerleği', note: 'Çarpışma halkası' },
+      { label: 'Lindsay-Shapley Halkası (AM 0644-741)', kind: 'galaxy', ref: 'Lindsay-Shapley', note: 'Çarpışma halkası' },
+      { label: 'Arp 147 (halka)', kind: 'galaxy', ref: 'Arp 147 (halka)', note: 'Çarpışma halkası' },
+      { label: 'NGC 922', kind: 'galaxy', ref: 'NGC 922', note: 'Çarpışma halkası' },
+      { label: 'NGC 4650A', kind: 'galaxy', ref: 'NGC 4650A', note: 'Kutup halkası' },
+      { label: 'NGC 660', kind: 'galaxy', ref: 'NGC 660', note: 'Kutup halkası' },
+      { label: 'Antenler', kind: 'galaxy', ref: 'Antenler', note: 'Birleşen galaksiler' },
+      { label: 'Fareler', kind: 'galaxy', ref: 'Fareler', note: 'Gelgit kuyrukları' },
+      { label: 'İribaş (UGC 10214)', kind: 'galaxy', ref: 'İribaş', note: 'Gelgit kuyruğu' },
+      { label: 'Gül (Arp 273)', kind: 'galaxy', ref: 'Gül (Arp 273', note: 'Etkileşen çift' },
+      { label: 'NGC 2207 ve IC 2163', kind: 'galaxy', ref: 'NGC 2207', note: 'Etkileşen çift' },
+      { label: 'Penguen ve Yumurta (Arp 142)', kind: 'galaxy', ref: 'Penguen', note: 'Etkileşen çift' },
+      { label: 'Barış İçin Atomlar (NGC 7252)', kind: 'galaxy', ref: 'Barış İçin Atomlar', note: 'Birleşme kalıntısı' },
+      { label: 'İntegral İşareti (UGC 3697)', kind: 'galaxy', ref: 'İntegral İşareti', note: 'Bükülmüş disk' },
+    ],
+  },
+];
