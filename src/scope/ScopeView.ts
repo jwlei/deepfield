@@ -845,12 +845,12 @@ export class ScopeView {
     const ins = this.ins;
     const flip = ins.mode === 'visual' ? (ins.orient === 'inverted' ? [-1, -1] : ins.orient === 'mirrored' ? [-1, 1] : [1, 1]) : [1, 1];
     const pxArc = (this.scale * this.W) / w; // arcsec per css px
-    c.font = '10.5px -apple-system, system-ui, sans-serif';
+    c.font = "10.5px Lato, 'Segoe UI', sans-serif";
     c.textBaseline = 'middle';
     // compass, lower right
     const ox = w - 30, oy = h - 30, len = 16;
-    c.strokeStyle = 'rgba(189, 155, 108, 0.8)';
-    c.fillStyle = 'rgba(189, 155, 108, 0.9)';
+    c.strokeStyle = 'rgba(88, 166, 255, 0.8)';
+    c.fillStyle = 'rgba(88, 166, 255, 0.9)';
     c.lineWidth = 1.2;
     const arrow = (dx: number, dy: number, label: string) => {
       c.beginPath(); c.moveTo(ox, oy); c.lineTo(ox + dx * len, oy + dy * len); c.stroke();

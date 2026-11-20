@@ -75,7 +75,7 @@ const LANDMARK_COLORS: Record<string, string> = {
 };
 
 /** Muted brass — the one accent colour of the interface, used only for the selected object. */
-const SELECTION_COLOR = 'rgba(189, 155, 108, 0.95)';
+const SELECTION_COLOR = 'rgba(88, 166, 255, 0.95)';
 
 const SUN_COLOR = 'rgba(255, 225, 160, 0.9)';
 /** bodies farther than this (km) carry their distance in the label: "Mars · 1.2 AU" */
@@ -178,7 +178,7 @@ export class Overlay {
     }
 
     if (!uiVisible) return this.items;
-    ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+    ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
     ctx.textBaseline = 'middle';
     if (this.clean) {
       // clean view: only the selection keeps its reticle (and name), so a click still answers
@@ -217,7 +217,7 @@ export class Overlay {
     const viewOf = new Map<CelestialBody, BodyView>();
     for (const v of views) viewOf.set(v.body, v);
 
-    ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+    ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
     ctx.textBaseline = 'middle';
 
     // The sun marker's label gets its spot first; star and landmark labels keep clear of it
@@ -231,7 +231,7 @@ export class Overlay {
     const scope = this.scope;
     const anyForced = !this.showStarNames && namedStars.some((s) => (s.landmark && this.showMarkers) || s.id !== undefined);
     if (!scope && (this.showStarNames || anyForced)) {
-      ctx.font = '400 11px Inter, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '400 11px Lato, "Segoe UI", sans-serif';
       const taken: Array<{ x: number; y: number; w: number }> = sunBox ? [sunBox] : [];
       const shown = this.shownStars;
       const rank = (s: NamedStarScreen): number => (s.index === 0 ? -99 : s.mag - (shown.has(s.name) ? 0.5 : 0));
@@ -276,12 +276,12 @@ export class Overlay {
       }
       this.shownStarsNext = shown;
       this.shownStars = next;
-      ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
     }
 
     // Galaxy names
     if (!scope && this.showGalaxyNames && namedGalaxies.length) {
-      ctx.font = 'italic 400 11px Inter, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = 'italic 400 11px Lato, "Segoe UI", sans-serif';
       for (const s of namedGalaxies) {
         if (selectedStar && selectedStar.kind === 'galaxy' && selectedStar.name === s.name) continue;
         if (anyOccluder && occluded(s.dir)) continue;
@@ -295,12 +295,12 @@ export class Overlay {
         ctx.fillText(glabel, x + 7, y + 9);
         this.labelHits.push({ kind: 'galaxy', index: s.index, name: s.name, x: x + 7, y: y + 2, w: ctx.measureText(glabel).width, h: 14 });
       }
-      ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
     }
 
     // Deep-sky landmarks (nebulae, clusters, remnants, record stars): dashed ring + name
     if (!scope && (this.showMarkers || this.showLabels) && landmarks.length) {
-      ctx.font = '400 11px Inter, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '400 11px Lato, "Segoe UI", sans-serif';
       const taken: Array<{ x: number; y: number; w: number }> = sunBox ? [sunBox] : [];
       for (const s of landmarks) {
         if (selectedStar && selectedStar.kind === 'landmark' && selectedStar.name === s.name) continue;
@@ -342,7 +342,7 @@ export class Overlay {
           ctx.globalAlpha = 1;
         }
       }
-      ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+      ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
     }
 
     // Black holes in other systems: ring marker + name
@@ -514,7 +514,7 @@ export class Overlay {
           const sx = x > W * 0.6 ? -1 : 1;
           const sy = y < H * 0.35 ? 1 : -1;
           const lx = x + sx * 34, ly = y + sy * 30;
-          ctx.font = '500 13px Inter, ui-sans-serif, system-ui, sans-serif';
+          ctx.font = '500 13px Lato, "Segoe UI", sans-serif';
           const tw = ctx.measureText(pin.label).width;
           const ex = lx + sx * (tw + 8);
           ctx.globalAlpha = Math.max(0, Math.min(1, pin.alpha));
@@ -537,7 +537,7 @@ export class Overlay {
           ctx.fillText(pin.label, lx + sx * 4, ly - 9);
           ctx.globalAlpha = 1;
           ctx.textAlign = 'left';
-          ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+          ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
         }
       }
     }
@@ -604,7 +604,7 @@ export class Overlay {
     const ctx = this.ctx;
     const cx = this.width / 2, cy = this.height / 2;
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = 'rgba(240, 240, 235, 0.7)';
+    ctx.strokeStyle = 'rgba(230, 237, 243, 0.7)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cx - 12, cy); ctx.lineTo(cx - 4, cy);
@@ -612,7 +612,7 @@ export class Overlay {
     ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy - 4);
     ctx.moveTo(cx, cy + 4); ctx.lineTo(cx, cy + 12);
     ctx.stroke();
-    ctx.fillStyle = 'rgba(240, 240, 235, 0.8)';
+    ctx.fillStyle = 'rgba(230, 237, 243, 0.8)';
     ctx.fillRect(cx - 0.75, cy - 0.75, 1.5, 1.5);
   }
 
@@ -628,18 +628,18 @@ export class Overlay {
   private sunLabelBox(sun: SunMarkerScreen, camera: PerspectiveCamera): { x: number; y: number; w: number } | null {
     const p = this.sunScreenPos(sun, camera);
     if (!p) return null;
-    this.ctx.font = '500 11px Inter, ui-sans-serif, system-ui, sans-serif';
+    this.ctx.font = '500 11px Lato, "Segoe UI", sans-serif';
     const w = this.ctx.measureText(sun.label).width + 10;
-    this.ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+    this.ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
     return { x: p.x + 9, y: p.y - 8, w };
   }
 
   private drawSun(sun: SunMarkerScreen, camera: PerspectiveCamera): void {
     const ctx = this.ctx;
     const W = this.width, H = this.height;
-    ctx.font = '500 11px Inter, ui-sans-serif, system-ui, sans-serif';
+    ctx.font = '500 11px Lato, "Segoe UI", sans-serif';
     const p = this.sunScreenPos(sun, camera);
-    if (p && sun.selected) { ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif'; return; }
+    if (p && sun.selected) { ctx.font = '500 12px Lato, "Segoe UI", sans-serif'; return; }
     if (p) {
       // on the sky: a small ring and the label
       const { x, y } = p;
@@ -685,7 +685,7 @@ export class Overlay {
       const w = Math.max(2 * R, ctx.measureText(sun.label).width) + 16;
       this.sunHit = { x: cx - w / 2, y: cy - R - 6, w, h: 2 * R + 30 };
     }
-    ctx.font = '500 12px Inter, ui-sans-serif, system-ui, sans-serif';
+    ctx.font = '500 12px Lato, "Segoe UI", sans-serif';
   }
 
   /** `true` when a screen point (px) is on the sun marker or its compass */

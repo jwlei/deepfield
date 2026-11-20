@@ -1,4 +1,13 @@
+import { readdirSync, statSync } from 'node:fs';
 import { defineConfig, type Plugin } from 'vite';
+
+/**
+ * Decoded size of every file in public/data, for the loader's percentage: the server may gzip a
+ * file, so its Content-Length is not the number of bytes the page reads.
+ */
+const DATA_SIZES = Object.fromEntries(
+  readdirSync('public/data').filter((f) => statSync(`public/data/${f}`).isFile()).map((f) => [f, statSync(`public/data/${f}`).size]),
+);
 
 /**
  * Build id stamped into asset URLs that are not content-hashed by Vite (/data, /models).
@@ -38,6 +47,7 @@ export default defineConfig({
   },
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
+    __DATA_SIZES__: JSON.stringify(DATA_SIZES),
   },
   plugins: [expeditionRelay()],
   build: {

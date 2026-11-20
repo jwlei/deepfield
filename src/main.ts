@@ -70,6 +70,7 @@ import { SmallBodyCatalog } from './data/SmallBodies';
 import { applyEventMeta, beacon, eventUrl, parseLaunch, type LaunchParams } from './app/share';
 import { EmbedUI } from './ui/EmbedUI';
 import { Welcome } from './ui/Welcome';
+import { LoadProgress } from './ui/LoadProgress';
 import { VoyagerCelebration } from './ui/VoyagerCelebration';
 import { SupportAsk } from './ui/SupportAsk';
 import { Music } from './audio/Music';
@@ -3806,9 +3807,13 @@ const DEEP_FIELD_UPSTREAM_EXTRAS = false as boolean;
 
 async function boot(): Promise<void> {
   const loaderText = document.querySelector('#loader .loader-text');
-  /** the loader's sweep stops, a button appears; resolves inside its click */
+  // the loading percentage: the start-up data downloads byte by byte, then the later steps
+  const progress = new LoadProgress(document.querySelector<HTMLElement>('#loader .loader-fill'), document.querySelector<HTMLElement>('#loader .loader-pct'));
+  progress.trackDownloads(import.meta.env.BASE_URL);
+  /** the loader's bar fills, a button appears; resolves inside its click */
   const enterOnClick = (text: Element | null): Promise<void> => new Promise((resolve) => {
     const loader = document.getElementById('loader');
+    progress.done();
     if (!loader) { resolve(); return; }
     if (text) text.textContent = _('Hazır');
     const btn = document.createElement('button');
@@ -3834,6 +3839,8 @@ async function boot(): Promise<void> {
       loadBrownDwarfs(base).catch((err) => { console.warn('brown-dwarf catalogue unavailable', err); return null; }),
       loadBinaries(base).catch((err) => { console.warn('binary-star catalogue unavailable', err); return null; }),
     ]);
+    progress.stopTracking();
+    progress.step(88);
     if (loaderText) loaderText.textContent = _('Evren hazırlanıyor…');
     // building the App is one long task: let the new line reach the screen first
     await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
@@ -3843,6 +3850,7 @@ async function boot(): Promise<void> {
     // Expose for debugging / console experiments
     (window as unknown as { yeits: App }).yeits = app;
     app.launch(launch);
+    progress.step(94);
     // Streamer Mode (The Great Expedition): stream.* host or ?stream; its UI replaces the app's
     // Deep Field: streamer mode needs the upstream relay server and narration audio: off
     const stream = false;
@@ -3870,6 +3878,7 @@ async function boot(): Promise<void> {
       // the first view's programs compile behind the loader instead of freezing its first frame
       await app.settle(2, 2);
     }
+    progress.done();
     app.ready();
     if (intro) app.welcome.start();
     // Voyager 1 one light-day from Earth: a one-time card until 23 November (after the welcome, if any)
@@ -3897,6 +3906,7 @@ async function boot(): Promise<void> {
     if (partyCode !== null) void openParty(partyCode);
   } catch (err) {
     console.error(err);
+    progress.stopTracking();
     if (loaderText) loaderText.textContent = `${_('Yükleme hatası')}: ${(err as Error).message}`;
   }
 }

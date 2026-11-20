@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#090b0f" />
+    <meta name="theme-color" content="#0d1117" />
     <!-- Static head text is English for crawlers / link previews (no JS); applyDom() rewrites it
          per locale at runtime using the Turkish source key in data-i18n-content. -->
     <title>Deep Field — Explore the observable universe in your browser</title>
@@ -26,6 +26,9 @@
     <meta name="twitter:title" content="Deep Field" />
     <meta name="twitter:description" data-i18n-content="Gözlemlenebilir evreni gerçek verilerle tarayıcıda gezin." content="Explore the observable universe in your browser, on real data." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" />
   </head>
   <body>
     <canvas id="scene"></canvas>
@@ -470,7 +473,8 @@
     </div>
 
     <div id="loader">
-      <div class="loader-mark"></div>
+      <div class="loader-pct" aria-hidden="true">0%</div>
+      <div class="loader-mark" role="progressbar" aria-label="Loading"><div class="loader-fill"></div></div>
       <div class="loader-text" data-i18n>Evren hazırlanıyor…</div>
     </div>
 

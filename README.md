@@ -28,6 +28,9 @@ Based on upstream commit
   GitHub Pages project path, deployed by `.github/workflows/pages.yml`. The encyclopedia (static
   site generator) is not built.
 - Rover terrain from the removed tour media is replaced by the generated ground.
+- **Restyled** to match [jleiros.com](https://www.jleiros.com): GitHub-dark palette, blue accent,
+  Lato throughout. The loading screen shows a percentage: the start-up data downloads are counted
+  byte by byte against their sizes recorded at build time (`src/ui/LoadProgress.ts`).
 
 ## Develop
 
