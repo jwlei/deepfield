@@ -29,6 +29,8 @@ export class SystemStrip {
   private selected: CelestialBody | null = null;
   private stars: CelestialBody[] = [];
   private at = -Infinity;
+  /** phones show the strip as a horizontal row of named chips above the bottom bar */
+  private readonly chips = window.matchMedia('(max-width: 700px)');
 
   constructor(private readonly host: UIHost) {
     this.el = document.getElementById('system-strip')!;
@@ -54,7 +56,10 @@ export class SystemStrip {
     const sel = this.host.selected;
     if (sel !== this.selected) {
       this.buttons.get(this.selected!)?.classList.remove('selected');
-      this.buttons.get(sel!)?.classList.add('selected');
+      const btn = this.buttons.get(sel!);
+      btn?.classList.add('selected');
+      // the phone chip row scrolls sideways: bring the selection into view
+      if (btn && this.chips.matches) btn.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
       this.selected = sel;
     }
   }
@@ -95,8 +100,9 @@ export class SystemStrip {
     btn.type = 'button';
     btn.className = `ss-item ss-${e.kind}`;
     btn.setAttribute('aria-label', b.name);
-    btn.append(icon(e));
-    const show = () => this.showTip(btn, b.name);
+    // the name shows beside the icon only on phones, where the strip is a row of chips
+    btn.append(icon(e), Object.assign(document.createElement('span'), { className: 'ss-name', textContent: b.name }));
+    const show = () => { if (!this.chips.matches) this.showTip(btn, b.name); };
     btn.addEventListener('pointerenter', show);
     btn.addEventListener('focus', show);
     btn.addEventListener('pointerleave', () => { this.tip.hidden = true; });

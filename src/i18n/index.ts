@@ -133,7 +133,7 @@ export function fixed(n: number, digits: number): string {
 
 /**
  * Translate static markup: elements carrying `data-i18n` (text), `data-i18n-html` (innerHTML),
- * `data-i18n-title`, `data-i18n-placeholder`, `data-i18n-content` (meta tags). The attribute
+ * `data-i18n-title`, `data-i18n-placeholder`, `data-i18n-aria-label`, `data-i18n-content` (meta tags). The attribute
  * value is the source string; when it is empty the element's current text is used as the key
  * and written back. In English the markup already holds the source text and is left alone.
  */
@@ -163,6 +163,12 @@ export function applyDom(root: ParentNode = document): void {
     const key = el.dataset.i18nPlaceholder || el.placeholder;
     if (!el.dataset.i18nPlaceholder) el.dataset.i18nPlaceholder = key;
     el.placeholder = _(key);
+  });
+  root.querySelectorAll<HTMLElement>('[data-i18n-aria-label]').forEach((el) => {
+    if (en && !el.dataset.i18nAriaLabel) return;
+    const key = el.dataset.i18nAriaLabel || el.getAttribute('aria-label') || '';
+    if (!el.dataset.i18nAriaLabel) el.dataset.i18nAriaLabel = key;
+    el.setAttribute('aria-label', _(key));
   });
   root.querySelectorAll<HTMLMetaElement>('[data-i18n-content]').forEach((el) => {
     if (en && !el.dataset.i18nContent) return;

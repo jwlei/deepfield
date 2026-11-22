@@ -67,6 +67,8 @@ export interface Settings {
   exposure: number;
   mouseSensitivity: number;
   invertY: boolean;
+  /** the controls fade out while the scene is dragged (or left alone); a tap on the scene brings them back */
+  autoHideUI: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -112,6 +114,7 @@ export const DEFAULT_SETTINGS: Settings = {
   exposure: 1.0,
   mouseSensitivity: 1.0,
   invertY: false,
+  autoHideUI: false,
 };
 
 export type GraphicsPreset = 'low' | 'medium' | 'high';

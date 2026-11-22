@@ -35,8 +35,13 @@ Based on upstream commit
 - Rover terrain from the removed tour media is replaced by the generated ground.
 - **Reworked layout.** A menu behind the settings icon (Settings, Mission planner, About), a
   places button beside the search field, the selected object as a one-line pill on the time-control
-  line whose details card grows up from it, and on phones the time controls as a pop-out above a
-  "Time control" button. Settings fold their render and camera details under "Advanced".
+  line whose details card grows up from it. Settings fold their render and camera details under
+  "Advanced". On phones a bottom tab bar (Explore, Search, Time, Missions, More) opens sheets over
+  the scene: a full-screen search with filters, recent searches and places as cards; a time sheet
+  with a ruler you drag through time; the mission planner as a four-step wizard; and view switches
+  with the way to settings, help and about. The selected object becomes a bar with its actions,
+  the system's bodies a row of chips above it. An optional setting fades the controls while you
+  look around.
 - **Restyled** to match [jleiros.com](https://www.jleiros.com): GitHub-dark palette, blue accent,
   Lato throughout. The loading screen shows a percentage: the start-up data downloads are counted
   byte by byte against their sizes recorded at build time (`src/ui/LoadProgress.ts`).

@@ -68,9 +68,34 @@ export class MissionPanel {
     }
     this.computeBtn.addEventListener('click', () => this.compute());
     this.launchBtn.addEventListener('click', () => this.launch());
-    $('mission-close').addEventListener('click', () => this.toggle(false));
+    $('mission-close').addEventListener('click', () => { this.toggle(false); this.onClose?.(); });
     $('m-use-selected').addEventListener('click', () => this.useSelected());
+    $('m-back').addEventListener('click', () => this.setStep(this.step - 1));
+    $('m-next').addEventListener('click', () => this.setStep(this.step + 1));
     this.onShipChange();
+    this.setStep(1);
+  }
+
+  /** called when the panel's own close button hides it */
+  onClose: (() => void) | null = null;
+
+  /* On phones the form is a four-step wizard (route, ship, options, review); wider screens show
+     every step at once and ignore the step. */
+  private step = 1;
+  private readonly steps = Array.from(this.panel.querySelectorAll<HTMLElement>('.m-step'));
+  private readonly progress = Array.from(this.panel.querySelectorAll<HTMLElement>('.m-progress span'));
+
+  private setStep(n: number): void {
+    this.step = Math.max(1, Math.min(4, n));
+    for (const el of this.steps) el.classList.toggle('current', Number(el.dataset.step) === this.step);
+    this.progress.forEach((el, i) => el.classList.toggle('done', i < this.step));
+    const titles = [_('Where to?'), _('Choose a ship'), _('Launch window and arrival'), _('Review and launch')];
+    $('m-step-k').textContent = _('Step {n} of {total}', { n: this.step, total: 4 });
+    $('m-step-title').textContent = titles[this.step - 1];
+    $<HTMLButtonElement>('m-back').disabled = this.step === 1;
+    $('m-next').hidden = this.step === 4;
+    // arriving at the review computes the route straight away
+    if (this.step === 4 && !this.plan && this.computeBtn.offsetParent !== null) this.compute();
   }
 
   toggle(force?: boolean): void {
@@ -486,6 +511,8 @@ export class MissionPanel {
     this.host.launchMission(this.plan, true, fit);
     this.plan = null;
     this.launchBtn.disabled = true;
+    this.result.hidden = true;
+    this.setStep(1);
     this.renderActive(true);
   }
 

@@ -1,6 +1,7 @@
 import type { CelestialBody } from '../core/CelestialBody';
 import { MissionPanel, type MissionPanelHost } from './MissionPanel';
 import { SystemStrip } from './SystemStrip';
+import { TimeSheet } from './TimeSheet';
 import type { SmallBodyCatalog } from '../data/SmallBodies';
 import { copyText, viewUrl } from '../app/share';
 import { ScopeCard, scopeTargetFor } from './ScopeCard';
@@ -30,6 +31,27 @@ import { PLACES } from './places';
 import { exoBodyId } from '../gen/RealSystem';
 import { Vector3 } from 'three';
 import { fmtGalactic, fmtRaDec, parseSkyQuery, sceneToGalactic, sceneToRaDec } from './coords';
+
+/** the phone tab bar: Explore is the scene itself, the others open a sheet over it */
+type Tab = 'explore' | 'search' | 'time' | 'missions' | 'more';
+
+/** search result filters (phones); 'any' rows (coordinates, ids) show under every filter */
+type SearchCat = 'all' | 'bodies' | 'stars' | 'galaxies' | 'nebulae' | 'blackholes';
+const SEARCH_CATS: Array<[SearchCat, string]> = [
+  ['all', 'All'], ['bodies', 'Planets and moons'], ['stars', 'Stars'], ['galaxies', 'Galaxies'], ['nebulae', 'Nebulae and clusters'], ['blackholes', 'Black holes'],
+];
+/** which filter each places group belongs to */
+const PLACE_GROUP_CAT: Record<string, SearchCat> = {
+  'Spacecraft': 'bodies', 'Black holes': 'blackholes', 'Pulsars': 'stars', 'Nebulae, clusters and record stars': 'nebulae',
+  'Planets and moons': 'bodies', 'Exoplanets': 'bodies', 'Stars': 'stars', 'Galaxies': 'galaxies', 'Peculiar galaxies': 'galaxies',
+};
+const RECENT_KEY = 'deepfield.recent.v1';
+
+function catOfType(t: string): SearchCat {
+  if (t === 'star' || t === 'pulsar') return 'stars';
+  if (t === 'blackhole') return 'blackholes';
+  return 'bodies';
+}
 
 /** body types that act as the light source / primary of a system */
 function isPrimaryType(t: string): boolean {
@@ -159,6 +181,7 @@ interface SettingDef {
 
 const SETTING_DEFS: SettingDef[] = [
   { key: 'cleanView', label: 'Clean view: hide all markers and names (N)', kind: 'bool', group: 'Display' },
+  { key: 'autoHideUI', label: 'Hide the controls while you look around (tap the scene to show them)', kind: 'bool' },
   { key: 'orbits', label: 'Orbits', kind: 'bool' },
   { key: 'moonOrbits', label: 'Moon orbits', kind: 'bool' },
   { key: 'labels', label: 'Labels', kind: 'bool' },
@@ -290,6 +313,173 @@ export class UI {
     $('info-close').addEventListener('click', () => { host.select(null); host.selectStar(null); host.selectGalaxy(null); host.selectLandmark(null); });
     this.timeBtn.addEventListener('click', () => this.setTimeOpen(!this.bottombar.classList.contains('time-open')));
     $('time-pop-close').addEventListener('click', () => this.setTimeOpen(false));
+    this.timeSheet = new TimeSheet(host.time, (msg) => this.showToast(msg));
+    this.missionPanel.onClose = () => this.syncTabs();
+    this.bindTabs();
+    this.bindContextBar();
+    this.bindMore();
+    this.bindAutoHide();
+    this.phoneMq.addEventListener('change', () => this.placeSearch());
+    this.placeSearch();
+  }
+
+  /* ---------------- Phones: tab bar and sheets ---------------- */
+  private readonly phoneMq = window.matchMedia('(max-width: 700px)');
+  private readonly uiEl = $('ui');
+  private readonly tabbar = $('tabbar');
+  private readonly searchSheet = $('sheet-search');
+  private readonly moreSheet = $('sheet-more');
+  private readonly searchHome = $('search-home');
+  private readonly timeSheet: TimeSheet;
+
+  private bindTabs(): void {
+    this.tabbar.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+      const tab = b.dataset.tab as Tab;
+      // a second tap on the open tab closes its sheet
+      this.setTab(tab !== 'explore' && this.currentTab() === tab ? 'explore' : tab);
+    }));
+    $('search-cancel').addEventListener('click', () => { this.closeSearch(); this.setTab('explore'); });
+  }
+
+  /** the sheets the tab bar opens (on phones); the settings panel counts as part of More */
+  private hideSheets(): void {
+    this.searchSheet.hidden = true;
+    this.timeSheet.el.hidden = true;
+    this.moreSheet.hidden = true;
+  }
+
+  /** Explore is the scene itself: every sheet closed */
+  setTab(tab: Tab): void {
+    if (tab !== 'search' && !this.searchSheet.hidden) { this.searchInput.value = ''; this.searchResults.hidden = true; this.searchInput.blur(); }
+    this.hideSheets();
+    this.toggleSettings(false);
+    this.missionPanel.toggle(false);
+    this.togglePlaces(false);
+    if (tab === 'search') {
+      this.searchSheet.hidden = false;
+      this.renderSearchHome();
+      this.searchInput.focus();
+    } else if (tab === 'time') this.timeSheet.el.hidden = false;
+    else if (tab === 'missions') this.missionPanel.toggle(true);
+    else if (tab === 'more') { this.moreSheet.hidden = false; this.syncTiles(); }
+    if (tab !== 'explore') this.setChrome(true);
+    this.syncTabs();
+  }
+
+  private currentTab(): Tab {
+    if (!this.searchSheet.hidden) return 'search';
+    if (this.timeSheet.visible) return 'time';
+    if (this.missionPanel.visible) return 'missions';
+    if (!this.moreSheet.hidden || !this.settingsPanel.hidden) return 'more';
+    return 'explore';
+  }
+
+  private syncTabs(): void {
+    const cur = this.currentTab();
+    this.tabbar.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) => {
+      if (b.dataset.tab === cur) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+    this.uiEl.classList.toggle('sheet-open', cur !== 'explore');
+  }
+
+  /** the search field lives in the top bar on wide screens and in the search sheet on phones */
+  private placeSearch(): void {
+    const s = $('search');
+    if (this.phoneMq.matches) {
+      if (s.parentElement !== $('search-slot')) $('search-slot').appendChild(s);
+    } else {
+      if (s.parentElement !== $('places').parentElement) $('places').before(s);
+      this.hideSheets();
+      this.syncTabs();
+    }
+  }
+
+  /* ---------------- Phones: the selection's bar ---------------- */
+  private readonly cbFollow = $<HTMLButtonElement>('cb-follow');
+  private readonly cbLand = $<HTMLButtonElement>('cb-land');
+  private readonly cbCenter = $<HTMLButtonElement>('cb-center');
+  private readonly infoSub = $('info-sub');
+
+  private bindContextBar(): void {
+    $('cb-go').addEventListener('click', () => $('act-goto').click());
+    this.cbFollow.addEventListener('click', () => this.followBtn.click());
+    this.cbLand.addEventListener('click', () => this.landBtn.click());
+    this.cbCenter.addEventListener('click', () => $('act-center').click());
+  }
+
+  /* ---------------- Phones: More (view switches, settings, help, about) ---------------- */
+  private bindMore(): void {
+    const h = this.host, s = h.settings;
+    this.moreSheet.querySelectorAll<HTMLButtonElement>('[data-tile]').forEach((b) => b.addEventListener('click', () => {
+      switch (b.dataset.tile) {
+        case 'orbits': s.orbits = !s.orbits; s.moonOrbits = s.orbits; h.applySettings(true); break;
+        case 'names': s.cleanView = !s.cleanView; h.applySettings(true); break;
+        case 'grid': s.eclipticGrid = !s.eclipticGrid; h.applySettings(true); break;
+        case 'euv': h.toggleEUV(); break;
+        case 'autohide': s.autoHideUI = !s.autoHideUI; h.applySettings(true); break;
+        case 'shot': this.setTab('explore'); requestAnimationFrame(() => h.screenshot()); break;
+      }
+      this.syncTiles();
+    }));
+    this.moreSheet.querySelectorAll<HTMLButtonElement>('[data-more]').forEach((b) => b.addEventListener('click', () => {
+      const what = b.dataset.more;
+      if (what === 'settings') { this.moreSheet.hidden = true; this.toggleSettings(true); }
+      else if (what === 'help') { this.setTab('explore'); this.toggleHelp(true); }
+      else if (what === 'about') { this.setTab('explore'); this.toggleAbout(true); }
+    }));
+  }
+
+  private syncTiles(): void {
+    const s = this.host.settings;
+    const on: Record<string, boolean> = { orbits: s.orbits, names: !s.cleanView, grid: s.eclipticGrid, euv: this.host.euv, autohide: s.autoHideUI };
+    this.moreSheet.querySelectorAll<HTMLButtonElement>('[data-tile]').forEach((b) => {
+      const k = b.dataset.tile!;
+      if (k in on) b.setAttribute('aria-pressed', String(on[k]));
+    });
+  }
+
+  /* ---------------- Auto-hide: the controls fade while the scene is dragged ---------------- */
+  private chromeOff = false;
+  private autoHideWas = false;
+  private idleTimer = 0;
+
+  private bindAutoHide(): void {
+    const scene = document.getElementById('scene');
+    if (!scene) return;
+    let down: { x: number; y: number; t: number } | null = null;
+    scene.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+    scene.addEventListener('pointermove', (e) => {
+      if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 12) this.setChrome(false);
+    });
+    window.addEventListener('pointerup', (e) => {
+      if (!down) return;
+      const tap = Math.hypot(e.clientX - down.x, e.clientY - down.y) <= 12 && performance.now() - down.t < 400;
+      down = null;
+      // a tap on the scene brings the controls back
+      if (tap && this.chromeOff) this.setChrome(true);
+      else this.armIdle();
+    });
+    // using the controls keeps them up
+    this.uiEl.addEventListener('pointerdown', () => this.armIdle());
+    this.autoHideWas = this.host.settings.autoHideUI;
+    this.armIdle();
+  }
+
+  private armIdle(): void {
+    window.clearTimeout(this.idleTimer);
+    if (!this.host.settings.autoHideUI) return;
+    this.idleTimer = window.setTimeout(() => this.setChrome(false), 6000);
+  }
+
+  /** show (true) or fade (false) the controls; nothing fades while a sheet or the details card is open */
+  private setChrome(on: boolean): void {
+    if (!on && (!this.host.settings.autoHideUI || this.currentTab() !== 'explore' || this.infoOpen
+      || !this.help.hidden || !this.about.hidden || document.activeElement === this.searchInput)) return;
+    if (on) this.armIdle();
+    if (this.chromeOff === !on) return;
+    this.chromeOff = !on;
+    this.uiEl.classList.toggle('chrome-off', !on);
   }
 
   /* ---------------- Menu (top left) and the bottom dock ---------------- */
@@ -491,8 +681,7 @@ export class UI {
         item.className = 'dropdown-item';
         item.setAttribute('role', 'option');
         item.innerHTML = `<span>${_(p.label)}</span>${p.note ? `<span class="n">${_(p.note)}</span>` : ''}`;
-        item.addEventListener('click', () => {
-          this.togglePlaces(false);
+        const go = (): void => {
           if (p.kind === 'body') h.goToBodyId(p.ref);
           else if (p.kind === 'blackhole') h.goToBlackHole(p.ref);
           else if (p.kind === 'landmark') h.goToLandmark(u.landmarks.indexOf(u.landmark(p.ref)!));
@@ -507,8 +696,10 @@ export class UI {
             const gi = resolveGalaxy(p.ref);
             if (gi !== null) h.goToGalaxy(gi);
           }
-        });
+        };
+        item.addEventListener('click', () => { this.togglePlaces(false); go(); });
         menu.appendChild(item);
+        this.placeItems.push({ group: group.title, label: p.label, note: p.note ?? '', go });
       }
     }
     this.placesBtn.addEventListener('click', (e) => { e.stopPropagation(); this.togglePlaces(); });
@@ -518,6 +709,115 @@ export class UI {
   }
 
   private discoveriesGroup!: HTMLElement;
+  /** the places, resolved, with what a tap on each does (the phone search screen lists them as cards) */
+  private readonly placeItems: Array<{ group: string; label: string; note: string; go: () => void }> = [];
+  private searchCat: SearchCat = 'all';
+  private searchRender: () => void = () => {};
+
+  /* ---------------- Phones: the search screen's home (filters, recent, places) ---------------- */
+  private buildSearchCats(): void {
+    const box = $('search-cats');
+    box.innerHTML = '';
+    for (const [cat, label] of SEARCH_CATS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(cat === this.searchCat));
+      b.textContent = _(label);
+      b.addEventListener('click', () => {
+        this.searchCat = cat;
+        box.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-checked', String(c === b)));
+        this.searchRender();
+        this.renderSearchHome();
+      });
+      box.appendChild(b);
+    }
+  }
+
+  private loadRecent(): Array<{ name: string; tag: string }> {
+    try {
+      const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as Array<{ name: string; tag: string }>;
+      return Array.isArray(v) ? v.filter((r) => typeof r?.name === 'string').slice(0, 6) : [];
+    } catch { return []; }
+  }
+
+  private remember(name: string, tag: string): void {
+    const list = [{ name, tag }, ...this.loadRecent().filter((r) => r.name !== name)].slice(0, 6);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { /* private mode */ }
+  }
+
+  /** a recent search runs again: the same name, and its row is taken when it comes up first */
+  private replayRecent(name: string): void {
+    this.searchInput.value = name;
+    this.searchRender();
+    const hit = Array.from(this.searchResults.children).find((li) => li.firstElementChild?.textContent === name) as HTMLElement | undefined;
+    if (hit) hit.click();
+  }
+
+  private renderSearchHome(): void {
+    const home = this.searchHome;
+    home.innerHTML = '';
+    home.hidden = this.searchInput.value.trim() !== '';
+    const section = (title: string, extra?: HTMLElement): HTMLElement => {
+      const sec = document.createElement('section');
+      sec.className = 'sh-sec';
+      const head = document.createElement('div');
+      head.className = 'sh-head';
+      const h = document.createElement('h2');
+      h.textContent = title;
+      head.appendChild(h);
+      if (extra) head.appendChild(extra);
+      sec.appendChild(head);
+      home.appendChild(sec);
+      return sec;
+    };
+    const recent = this.searchCat === 'all' ? this.loadRecent() : [];
+    if (recent.length) {
+      const clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'link-btn';
+      clear.textContent = _('Clear');
+      clear.addEventListener('click', () => { try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } this.renderSearchHome(); });
+      const sec = section(_('Recent'), clear);
+      for (const r of recent) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sh-row';
+        b.innerHTML = `<span class="sh-name">${escapeHtml(r.name)}</span><span class="sh-tag">${escapeHtml(r.tag)}</span>`;
+        b.addEventListener('click', () => this.replayRecent(r.name));
+        sec.appendChild(b);
+      }
+    }
+    const log = this.searchCat === 'all' ? this.host.discoveryLog().slice(0, 10) : [];
+    if (log.length) {
+      const row = document.createElement('div');
+      row.className = 'sh-cards';
+      for (const d of log) row.appendChild(this.placeCard(d.name, _(d.kind), () => this.host.goToDiscovery(d.id)));
+      section(`${_('My discoveries')} (${this.host.discoveryLog().length})`).appendChild(row);
+    }
+    let group = '';
+    let row: HTMLElement | null = null;
+    for (const p of this.placeItems) {
+      if (this.searchCat !== 'all' && PLACE_GROUP_CAT[p.group] !== this.searchCat) continue;
+      if (p.group !== group) {
+        group = p.group;
+        row = document.createElement('div');
+        row.className = 'sh-cards';
+        section(_(p.group)).appendChild(row);
+      }
+      row!.appendChild(this.placeCard(_(p.label), p.note ? _(p.note) : '', p.go));
+    }
+  }
+
+  private placeCard(name: string, note: string, go: () => void): HTMLButtonElement {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sh-card';
+    b.innerHTML = `<span class="sh-name">${escapeHtml(name)}</span>${note ? `<span class="sh-tag">${escapeHtml(note)}</span>` : ''}`;
+    b.addEventListener('click', () => { go(); this.closeSearch(); });
+    return b;
+  }
 
   /** "Keşiflerim": the visitor's own finds, rebuilt every time the menu opens */
   private fillDiscoveries(): void {
@@ -564,12 +864,14 @@ export class UI {
       const q = input.value.trim().toLowerCase();
       list.innerHTML = '';
       this.searchIndex = -1;
+      this.searchHome.hidden = q !== '' || this.searchSheet.hidden;
       if (!q) { list.hidden = true; return; }
       const norm = (s: string) => s.toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const nq = norm(q);
       const u = this.host.universe;
-      const add = (name: string, tag: string, onClick: () => void) => {
+      const add = (name: string, tag: string, onClick: () => void, cat = 'any') => {
         const li = document.createElement('li');
+        li.dataset.cat = cat;
         li.innerHTML = `<span>${escapeHtml(name)}</span><span class="t">${escapeHtml(tag)}</span>`;
         li.addEventListener('click', onClick);
         list.appendChild(li);
@@ -580,6 +882,7 @@ export class UI {
         .slice(0, 8);
       for (const b of hits) {
         const li = document.createElement('li');
+        li.dataset.cat = catOfType(b.data.type);
         li.innerHTML = `<span>${b.name}</span><span class="t">${typeLabel(b.data.type)}${b.parent ? ' · ' + b.parent.name : ''}</span>`;
         li.addEventListener('click', () => { this.pick(b); });
         list.appendChild(li);
@@ -589,6 +892,7 @@ export class UI {
       const small = (sb?.search(q, 8) ?? []).filter((k) => !(sb!.flags[k] & 4) && !(u.current.catalogIndex === 0 && u.get(sb!.bodyId(k)))).slice(0, 6);
       for (const k of small) {
         const li = document.createElement('li');
+        li.dataset.cat = 'bodies';
         li.innerHTML = `<span>${sb!.label(k)}</span><span class="t">${_(sb!.className(k))} · ${fixed(sb!.a[k], sb!.a[k] < 10 ? 2 : 0)} AU</span>`;
         li.addEventListener('click', () => { this.host.goToSmallBody(k); this.closeSearch(); });
         list.appendChild(li);
@@ -597,6 +901,7 @@ export class UI {
       const foreign = u.searchForeignBodies(q, 6);
       for (const f of foreign) {
         const li = document.createElement('li');
+        li.dataset.cat = catOfType(f.body.type);
         li.innerHTML = `<span>${f.name}</span><span class="t">${typeLabel(f.body.type)} · ${f.systemName}</span>`;
         li.addEventListener('click', () => { this.host.goToSystemBody(f.starId, f.body.id); this.closeSearch(); });
         list.appendChild(li);
@@ -606,6 +911,7 @@ export class UI {
       for (const { host, planet } of exo) {
         const li = document.createElement('li');
         const ly = u.catalog.distancePc(host.i) * 3.26156;
+        li.dataset.cat = 'bodies';
         li.innerHTML = `<span>${planet.name}</span><span class="t">${_('Exoplanet')} · ${u.catalog.nameOf(host.i)} · ${fixed(ly, ly < 100 ? 1 : 0)} ly</span>`;
         li.addEventListener('click', () => { this.host.goToSystemBody(`c${host.i}`, exoBodyId(host.i, planet.name)); this.closeSearch(); });
         list.appendChild(li);
@@ -616,6 +922,7 @@ export class UI {
         const li = document.createElement('li');
         const spect = u.catalog.catalogSpectral(i);
         const ly = u.catalog.distancePc(i) * 3.26156;
+        li.dataset.cat = 'stars';
         li.innerHTML = `<span>${u.catalog.nameOf(i)}</span><span class="t">${_('Star')}${spect ? ' · ' + spect : ''} · ${fixed(ly, 1)} ly</span>`;
         li.addEventListener('click', () => { this.pickStar(`c${i}`); });
         list.appendChild(li);
@@ -625,6 +932,7 @@ export class UI {
       for (const b of bhs) {
         const li = document.createElement('li');
         const dist = fmtLightYears(b.positionPc.length() * PARSEC_KM);
+        li.dataset.cat = 'blackholes';
         li.innerHTML = `<span>${b.entry.name}</span><span class="t">${_('Black Hole')} · ${fmtSolarMass(b.entry.massSolar)} · ${dist}</span>`;
         li.addEventListener('click', () => { this.host.goToBlackHole(b.entry.id); this.closeSearch(); });
         list.appendChild(li);
@@ -635,6 +943,7 @@ export class UI {
         const l = u.landmarks[i];
         const li = document.createElement('li');
         const where = u.galaxies.name(l.galaxy);
+        li.dataset.cat = l.def.kind === 'pulsar' ? 'stars' : 'nebulae';
         li.innerHTML = `<span>${l.def.name}</span><span class="t">${_(LANDMARK_KIND_LABEL[l.def.kind]).split(' /')[0]} · ${where} · ${fmtLightYears(l.positionPc.length() * PARSEC_KM)}</span>`;
         li.addEventListener('click', () => { this.host.goToLandmark(i); this.closeSearch(); });
         list.appendChild(li);
@@ -644,12 +953,29 @@ export class UI {
       for (const i of gals) {
         const li = document.createElement('li');
         const dist = fmtLightYears(u.galaxies.distancePc(i) * PARSEC_KM);
+        li.dataset.cat = 'galaxies';
         li.innerHTML = `<span>${u.galaxies.name(i)}</span><span class="t">${_('Galaxy')} · ${_(u.galaxies.typeLabel(i))} · ${dist}</span>`;
         li.addEventListener('click', () => { this.host.selectGalaxy(i); this.host.goToGalaxy(i); this.closeSearch(); });
         list.appendChild(li);
       }
-      list.hidden = extra + hits.length + small.length + foreign.length + exo.length + stars.length + bhs.length + lms.length + gals.length === 0;
+      void extra;
+      // the phone filter chips: rows of other kinds step aside
+      let shown = 0;
+      for (const li of Array.from(list.children) as HTMLElement[]) {
+        const ok = this.searchCat === 'all' || li.dataset.cat === 'any' || li.dataset.cat === this.searchCat;
+        li.hidden = !ok;
+        if (ok) shown++;
+      }
+      list.hidden = shown === 0;
     };
+    this.searchRender = render;
+    this.buildSearchCats();
+    // a pick is remembered for the phone search screen's "Recent" (not coordinates or raw ids)
+    list.addEventListener('click', (e) => {
+      const li = (e.target as HTMLElement).closest('li');
+      if (!li || li.dataset.cat === 'any') return;
+      this.remember(li.firstElementChild?.textContent ?? '', li.querySelector('.t')?.textContent ?? '');
+    }, true);
     input.addEventListener('input', render);
     input.addEventListener('focus', render);
     input.addEventListener('keydown', (e) => {
@@ -669,7 +995,7 @@ export class UI {
       }
     });
     document.addEventListener('pointerdown', (e) => {
-      if (!(e.target as HTMLElement).closest('#search')) list.hidden = true;
+      if (!(e.target as HTMLElement).closest('#search, #search-cats')) list.hidden = true;
     });
   }
 
@@ -780,6 +1106,7 @@ export class UI {
     this.searchInput.value = '';
     this.searchResults.hidden = true;
     this.searchInput.blur();
+    if (!this.searchSheet.hidden) this.setTab('explore');
   }
 
   /* ---------------- Settings ---------------- */
@@ -934,14 +1261,16 @@ export class UI {
 
   toggleMission(force?: boolean): void {
     const show = force ?? this.missionPanel.panel.hidden === true;
-    if (show) this.toggleSettings(false);
+    if (show) { this.toggleSettings(false); this.hideSheets(); }
     this.missionPanel.toggle(show);
+    this.syncTabs();
   }
 
   toggleSettings(force?: boolean): void {
     const show = force ?? this.settingsPanel.hidden === true;
-    if (show) this.missionPanel.toggle(false);
+    if (show) { this.missionPanel.toggle(false); this.hideSheets(); }
     this.settingsPanel.hidden = !show;
+    this.syncTabs();
   }
 
   toggleHelp(force?: boolean): void {
@@ -1031,6 +1360,10 @@ export class UI {
         $('surface-where').textContent = `${this.host.landedOn!.name} · ${fmtDistance(camera.altitude)} · ${status.clock}`;
       } else if (!bar.hidden) $('surface-where').textContent = this.host.landedOn!.name;
       $('nav-fps').textContent = fixed(this.fps, 0);
+      if (this.timeSheet.visible) {
+        const alt = $('nav-alt').textContent ?? '—';
+        $('ts-nav').textContent = `${$('nav-mode').textContent} · ${alt === '—' ? $('nav-speed').textContent : alt}`;
+      }
       if (now - this.discAt >= 500) {
         this.discAt = now;
         const n = this.host.discoveryLog().length;
@@ -1050,6 +1383,22 @@ export class UI {
     const landLabel = landHere ? _('Take off') : _('Land');
     if (this.landBtn.textContent !== landLabel) { this.landBtn.textContent = landLabel; this.landBtn.title = landHere ? _('Back up to orbit (I)') : _('Land on the surface (I)'); }
     this.landBtn.classList.toggle('active', landHere);
+    // the phone bar mirrors the card's actions: Land where one can, Center otherwise
+    this.cbFollow.classList.toggle('active', this.followBtn.classList.contains('active'));
+    this.cbFollow.disabled = this.followBtn.disabled;
+    if (this.cbLand.hidden !== this.landBtn.hidden) { this.cbLand.hidden = this.landBtn.hidden; this.cbCenter.hidden = !this.landBtn.hidden; }
+    if ($('cb-land-label').textContent !== landLabel) $('cb-land-label').textContent = landLabel;
+    const sub = this.infoType.textContent ?? '';
+    if (this.infoSub.textContent !== sub) this.infoSub.textContent = sub;
+    this.timeSheet.update();
+    // auto-hide switched on or off (settings, the More sheet)
+    const autoHide = this.host.settings.autoHideUI;
+    if (autoHide !== this.autoHideWas) {
+      this.autoHideWas = autoHide;
+      if (autoHide) { this.showToast(_('The controls hide while you look around. Tap the scene to bring them back.'), 4000); this.armIdle(); }
+      else this.setChrome(true);
+    }
+    if (this.chromeOff && (this.currentTab() !== 'explore' || this.infoOpen)) this.setChrome(true);
 
     const u = this.host.universe;
     const sys = u.current;
