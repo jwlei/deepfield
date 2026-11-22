@@ -605,7 +605,7 @@ export class BodyView {
     loadModel(a.model).then((src) => {
       fit(src.clone(true));
       if (this.body.data.orbit?.kind === 'surface' && !a.terrain) this.addGroundPatch();
-    }).catch((err) => console.warn(`Model yüklenemedi: ${a.model}`, err));
+    }).catch((err) => console.warn(`Model could not be loaded: ${a.model}`, err));
   }
 
   /**
@@ -650,7 +650,7 @@ export class BodyView {
       this.group.add(t.group);
       await t.load();
       if (this.terrain === t && this.ground) { this.group.remove(this.ground); this.ground.geometry.dispose(); this.ground = null; }
-    }).catch((err) => console.warn(`Arazi yüklenemedi: ${dir}`, err));
+    }).catch((err) => console.warn(`Terrain could not be loaded: ${dir}`, err));
   }
 
   private releaseTerrain(): void {

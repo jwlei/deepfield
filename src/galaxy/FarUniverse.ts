@@ -42,7 +42,7 @@ export interface FarTierSpec {
  */
 export const FAR_TIERS: FarTierSpec[] = [
   {
-    label: 'Galaksi kümeleri',
+    label: 'Galaxy clusters',
     rMin: 5 * MPC, rMax: 2600 * MPC, count: 260_000, mode: 'web', nodes: 8000,
     webScale: 420 * MPC, clumpScale: 60 * MPC,
     magBright: -27.5, magFaint: -23.5, radiusFaint: 1.4 * MPC, boostMag: 0.0,
@@ -50,7 +50,7 @@ export const FAR_TIERS: FarTierSpec[] = [
     fadeIn: [120 * MPC, 350 * MPC], fadeOut: [3200 * MPC, 6500 * MPC],
   },
   {
-    label: 'Süperküme kompleksleri',
+    label: 'Supercluster complexes',
     rMin: 1500 * MPC, rMax: 13_800 * MPC, count: 160_000, mode: 'noise', nodes: 0,
     webScale: 900 * MPC, clumpScale: 260 * MPC,
     magBright: -31.0, magFaint: -27.5, radiusFaint: 16 * MPC, boostMag: 1.5,
@@ -267,7 +267,7 @@ export class FarTier implements GalaxySource {
   /* ------------------------------------------------------------------ */
 
   name(i: number): string {
-    const kind = this.spec.label === 'Galaksi kümeleri' ? _('Galaxy cluster') : _('Supercluster complex');
+    const kind = this.spec.label === 'Galaxy clusters' ? _('Galaxy cluster') : _('Supercluster complex');
     return `${kind} YE-${(this.seed[i] % 0xffffff).toString(16).toUpperCase().padStart(6, '0')}`;
   }
 

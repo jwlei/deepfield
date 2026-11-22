@@ -177,7 +177,7 @@ export class StarCatalog {
   static async load(baseUrl: string): Promise<StarCatalog> {
     // /data/* is served with a one-year immutable cache; the build id busts it on redeploy
     const v = `?v=${__BUILD_ID__}`;
-    const get = (f: string) => fetch(`${baseUrl}data/${f}${v}`).then((r) => { if (!r.ok) throw new Error(`${f} yüklenemedi`); return r; });
+    const get = (f: string) => fetch(`${baseUrl}data/${f}${v}`).then((r) => { if (!r.ok) throw new Error(`${f} could not be loaded`); return r; });
     const [bin, names, manifest] = await Promise.all([
       get('stars.bin').then((r) => r.arrayBuffer()),
       get('star-names.json').then((r) => r.json()),
@@ -209,7 +209,7 @@ export class StarCatalog {
       try {
         for (const t of this.tiers) {
           const r = await fetch(`${this.baseUrl}data/${t.file}${v}`);
-          if (!r.ok) throw new Error(`${t.file} yüklenemedi`);
+          if (!r.ok) throw new Error(`${t.file} could not be loaded`);
           const buf = await r.arrayBuffer();
           const res = await new Promise<TierResult>((resolve, reject) => {
             worker.onmessage = (e: MessageEvent<TierResult | { error: string }>) => { if ('error' in e.data) reject(new Error(e.data.error)); else resolve(e.data); };

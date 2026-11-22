@@ -34,10 +34,10 @@ const HAND_MADE = {
 
 const GROUPS = [
   { key: 'main', name: 'Asteroid Belt', classes: ['IMB', 'MBA', 'OMB', 'MCA', 'AST'] },
-  { key: 'neo', name: "Dünya'ya yakın cisimler", classes: ['IEO', 'ATE', 'APO', 'AMO'] },
-  { key: 'trojan', name: 'Truva Asteroitleri', classes: ['TJN'] },
-  { key: 'outer', name: 'Kentaurlar ve Kuiper Kuşağı', classes: ['CEN', 'TNO', 'PAA', 'HYA'] },
-  { key: 'comet', name: 'Kuyruklu yıldızlar', classes: [] },
+  { key: 'neo', name: "Near-Earth objects", classes: ['IEO', 'ATE', 'APO', 'AMO'] },
+  { key: 'trojan', name: 'Jupiter Trojans', classes: ['TJN'] },
+  { key: 'outer', name: 'Centaurs and Kuiper Belt', classes: ['CEN', 'TNO', 'PAA', 'HYA'] },
+  { key: 'comet', name: 'Comets', classes: [] },
 ];
 const groupOf = new Map(GROUPS.flatMap((g, k) => g.classes.map((c) => [c, k])));
 const CLASSES = ['IEO', 'ATE', 'APO', 'AMO', 'MCA', 'IMB', 'MBA', 'OMB', 'TJN', 'CEN', 'TNO', 'PAA', 'HYA', 'AST', 'JFc', 'JFC', 'HTC', 'ETc', 'CTc', 'COM', 'PAR', 'HYP'];

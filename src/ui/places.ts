@@ -1,5 +1,5 @@
 /**
- * "Görmeye değecek yerler" – curated destinations for the topbar dropdown.
+ * Places worth seeing: curated destinations for the topbar dropdown.
  * body: Solar-System body id · star: HYG proper name (resolved through the catalogue search)
  * galaxy: substring of the galaxy catalogue name · index 0 = Milky Way overview.
  * blackhole: universal black-hole id (see data/blackholes.ts) · landmark: id from data/landmarks.ts.

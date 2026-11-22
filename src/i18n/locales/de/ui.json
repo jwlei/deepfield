@@ -1811,5 +1811,13 @@
   "Faster backwards": "Schneller rückwärts",
   "Faster forwards": "Schneller vorwärts",
   "Category": "Kategorie",
-  "Main": "Hauptmenü"
+  "Main": "Hauptmenü",
+  "Ascend": "Steigen",
+  "Descend": "Sinken",
+  "Live": "Live",
+  "Details": "Details",
+  "All": "Alle",
+  "Explore somewhere random": "Irgendwohin, zufällig",
+  "Nearby planets and stars": "Planeten und Sterne in der Nähe",
+  "show all {n}": "alle {n} zeigen"
 }

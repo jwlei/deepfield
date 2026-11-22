@@ -1,7 +1,7 @@
 import type { CelestialBody } from '../core/CelestialBody';
 import { MissionPanel, type MissionPanelHost } from './MissionPanel';
 import { SystemStrip } from './SystemStrip';
-import { TimeSheet } from './TimeSheet';
+import { TimeSheet, type TimeStatus } from './TimeSheet';
 import type { SmallBodyCatalog } from '../data/SmallBodies';
 import { copyText, viewUrl } from '../app/share';
 import { ScopeCard, scopeTargetFor } from './ScopeCard';
@@ -17,7 +17,7 @@ import type { LandmarkSprites } from '../render/LandmarkSprites';
 import { LANDMARK_KIND_LABEL } from '../data/landmarks';
 import { HYDROGEN_BURNING_LIMIT } from '../data/BrownDwarfs';
 import { colouredDwarf } from '../data/colouredDwarfs';
-import { AU_KM, LIGHT_YEAR_KM, PARSEC_KM, RAD } from '../core/constants';
+import { AU_KM, DAY_S, LIGHT_YEAR_KM, PARSEC_KM, RAD } from '../core/constants';
 import { LUM_CLASS_DESC, SUN_MASS_KG } from '../astro/stellar';
 import { GALAXY_TYPE_LABEL } from '../galaxy/GalaxyModel';
 import { farKey, type FarRef } from '../galaxy/FarClusters';
@@ -313,8 +313,10 @@ export class UI {
     $('info-close').addEventListener('click', () => { host.select(null); host.selectStar(null); host.selectGalaxy(null); host.selectLandmark(null); });
     this.timeBtn.addEventListener('click', () => this.setTimeOpen(!this.bottombar.classList.contains('time-open')));
     $('time-pop-close').addEventListener('click', () => this.setTimeOpen(false));
-    this.timeSheet = new TimeSheet(host.time, (msg) => this.showToast(msg));
+    this.timeSheet = new TimeSheet(host.time, (msg) => this.showToast(msg), () => this.timeStatus());
     this.missionPanel.onClose = () => this.syncTabs();
+    // after a launch the ship is followed: phones go to the time controls to speed the trip up
+    this.missionPanel.onLaunched = () => { if (this.phoneMq.matches) this.setTab('time'); else this.syncTabs(); };
     this.bindTabs();
     this.bindContextBar();
     this.bindMore();
@@ -335,10 +337,77 @@ export class UI {
   private bindTabs(): void {
     this.tabbar.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => {
       const tab = b.dataset.tab as Tab;
-      // a second tap on the open tab closes its sheet
-      this.setTab(tab !== 'explore' && this.currentTab() === tab ? 'explore' : tab);
+      // Explore closes any sheet and opens its own small menu; a second tap on an open tab closes it
+      if (tab === 'explore') {
+        const open = this.exploreMenu.hidden === true;
+        this.setTab('explore');
+        this.toggleExploreMenu(open);
+      } else this.setTab(this.currentTab() === tab ? 'explore' : tab);
     }));
     $('search-cancel').addEventListener('click', () => { this.closeSearch(); this.setTab('explore'); });
+    this.bindExploreMenu();
+    this.bindKeyboardInset();
+  }
+
+  /* ---------------- Phones: the Explore menu (body chips, somewhere random) ---------------- */
+  private readonly exploreMenu = $('explore-menu');
+  private lastRandom = -1;
+
+  private bindExploreMenu(): void {
+    const menu = this.exploreMenu, h = this.host;
+    menu.querySelectorAll<HTMLButtonElement>('[data-x]').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.x === 'chips') {
+        h.settings.bodyChips = !h.settings.bodyChips;
+        h.applySettings(true);
+        this.syncChips();
+      } else {
+        this.toggleExploreMenu(false);
+        this.exploreRandom();
+      }
+    }));
+    document.addEventListener('pointerdown', (e) => {
+      const t = e.target as Node;
+      if (!menu.hidden && !menu.contains(t) && !this.tabbar.querySelector('[data-tab="explore"]')!.contains(t)) this.toggleExploreMenu(false);
+    });
+    this.syncChips();
+  }
+
+  private toggleExploreMenu(show: boolean): void {
+    this.exploreMenu.hidden = !show;
+    this.tabbar.querySelector('[data-tab="explore"]')!.setAttribute('aria-expanded', String(show));
+    if (show) this.syncChips();
+  }
+
+  private syncChips(): void {
+    const on = this.host.settings.bodyChips;
+    this.exploreMenu.querySelector('[data-x="chips"]')!.setAttribute('aria-checked', String(on));
+    this.uiEl.classList.toggle('no-chips', !on);
+  }
+
+  /** fly to one of the places worth seeing, picked at random (never the same twice in a row) */
+  private exploreRandom(): void {
+    const n = this.placeItems.length;
+    if (!n) return;
+    let i = Math.floor(Math.random() * n);
+    if (n > 1 && i === this.lastRandom) i = (i + 1 + Math.floor(Math.random() * (n - 1))) % n;
+    this.lastRandom = i;
+    this.placeItems[i].go();
+  }
+
+  /**
+   * The on-screen keyboard covers the bottom of the page on some phones without resizing it: the
+   * search sheet (its field at the bottom) is lifted by the keyboard's height.
+   */
+  private bindKeyboardInset(): void {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      this.uiEl.style.setProperty('--kb', `${Math.round(kb)}px`);
+    };
+    vv.addEventListener('resize', sync);
+    vv.addEventListener('scroll', sync);
+    sync();
   }
 
   /** the sheets the tab bar opens (on phones); the settings panel counts as part of More */
@@ -355,10 +424,12 @@ export class UI {
     this.toggleSettings(false);
     this.missionPanel.toggle(false);
     this.togglePlaces(false);
+    this.toggleExploreMenu(false);
     if (tab === 'search') {
+      // the field is not focused: the keyboard stays down until the field is tapped
       this.searchSheet.hidden = false;
+      this.searchTopic = null;
       this.renderSearchHome();
-      this.searchInput.focus();
     } else if (tab === 'time') this.timeSheet.el.hidden = false;
     else if (tab === 'missions') this.missionPanel.toggle(true);
     else if (tab === 'more') { this.moreSheet.hidden = false; this.syncTiles(); }
@@ -393,6 +464,27 @@ export class UI {
       this.hideSheets();
       this.syncTabs();
     }
+  }
+
+  /** the time sheet's mission bar and info text: the followed mission (else the first), and the camera */
+  private timeStatus(): TimeStatus {
+    const ms = this.host.missions;
+    const m = ms.followed ?? ms.list[0] ?? null;
+    const nav = `${$('nav-mode').textContent} · ${$('nav-alt').textContent === '—' ? $('nav-speed').textContent : $('nav-alt').textContent}`;
+    if (!m) return { mission: null, nav };
+    const jd = this.host.time.jd, p = m.plan;
+    const span = p.arrivalJd - p.departureJd;
+    const eta = jd < p.departureJd ? _('{t} to departure', { t: fmtDuration((p.departureJd - jd) * DAY_S) })
+      : jd < p.arrivalJd ? _('{t} to arrival', { t: fmtDuration((p.arrivalJd - jd) * DAY_S) })
+      : _('arrived');
+    return {
+      mission: {
+        progress: span > 0 ? (jd - p.departureJd) / span : 1,
+        title: `${m.name} · ${p.originName} → ${p.targetName}`,
+        detail: m.phase ? `${phaseLabel(m.phase, p)} · ${eta}` : eta,
+      },
+      nav,
+    };
   }
 
   /* ---------------- Phones: the selection's bar ---------------- */
@@ -650,7 +742,7 @@ export class UI {
     }
   }
 
-  /* ---------------- "Görmeye değecek yerler" ---------------- */
+  /* ---------------- Places worth seeing ---------------- */
   private buildPlaces(): void {
     const h = this.host;
     const u = h.universe;
@@ -712,6 +804,8 @@ export class UI {
   /** the places, resolved, with what a tap on each does (the phone search screen lists them as cards) */
   private readonly placeItems: Array<{ group: string; label: string; note: string; go: () => void }> = [];
   private searchCat: SearchCat = 'all';
+  /** a section of the search home opened in full (its key), or null for the overview */
+  private searchTopic: string | null = null;
   private searchRender: () => void = () => {};
 
   /* ---------------- Phones: the search screen's home (filters, recent, places) ---------------- */
@@ -727,6 +821,7 @@ export class UI {
       b.textContent = _(label);
       b.addEventListener('click', () => {
         this.searchCat = cat;
+        this.searchTopic = null;
         box.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-checked', String(c === b)));
         this.searchRender();
         this.renderSearchHome();
@@ -755,71 +850,93 @@ export class UI {
     if (hit) hit.click();
   }
 
+  /**
+   * The search screen's home: Recent, My discoveries and each group of places as a short list of
+   * rows; a section with more than a few rows has a header that opens it in full (a topic).
+   */
   private renderSearchHome(): void {
     const home = this.searchHome;
     home.innerHTML = '';
     home.hidden = this.searchInput.value.trim() !== '';
-    const section = (title: string, extra?: HTMLElement): HTMLElement => {
-      const sec = document.createElement('section');
-      sec.className = 'sh-sec';
-      const head = document.createElement('div');
-      head.className = 'sh-head';
-      const h = document.createElement('h2');
-      h.textContent = title;
-      head.appendChild(h);
-      if (extra) head.appendChild(extra);
-      sec.appendChild(head);
-      home.appendChild(sec);
-      return sec;
-    };
-    const recent = this.searchCat === 'all' ? this.loadRecent() : [];
-    if (recent.length) {
-      const clear = document.createElement('button');
-      clear.type = 'button';
-      clear.className = 'link-btn';
-      clear.textContent = _('Clear');
-      clear.addEventListener('click', () => { try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } this.renderSearchHome(); });
-      const sec = section(_('Recent'), clear);
-      for (const r of recent) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'sh-row';
-        b.innerHTML = `<span class="sh-name">${escapeHtml(r.name)}</span><span class="sh-tag">${escapeHtml(r.tag)}</span>`;
-        b.addEventListener('click', () => this.replayRecent(r.name));
-        sec.appendChild(b);
+    type Row = { name: string; tag: string; go: () => void };
+    const sections: Array<{ key: string; title: string; rows: Row[]; extra?: HTMLElement }> = [];
+    if (this.searchCat === 'all') {
+      const recent = this.loadRecent();
+      if (recent.length) {
+        const clear = document.createElement('button');
+        clear.type = 'button';
+        clear.className = 'link-btn';
+        clear.textContent = _('Clear');
+        clear.addEventListener('click', () => { try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } this.searchTopic = null; this.renderSearchHome(); });
+        sections.push({ key: 'recent', title: _('Recent'), rows: recent.map((r) => ({ name: r.name, tag: r.tag, go: () => this.replayRecent(r.name) })), extra: clear });
+      }
+      const log = this.host.discoveryLog();
+      if (log.length) {
+        sections.push({ key: 'discoveries', title: _('My discoveries'), rows: log.map((d) => ({ name: d.name, tag: _(d.kind), go: () => { this.host.goToDiscovery(d.id); this.closeSearch(); } })) });
       }
     }
-    const log = this.searchCat === 'all' ? this.host.discoveryLog().slice(0, 10) : [];
-    if (log.length) {
-      const row = document.createElement('div');
-      row.className = 'sh-cards';
-      for (const d of log) row.appendChild(this.placeCard(d.name, _(d.kind), () => this.host.goToDiscovery(d.id)));
-      section(`${_('My discoveries')} (${this.host.discoveryLog().length})`).appendChild(row);
-    }
-    let group = '';
-    let row: HTMLElement | null = null;
     for (const p of this.placeItems) {
       if (this.searchCat !== 'all' && PLACE_GROUP_CAT[p.group] !== this.searchCat) continue;
-      if (p.group !== group) {
-        group = p.group;
-        row = document.createElement('div');
-        row.className = 'sh-cards';
-        section(_(p.group)).appendChild(row);
+      let sec = sections.find((x) => x.key === p.group);
+      if (!sec) { sec = { key: p.group, title: _(p.group), rows: [] }; sections.push(sec); }
+      sec.rows.push({ name: _(p.label), tag: p.note ? _(p.note) : '', go: () => { p.go(); this.closeSearch(); } });
+    }
+    const row = (r: Row): HTMLButtonElement => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sh-row';
+      b.innerHTML = `<span class="sh-name">${escapeHtml(r.name)}</span>${r.tag ? `<span class="sh-tag">${escapeHtml(r.tag)}</span>` : ''}`;
+      b.addEventListener('click', r.go);
+      return b;
+    };
+    const open = this.searchTopic ? sections.find((x) => x.key === this.searchTopic) : undefined;
+    if (open) {
+      // one topic in full, with the way back to all of them
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'sh-back';
+      back.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg><span>${escapeHtml(_('All'))}</span>`;
+      back.addEventListener('click', () => { this.searchTopic = null; this.renderSearchHome(); });
+      const sec = document.createElement('section');
+      sec.className = 'sh-sec';
+      const h = document.createElement('h2');
+      h.className = 'sh-topic';
+      h.textContent = open.title;
+      sec.append(back, h, ...open.rows.map(row));
+      home.appendChild(sec);
+      home.scrollTop = 0;
+      return;
+    }
+    this.searchTopic = null;
+    const PEEK = 3;
+    for (const s of sections) {
+      const sec = document.createElement('section');
+      sec.className = 'sh-sec';
+      const more = s.rows.length > PEEK;
+      const head = document.createElement(more ? 'button' : 'div');
+      head.className = 'sh-head';
+      const h = document.createElement('h2');
+      h.textContent = s.title;
+      head.appendChild(h);
+      if (more) {
+        (head as HTMLButtonElement).type = 'button';
+        head.setAttribute('aria-label', `${s.title}: ${_('show all {n}', { n: s.rows.length })}`);
+        const n = document.createElement('span');
+        n.className = 'sh-more';
+        n.innerHTML = `${s.rows.length}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>`;
+        head.appendChild(n);
+        head.addEventListener('click', () => { this.searchTopic = s.key; this.renderSearchHome(); });
       }
-      row!.appendChild(this.placeCard(_(p.label), p.note ? _(p.note) : '', p.go));
+      const top = document.createElement('div');
+      top.className = 'sh-top';
+      top.appendChild(head);
+      if (s.extra) top.appendChild(s.extra);
+      sec.append(top, ...s.rows.slice(0, PEEK).map(row));
+      home.appendChild(sec);
     }
   }
 
-  private placeCard(name: string, note: string, go: () => void): HTMLButtonElement {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'sh-card';
-    b.innerHTML = `<span class="sh-name">${escapeHtml(name)}</span>${note ? `<span class="sh-tag">${escapeHtml(note)}</span>` : ''}`;
-    b.addEventListener('click', () => { go(); this.closeSearch(); });
-    return b;
-  }
-
-  /** "Keşiflerim": the visitor's own finds, rebuilt every time the menu opens */
+  /** "My discoveries": the visitor's own finds, rebuilt every time the menu opens */
   private fillDiscoveries(): void {
     const h = this.host;
     const box = this.discoveriesGroup;
@@ -1357,13 +1474,10 @@ export class UI {
       if (status) {
         $('nav-place').textContent = status.place + (camera.surface && camera.surface.zoom > 1.01 ? ` · ${camera.surface.zoom.toFixed(1)}×` : '');
         $('nav-clock').textContent = status.clock;
-        $('surface-where').textContent = `${this.host.landedOn!.name} · ${fmtDistance(camera.altitude)} · ${status.clock}`;
-      } else if (!bar.hidden) $('surface-where').textContent = this.host.landedOn!.name;
+        $('surface-where').textContent = this.host.landedOn!.name;
+        $('surface-sub').textContent = `${fmtDistance(camera.altitude)} · ${status.clock}`;
+      } else if (!bar.hidden) { $('surface-where').textContent = this.host.landedOn!.name; $('surface-sub').textContent = ''; }
       $('nav-fps').textContent = fixed(this.fps, 0);
-      if (this.timeSheet.visible) {
-        const alt = $('nav-alt').textContent ?? '—';
-        $('ts-nav').textContent = `${$('nav-mode').textContent} · ${alt === '—' ? $('nav-speed').textContent : alt}`;
-      }
       if (now - this.discAt >= 500) {
         this.discAt = now;
         const n = this.host.discoveryLog().length;

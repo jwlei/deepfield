@@ -146,7 +146,7 @@ export class GroundRocks {
       this.mat.uniforms.uRockMap.value = map;
       this.mat.uniforms.uRockMapOn.value = map ? 1 : 0;
       this.build(geos);
-    }, (err) => console.warn('Kayalar yüklenemedi', err));
+    }, (err) => console.warn('Rocks could not be loaded', err));
   }
 
   /** rock fields and bare stretches: a smooth noise over ~40 m cells, 0 … 1 */

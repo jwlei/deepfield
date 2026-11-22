@@ -254,7 +254,7 @@ export class Terrain {
         this.mat.uniforms[`uGround${slot}`].value = t;
         (this.mat.uniforms[`uGroundRange${slot}`].value as Vector4).set(gm.slope, gm.albedo, gm.height, 1);
       }, (err) => {
-        console.warn(`Zemin malzemesi yüklenemedi: ${gm.file}`, err);
+        console.warn(`Ground material could not be loaded: ${gm.file}`, err);
         if (fallback) lay(fallback, slot);
       });
     };

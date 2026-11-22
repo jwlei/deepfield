@@ -78,6 +78,8 @@ export class MissionPanel {
 
   /** called when the panel's own close button hides it */
   onClose: (() => void) | null = null;
+  /** called after a launch has closed the panel (phones open the time controls) */
+  onLaunched: (() => void) | null = null;
 
   /* On phones the form is a four-step wizard (route, ship, options, review); wider screens show
      every step at once and ignore the step. */
@@ -514,6 +516,10 @@ export class MissionPanel {
     this.result.hidden = true;
     this.setStep(1);
     this.renderActive(true);
+    // the camera follows the ship: get the planner out of the way (it reopens on the route step)
+    this.toggle(false);
+    if (this.onLaunched) this.onLaunched();
+    else this.onClose?.();
   }
 
   private renderActive(force: boolean): void {

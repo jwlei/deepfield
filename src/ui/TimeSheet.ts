@@ -1,4 +1,4 @@
-import type { TimeSystem } from '../core/TimeSystem';
+import { RATE_PRESETS, type TimeSystem } from '../core/TimeSystem';
 import { DAY_S } from '../core/constants';
 import { _, localeTag } from '../i18n';
 
@@ -90,47 +90,48 @@ function majorLabel(u: Unit, ms: number): string {
   }
 }
 
+/** what the info button and the progress bar show: the followed (or first) mission, and the camera */
+export interface TimeStatus {
+  mission: { progress: number; title: string; detail: string } | null;
+  nav: string;
+}
+
 /**
- * The phone time sheet: the date, a ruler dragged sideways to move through time, a few rates as
- * chips, and play / faster backwards / faster forwards / now.
+ * The phone time sheet, kept compact: the date and time on one line with a Live button and an
+ * info button, a ruler dragged sideways to move through time, the mission's progress, and
+ * slower / play / faster, which step through the rate presets (backwards below real time).
  */
 export class TimeSheet {
   readonly el = document.getElementById('sheet-time')!;
   private readonly ruler = document.getElementById('ts-ruler')!;
   private readonly canvas = document.getElementById('ts-canvas') as HTMLCanvasElement;
   private readonly ctx = this.canvas.getContext('2d')!;
-  private readonly dayEl = document.getElementById('ts-day')!;
-  private readonly ymdEl = document.getElementById('ts-ymd')!;
-  private readonly clockEl = document.getElementById('ts-clock')!;
+  private readonly dateEl = document.getElementById('ts-date')!;
+  private readonly liveBtn = document.getElementById('ts-live')!;
+  private readonly infoBtn = document.getElementById('ts-info')!;
+  private readonly detail = document.getElementById('ts-detail')!;
+  private readonly missionBar = document.getElementById('ts-mission')!;
+  private readonly missionFill = document.getElementById('ts-mission-fill')!;
+  private readonly rateEl = document.getElementById('ts-rate')!;
   private readonly playBtn = document.getElementById('ts-play') as HTMLButtonElement;
   private readonly playIcon = document.getElementById('ts-play-icon')!;
   private readonly picker = document.getElementById('ts-picker') as HTMLInputElement;
-  private readonly rateBtns: Array<{ rate: number; el: HTMLButtonElement }> = [];
-  private dateKey = '';
   private dragX: number | null = null;
   private resumeAfterDrag = false;
+  private textAt = -Infinity;
 
-  constructor(private readonly time: TimeSystem, private readonly toast: (msg: string) => void) {
+  constructor(private readonly time: TimeSystem, private readonly toast: (msg: string) => void, private readonly status: () => TimeStatus) {
     const t = time;
-    const rates: Array<[number, string]> = [[1, '1×'], [3600, _('1 h/s')], [DAY_S, _('1 day/s')], [DAY_S * 30, _('1 month/s')], [YEAR_S, _('1 year/s')]];
-    const box = document.getElementById('ts-rates')!;
-    for (const [rate, label] of rates) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'ts-rate';
-      b.setAttribute('role', 'radio');
-      b.textContent = label;
-      b.addEventListener('click', () => t.setRate(rate, t.dir < 0 ? -1 : 1));
-      box.appendChild(b);
-      this.rateBtns.push({ rate, el: b });
-    }
     this.playBtn.addEventListener('click', () => t.togglePause());
-    document.getElementById('ts-rev')!.addEventListener('click', () => t.reverseWarp());
-    document.getElementById('ts-fwd')!.addEventListener('click', () => t.forwardWarp());
-    document.getElementById('ts-now')!.addEventListener('click', () => { t.setNow(); this.toast(_('Back to real time')); });
-    const pick = () => this.pickDate();
-    document.getElementById('ts-cal')!.addEventListener('click', pick);
-    document.getElementById('ts-date')!.addEventListener('click', pick);
+    document.getElementById('ts-slower')!.addEventListener('click', () => this.step(-1));
+    document.getElementById('ts-faster')!.addEventListener('click', () => this.step(1));
+    this.liveBtn.addEventListener('click', () => { t.setNow(); this.toast(_('Back to real time')); });
+    this.infoBtn.addEventListener('click', () => {
+      this.detail.hidden = !this.detail.hidden;
+      this.infoBtn.setAttribute('aria-expanded', String(!this.detail.hidden));
+      this.textAt = -Infinity;
+    });
+    this.dateEl.addEventListener('click', () => this.pickDate());
     this.picker.addEventListener('change', () => {
       if (!this.picker.value) return;
       const d = new Date(this.picker.value + 'Z');
@@ -141,7 +142,35 @@ export class TimeSheet {
 
   get visible(): boolean { return !this.el.hidden; }
 
-  /** the date field: the system picker where there is one, a typed date otherwise (UTC either way) */
+  /**
+   * One step along the rate ladder, read as a signed line: … −1 day/s, −1 h/s, −1×, 1×, 1 h/s,
+   * 1 day/s … — slower from real time runs the clock backwards. From a pause, either button
+   * starts the clock at real time in its direction.
+   */
+  private step(delta: 1 | -1): void {
+    const t = this.time;
+    const n = RATE_PRESETS.length;
+    let i = 0;
+    for (let k = 1; k < n; k++) if (Math.abs(Math.log(RATE_PRESETS[k].rate / t.rate)) < Math.abs(Math.log(RATE_PRESETS[i].rate / t.rate))) i = k;
+    let pos: number;
+    if (t.paused) pos = delta;
+    else {
+      pos = (t.dir < 0 ? -1 : 1) * (i + 1) + delta;
+      if (pos === 0) pos = delta;
+    }
+    pos = Math.max(-n, Math.min(n, pos));
+    t.setRate(RATE_PRESETS[Math.abs(pos) - 1].rate, pos < 0 ? -1 : 1);
+  }
+
+  private rateText(): string {
+    const t = this.time;
+    if (t.paused) return _('Paused');
+    const p = RATE_PRESETS.find((x) => Math.abs(Math.log(x.rate / t.rate)) < 0.01);
+    if (!p) return t.rateLabel();
+    return (t.dir < 0 ? '−' : '') + (p.rate === 1 ? '1×' : p.label());
+  }
+
+  /** the date: the system picker where there is one, a typed date otherwise (UTC either way) */
   private pickDate(): void {
     const t = this.time;
     const iso = t.date.toISOString().slice(0, 16);
@@ -198,27 +227,41 @@ export class TimeSheet {
     const d = t.date;
     if (!Number.isFinite(d.getTime())) return;
     const pad = (n: number) => String(n).padStart(2, '0');
-    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-    if (key !== this.dateKey) {
-      this.dateKey = key;
-      const y = d.getUTCFullYear();
-      this.dayEl.textContent = d.toLocaleDateString(localeTag(), { weekday: 'long', timeZone: 'UTC' });
-      this.ymdEl.textContent = y > 0
-        ? d.toLocaleDateString(localeTag(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
-        : `${d.getUTCDate()} ${d.toLocaleDateString(localeTag(), { month: 'short', timeZone: 'UTC' })} ${yearText(y)}`;
-    }
-    this.clockEl.textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
-    const paused = t.paused;
-    const icon = paused ? PLAY_ICON : PAUSE_ICON;
+    const y = d.getUTCFullYear();
+    const day = y > 0
+      ? d.toLocaleDateString(localeTag(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+      : `${d.getUTCDate()} ${d.toLocaleDateString(localeTag(), { month: 'short', timeZone: 'UTC' })} ${yearText(y)}`;
+    const when = `${day}  ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+    if (this.dateEl.textContent !== when) this.dateEl.textContent = when;
+    // live: real time, running forwards, within a minute of the wall clock
+    const live = !t.paused && t.rate === 1 && t.dir > 0 && Math.abs(d.getTime() - Date.now()) < 60_000;
+    this.liveBtn.classList.toggle('on', live);
+    const icon = t.paused ? PLAY_ICON : PAUSE_ICON;
     if (this.playIcon.getAttribute('d') !== icon) {
       this.playIcon.setAttribute('d', icon);
-      this.playBtn.setAttribute('aria-label', paused ? _('Play') : _('Pause'));
+      this.playBtn.setAttribute('aria-label', t.paused ? _('Play') : _('Pause'));
     }
-    for (const b of this.rateBtns) {
-      const on = !paused && Math.abs(Math.log(b.rate / t.rate)) < 0.01;
-      b.el.setAttribute('aria-checked', String(on));
+    const rate = this.rateText();
+    if (this.rateEl.textContent !== rate) this.rateEl.textContent = rate;
+    // the mission's progress every frame, the info text a few times a second
+    const st = this.status();
+    const m = st.mission;
+    this.missionBar.hidden = !m;
+    if (m) {
+      const pct = Math.max(0, Math.min(1, m.progress)) * 100;
+      this.missionFill.style.width = `${pct}%`;
+      this.missionBar.setAttribute('aria-valuenow', pct.toFixed(0));
+      this.missionBar.setAttribute('aria-label', m.title);
     }
-    this.ruler.setAttribute('aria-valuetext', `${this.ymdEl.textContent} ${this.clockEl.textContent}`);
+    const now = performance.now();
+    if (!this.detail.hidden && now - this.textAt > 250) {
+      this.textAt = now;
+      this.detail.replaceChildren();
+      const line = (text: string, cls: string) => this.detail.appendChild(Object.assign(document.createElement('div'), { className: cls, textContent: text }));
+      if (m) { line(m.title, 'ts-d-title'); line(m.detail, 'ts-d-text'); }
+      line(st.nav, 'ts-d-text');
+    }
+    this.ruler.setAttribute('aria-valuetext', when);
     this.draw(d.getTime());
   }
 
@@ -240,7 +283,7 @@ export class TimeSheet {
     const css = getComputedStyle(this.ruler);
     const ink = css.getPropertyValue('--ts-ink').trim() || '#e6edf3';
     const dim = css.getPropertyValue('--ts-dim').trim() || '#8b949e';
-    ctx.font = `600 11px ${css.fontFamily}`;
+    ctx.font = `600 10.5px ${css.fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     let n = 0;
@@ -249,11 +292,11 @@ export class TimeSheet {
       const major = floorTo(s.major, ms) === ms;
       ctx.fillStyle = major ? ink : dim;
       ctx.globalAlpha = major ? 0.9 : 0.55;
-      ctx.fillRect(Math.round(x) - (major ? 1 : 0.5), 6, major ? 2 : 1, major ? 22 : 12);
+      ctx.fillRect(Math.round(x) - (major ? 1 : 0.5), 4, major ? 2 : 1, major ? 16 : 9);
       if (major) {
         ctx.globalAlpha = 1;
         ctx.fillStyle = dim;
-        ctx.fillText(majorLabel(s.major, ms), x, 34);
+        ctx.fillText(majorLabel(s.major, ms), x, 24);
       }
     }
     ctx.globalAlpha = 1;

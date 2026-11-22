@@ -69,6 +69,8 @@ export interface Settings {
   invertY: boolean;
   /** the controls fade out while the scene is dragged (or left alone); a tap on the scene brings them back */
   autoHideUI: boolean;
+  /** phones: the current system's planets and stars as a row of chips above the bottom bar */
+  bodyChips: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -115,6 +117,7 @@ export const DEFAULT_SETTINGS: Settings = {
   mouseSensitivity: 1.0,
   invertY: false,
   autoHideUI: false,
+  bodyChips: true,
 };
 
 export type GraphicsPreset = 'low' | 'medium' | 'high';

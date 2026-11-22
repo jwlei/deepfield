@@ -145,7 +145,7 @@ export const SOLAR_SYSTEM: BodyData[] = [
 
   /* ---------------- Jupiter ---------------- */
   {
-    id: 'jupiter', name: 'Jüpiter', type: 'planet', parent: 'sun',
+    id: 'jupiter', name: 'Jupiter', type: 'planet', parent: 'sun',
     radius: 69_911, flattening: 0.06487, mass: 1.8982e27, albedo: 0.503, rotationPeriod: 9.925,
     pole: { ra: 268.06, dec: 64.50 },
     orbit: jpl(5.20288700, 0.04838624, 1.30439695, 34.39644051, 14.72847983, 100.47390909,
