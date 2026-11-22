@@ -17,31 +17,31 @@ export interface CatalogGalaxy {
 
 /** Real galaxies: Local Group + bright Messier/NGC objects (approximate parameters). */
 export const CATALOG: CatalogGalaxy[] = [
-  { name: 'Andromeda (M31)', ra: 10.685, dec: 41.269, distMpc: 0.78, type: 'S', diameterKpc: 46, absMag: -21.5, pa: 35, inc: 77, desc: 'Yerel Grup\'un en büyük galaksisi; Samanyolu ile ~4.5 milyar yıl sonra birleşecek.' },
-  { name: 'Üçgen (M33)', ra: 23.462, dec: 30.660, distMpc: 0.84, type: 'S', diameterKpc: 18, absMag: -18.9, pa: 23, inc: 54, desc: 'Yerel Grup\'un üçüncü büyük üyesi; çıplak gözle görülebilen en uzak cisimlerden biri.' },
-  { name: 'Büyük Macellan Bulutu', ra: 80.894, dec: -69.756, distMpc: 0.050, type: 'Irr', diameterKpc: 9.9, absMag: -18.1, pa: 170, inc: 35, desc: 'Samanyolu\'nun en parlak uydu galaksisi. Tarantula Bulutsusu gibi dev yıldız oluşum bölgeleri barındırır.' },
-  { name: 'Küçük Macellan Bulutu', ra: 13.187, dec: -72.829, distMpc: 0.061, type: 'Irr', diameterKpc: 5.8, absMag: -16.8, pa: 45, inc: 60, desc: 'Samanyolu\'nun cüce düzensiz uydu galaksisi.' },
-  { name: 'M32', ra: 10.674, dec: 40.865, distMpc: 0.76, type: 'E', diameterKpc: 2.5, absMag: -16.4, axis: 0.75, desc: 'Andromeda\'nın kompakt eliptik uydusu.' },
-  { name: 'M110', ra: 10.092, dec: 41.685, distMpc: 0.82, type: 'E', diameterKpc: 5.2, absMag: -16.5, pa: 170, inc: 60, axis: 0.5, desc: 'Andromeda\'nın cüce eliptik uydusu.' },
-  { name: 'Barnard Galaksisi (NGC 6822)', ra: 296.235, dec: -14.789, distMpc: 0.50, type: 'Irr', diameterKpc: 2.2, absMag: -15.2 },
+  { name: 'Andromeda (M31)', ra: 10.685, dec: 41.269, distMpc: 0.78, type: 'S', diameterKpc: 46, absMag: -21.5, pa: 35, inc: 77, desc: 'The largest galaxy in the Local Group; it will merge with the Milky Way in ~4.5 billion years.' },
+  { name: 'Triangulum (M33)', ra: 23.462, dec: 30.660, distMpc: 0.84, type: 'S', diameterKpc: 18, absMag: -18.9, pa: 23, inc: 54, desc: 'The third-largest member of the Local Group; one of the most distant objects visible to the naked eye.' },
+  { name: 'Large Magellanic Cloud', ra: 80.894, dec: -69.756, distMpc: 0.050, type: 'Irr', diameterKpc: 9.9, absMag: -18.1, pa: 170, inc: 35, desc: 'The brightest satellite galaxy of the Milky Way. It hosts giant star-forming regions such as the Tarantula Nebula.' },
+  { name: 'Small Magellanic Cloud', ra: 13.187, dec: -72.829, distMpc: 0.061, type: 'Irr', diameterKpc: 5.8, absMag: -16.8, pa: 45, inc: 60, desc: 'A dwarf irregular satellite galaxy of the Milky Way.' },
+  { name: 'M32', ra: 10.674, dec: 40.865, distMpc: 0.76, type: 'E', diameterKpc: 2.5, absMag: -16.4, axis: 0.75, desc: 'Andromeda\'s compact elliptical satellite.' },
+  { name: 'M110', ra: 10.092, dec: 41.685, distMpc: 0.82, type: 'E', diameterKpc: 5.2, absMag: -16.5, pa: 170, inc: 60, axis: 0.5, desc: 'Andromeda\'s dwarf elliptical satellite.' },
+  { name: 'Barnard\'s Galaxy (NGC 6822)', ra: 296.235, dec: -14.789, distMpc: 0.50, type: 'Irr', diameterKpc: 2.2, absMag: -15.2 },
   { name: 'IC 1613', ra: 16.199, dec: 2.118, distMpc: 0.73, type: 'Irr', diameterKpc: 2.6, absMag: -14.5 },
   { name: 'WLM', ra: 0.492, dec: -15.461, distMpc: 0.93, type: 'Irr', diameterKpc: 3.1, absMag: -14.2 },
-  { name: 'Heykeltıraş Cücesi', ra: 15.039, dec: -33.709, distMpc: 0.086, type: 'E', diameterKpc: 1.5, absMag: -11.1, axis: 0.7 },
-  { name: 'Fornax Cücesi', ra: 39.997, dec: -34.449, distMpc: 0.14, type: 'E', diameterKpc: 2.0, absMag: -13.4, axis: 0.7 },
+  { name: 'Sculptor Dwarf', ra: 15.039, dec: -33.709, distMpc: 0.086, type: 'E', diameterKpc: 1.5, absMag: -11.1, axis: 0.7 },
+  { name: 'Fornax Dwarf', ra: 39.997, dec: -34.449, distMpc: 0.14, type: 'E', diameterKpc: 2.0, absMag: -13.4, axis: 0.7 },
   { name: 'Leo I', ra: 152.117, dec: 12.306, distMpc: 0.25, type: 'E', diameterKpc: 1.0, absMag: -12.0, axis: 0.8 },
-  { name: 'Yay Cüce Galaksisi', ra: 283.76, dec: -30.48, distMpc: 0.020, type: 'E', diameterKpc: 3.0, absMag: -13.5, axis: 0.5, desc: 'Samanyolu tarafından parçalanmakta olan cüce uydu; Galaktik merkezin arkasında.' },
-  { name: 'Heykeltıraş Galaksisi (NGC 253)', ra: 11.888, dec: -25.288, distMpc: 3.5, type: 'SB', diameterKpc: 27, absMag: -21.0, pa: 52, inc: 78, desc: 'Yoğun yıldız oluşumlu "starburst" galaksi.' },
+  { name: 'Sagittarius Dwarf Galaxy', ra: 283.76, dec: -30.48, distMpc: 0.020, type: 'E', diameterKpc: 3.0, absMag: -13.5, axis: 0.5, desc: 'A dwarf satellite being torn apart by the Milky Way; it lies behind the Galactic centre.' },
+  { name: 'Sculptor Galaxy (NGC 253)', ra: 11.888, dec: -25.288, distMpc: 3.5, type: 'SB', diameterKpc: 27, absMag: -21.0, pa: 52, inc: 78, desc: 'A "starburst" galaxy with intense star formation.' },
   { name: 'NGC 55', ra: 3.723, dec: -39.197, distMpc: 2.1, type: 'Irr', diameterKpc: 20, absMag: -18.5, pa: 108, inc: 80 },
   { name: 'NGC 300', ra: 13.723, dec: -37.684, distMpc: 1.9, type: 'S', diameterKpc: 20, absMag: -18.5, pa: 111, inc: 42 },
-  { name: 'Centaurus A (NGC 5128)', ra: 201.365, dec: -43.019, distMpc: 3.8, type: 'S0', diameterKpc: 25, absMag: -21.0, pa: 35, inc: 60, desc: 'En yakın aktif galaksi çekirdeği; dev radyo lobları ve belirgin toz şeridi.' },
-  { name: 'Güney Fırıldak (M83)', ra: 204.254, dec: -29.866, distMpc: 4.6, type: 'SB', diameterKpc: 26, absMag: -20.8, pa: 45, inc: 24 },
-  { name: 'Bode Galaksisi (M81)', ra: 148.888, dec: 69.065, distMpc: 3.6, type: 'S', diameterKpc: 27, absMag: -21.1, pa: 157, inc: 60 },
-  { name: 'Puro Galaksisi (M82)', ra: 148.968, dec: 69.680, distMpc: 3.5, type: 'Irr', diameterKpc: 11, absMag: -19.6, pa: 65, inc: 80, desc: 'M81 ile etkileşim sonucu patlayıcı yıldız oluşumu yaşayan galaksi.' },
+  { name: 'Centaurus A (NGC 5128)', ra: 201.365, dec: -43.019, distMpc: 3.8, type: 'S0', diameterKpc: 25, absMag: -21.0, pa: 35, inc: 60, desc: 'The nearest active galactic nucleus; giant radio lobes and a prominent dust lane.' },
+  { name: 'Southern Pinwheel (M83)', ra: 204.254, dec: -29.866, distMpc: 4.6, type: 'SB', diameterKpc: 26, absMag: -20.8, pa: 45, inc: 24 },
+  { name: 'Bode\'s Galaxy (M81)', ra: 148.888, dec: 69.065, distMpc: 3.6, type: 'S', diameterKpc: 27, absMag: -21.1, pa: 157, inc: 60 },
+  { name: 'Cigar Galaxy (M82)', ra: 148.968, dec: 69.680, distMpc: 3.5, type: 'Irr', diameterKpc: 11, absMag: -19.6, pa: 65, inc: 80, desc: 'A galaxy undergoing explosive star formation triggered by its interaction with M81.' },
   { name: 'NGC 2403', ra: 114.214, dec: 65.603, distMpc: 3.2, type: 'S', diameterKpc: 21, absMag: -19.3, pa: 127, inc: 60 },
-  { name: 'Fırıldak (M101)', ra: 210.802, dec: 54.349, distMpc: 6.4, type: 'S', diameterKpc: 52, absMag: -21.5, pa: 35, inc: 18, desc: 'Samanyolu\'nun neredeyse iki katı büyüklüğünde, yüzümüze dönük dev sarmal.' },
-  { name: 'Girdap (M51)', ra: 202.470, dec: 47.195, distMpc: 8.6, type: 'S', diameterKpc: 23, absMag: -21.0, pa: 163, inc: 22, desc: 'Küçük eşlikçisi NGC 5195 ile etkileşen klasik "büyük tasarım" sarmalı.' },
-  { name: 'Sombrero (M104)', ra: 189.998, dec: -11.623, distMpc: 9.6, type: 'S0', diameterKpc: 29, absMag: -21.7, pa: 89, inc: 84, desc: 'Devasa şişkinliği ve keskin toz halkasıyla tanınır.' },
-  { name: 'Virgo A (M87)', ra: 187.706, dec: 12.391, distMpc: 16.4, type: 'E', diameterKpc: 40, absMag: -22.3, axis: 0.85, desc: 'Başak Kümesi\'nin devi; 6.5 milyar güneş kütleli kara deliği ilk görüntülenen kara deliktir.' },
+  { name: 'Pinwheel (M101)', ra: 210.802, dec: 54.349, distMpc: 6.4, type: 'S', diameterKpc: 52, absMag: -21.5, pa: 35, inc: 18, desc: 'A face-on giant spiral almost twice the size of the Milky Way.' },
+  { name: 'Whirlpool (M51)', ra: 202.470, dec: 47.195, distMpc: 8.6, type: 'S', diameterKpc: 23, absMag: -21.0, pa: 163, inc: 22, desc: 'The classic "grand-design" spiral, interacting with its small companion NGC 5195.' },
+  { name: 'Sombrero (M104)', ra: 189.998, dec: -11.623, distMpc: 9.6, type: 'S0', diameterKpc: 29, absMag: -21.7, pa: 89, inc: 84, desc: 'Known for its huge bulge and sharp dust ring.' },
+  { name: 'Virgo A (M87)', ra: 187.706, dec: 12.391, distMpc: 16.4, type: 'E', diameterKpc: 40, absMag: -22.3, axis: 0.85, desc: 'The giant of the Virgo Cluster; its 6.5-billion-solar-mass black hole was the first ever imaged.' },
   { name: 'M49', ra: 187.445, dec: 8.000, distMpc: 17.1, type: 'E', diameterKpc: 47, absMag: -22.6, axis: 0.8 },
   { name: 'M60', ra: 190.917, dec: 11.553, distMpc: 16.8, type: 'E', diameterKpc: 35, absMag: -22.2, axis: 0.8 },
   { name: 'M86', ra: 186.549, dec: 12.946, distMpc: 15.2, type: 'S0', diameterKpc: 39, absMag: -22.0, axis: 0.65 },
@@ -49,12 +49,12 @@ export const CATALOG: CatalogGalaxy[] = [
   { name: 'M100', ra: 185.729, dec: 15.822, distMpc: 16.0, type: 'S', diameterKpc: 32, absMag: -21.7, pa: 30, inc: 28 },
   { name: 'M99', ra: 184.707, dec: 14.416, distMpc: 15.2, type: 'S', diameterKpc: 27, absMag: -21.2, pa: 50, inc: 20 },
   { name: 'M61', ra: 185.479, dec: 4.474, distMpc: 16.0, type: 'SB', diameterKpc: 30, absMag: -21.3, pa: 10, inc: 20 },
-  { name: 'Kara Göz (M64)', ra: 194.182, dec: 21.683, distMpc: 5.3, type: 'S', diameterKpc: 16, absMag: -20.3, pa: 115, inc: 60 },
-  { name: 'Ayçiçeği (M63)', ra: 198.955, dec: 42.029, distMpc: 8.9, type: 'S', diameterKpc: 29, absMag: -21.0, pa: 105, inc: 55 },
+  { name: 'Black Eye (M64)', ra: 194.182, dec: 21.683, distMpc: 5.3, type: 'S', diameterKpc: 16, absMag: -20.3, pa: 115, inc: 60 },
+  { name: 'Sunflower (M63)', ra: 198.955, dec: 42.029, distMpc: 8.9, type: 'S', diameterKpc: 29, absMag: -21.0, pa: 105, inc: 55 },
   { name: 'M94', ra: 192.721, dec: 41.120, distMpc: 4.7, type: 'S', diameterKpc: 15, absMag: -19.9, pa: 120, inc: 35 },
   { name: 'M106', ra: 184.740, dec: 47.304, distMpc: 7.2, type: 'SB', diameterKpc: 40, absMag: -21.3, pa: 150, inc: 70 },
-  { name: 'Hayalet (M74)', ra: 24.174, dec: 15.783, distMpc: 9.0, type: 'S', diameterKpc: 26, absMag: -20.8, pa: 25, inc: 20 },
-  { name: 'M77', ra: 40.670, dec: -0.013, distMpc: 12.9, type: 'SB', diameterKpc: 27, absMag: -21.5, pa: 70, inc: 30, desc: 'En yakın ve en parlak Seyfert galaksilerinden biri.' },
+  { name: 'Phantom (M74)', ra: 24.174, dec: 15.783, distMpc: 9.0, type: 'S', diameterKpc: 26, absMag: -20.8, pa: 25, inc: 20 },
+  { name: 'M77', ra: 40.670, dec: -0.013, distMpc: 12.9, type: 'SB', diameterKpc: 27, absMag: -21.5, pa: 70, inc: 30, desc: 'One of the nearest and brightest Seyfert galaxies.' },
   { name: 'M65', ra: 169.733, dec: 13.092, distMpc: 10.7, type: 'SB', diameterKpc: 28, absMag: -21.0, pa: 174, inc: 70 },
   { name: 'M66', ra: 170.063, dec: 12.991, distMpc: 10.7, type: 'SB', diameterKpc: 29, absMag: -21.3, pa: 173, inc: 55 },
   { name: 'NGC 3628', ra: 170.071, dec: 13.589, distMpc: 10.7, type: 'S', diameterKpc: 30, absMag: -20.6, pa: 104, inc: 87 },
@@ -63,17 +63,17 @@ export const CATALOG: CatalogGalaxy[] = [
   { name: 'M105', ra: 161.957, dec: 12.582, distMpc: 10.6, type: 'E', diameterKpc: 16, absMag: -20.6, axis: 0.9 },
   { name: 'M108', ra: 167.879, dec: 55.674, distMpc: 14.1, type: 'SB', diameterKpc: 35, absMag: -21.0, pa: 80, inc: 80 },
   { name: 'M109', ra: 179.400, dec: 53.375, distMpc: 16.9, type: 'SB', diameterKpc: 37, absMag: -21.5, pa: 63, inc: 45 },
-  { name: 'NGC 891', ra: 35.639, dec: 42.349, distMpc: 9.1, type: 'S', diameterKpc: 33, absMag: -20.9, pa: 22, inc: 89, desc: 'Tam kenardan görülen, Samanyolu\'na çok benzeyen sarmal.' },
-  { name: 'İğne Galaksisi (NGC 4565)', ra: 189.087, dec: 25.988, distMpc: 11.9, type: 'S', diameterKpc: 55, absMag: -21.7, pa: 136, inc: 88 },
-  { name: 'NGC 1300', ra: 49.921, dec: -19.411, distMpc: 18.7, type: 'SB', diameterKpc: 33, absMag: -21.3, pa: 106, inc: 35, desc: 'Ders kitabı çubuklu sarmal.' },
+  { name: 'NGC 891', ra: 35.639, dec: 42.349, distMpc: 9.1, type: 'S', diameterKpc: 33, absMag: -20.9, pa: 22, inc: 89, desc: 'An edge-on spiral that closely resembles the Milky Way.' },
+  { name: 'Needle Galaxy (NGC 4565)', ra: 189.087, dec: 25.988, distMpc: 11.9, type: 'S', diameterKpc: 55, absMag: -21.7, pa: 136, inc: 88 },
+  { name: 'NGC 1300', ra: 49.921, dec: -19.411, distMpc: 18.7, type: 'SB', diameterKpc: 33, absMag: -21.3, pa: 106, inc: 35, desc: 'A textbook barred spiral.' },
   { name: 'NGC 7331', ra: 339.267, dec: 34.416, distMpc: 12.2, type: 'S', diameterKpc: 37, absMag: -21.6, pa: 171, inc: 70 },
   { name: 'Fornax A (NGC 1316)', ra: 50.674, dec: -37.208, distMpc: 19.0, type: 'S0', diameterKpc: 45, absMag: -22.8, axis: 0.7 },
   { name: 'NGC 1365', ra: 53.402, dec: -36.140, distMpc: 17.9, type: 'SB', diameterKpc: 60, absMag: -22.3, pa: 32, inc: 40 },
   { name: 'M58', ra: 189.431, dec: 11.818, distMpc: 19.1, type: 'SB', diameterKpc: 34, absMag: -21.5, pa: 95, inc: 40 },
   {
-    name: 'Antenler (NGC 4038)', ra: 180.4708, dec: -18.8694, distMpc: 22, type: 'S', diameterKpc: 120, absMag: -21.4, pa: 0, inc: 25,
-    desc: 'Birleşmekte olan iki sarmal galaksiden kuzeydeki. Çarpışmanın sıkıştırdığı gaz milyarlarca yeni yıldız doğuruyor; gelgit kuvvetleri iki galaksiden de upuzun birer yıldız kuyruğu çekip çıkarmış. Böcek antenlerine benzeyen bu kuyruklar galaksilere adını verir.',
-    pec: { label: 'Birleşen galaksi', body: 0.14, tails: [{ phase: 200, sweep: 45, r0: 0.12, r1: 1.2, lift: 0.18, w0: 0.035, w1: 0.08, light: 0.16, young: 0.45, knots: 0.55 }] },
+    name: 'Antennae (NGC 4038)', ra: 180.4708, dec: -18.8694, distMpc: 22, type: 'S', diameterKpc: 120, absMag: -21.4, pa: 0, inc: 25,
+    desc: 'The northern one of two merging spiral galaxies. Gas compressed by the collision is giving birth to billions of new stars; tidal forces have pulled a long tail of stars out of each galaxy. These tails, like an insect\'s antennae, give the pair its name.',
+    pec: { label: 'Merging galaxy', body: 0.14, tails: [{ phase: 200, sweep: 45, r0: 0.12, r1: 1.2, lift: 0.18, w0: 0.035, w1: 0.08, light: 0.16, young: 0.45, knots: 0.55 }] },
   },
 ];
 
@@ -84,10 +84,10 @@ export const CATALOG: CatalogGalaxy[] = [
  */
 export const PECULIAR_CATALOG: CatalogGalaxy[] = [
   {
-    name: 'Hoag Nesnesi', ra: 229.3100, dec: 21.5856, distMpc: 183, type: 'E', diameterKpc: 46, absMag: -21.1, pa: 0, inc: 20, axis: 0.9,
-    desc: 'Neredeyse kusursuz bir halka galaksi: yaşlı, sarı yıldızlardan oluşan yuvarlak çekirdeği karanlık bir boşluk ve genç, mavi yıldızlardan bir halka çevreliyor. Bu biçimin nasıl oluştuğu hâlâ tartışmalı. Boşluğun içinden, çok daha uzaktaki ikinci bir halka galaksi görünür.',
+    name: 'Hoag\'s Object', ra: 229.3100, dec: 21.5856, distMpc: 183, type: 'E', diameterKpc: 46, absMag: -21.1, pa: 0, inc: 20, axis: 0.9,
+    desc: 'An almost perfect ring galaxy: its round core of old, yellow stars is surrounded by a dark gap and a ring of young, blue stars. How this shape formed is still debated. Through the gap, a second and far more distant ring galaxy can be seen.',
     pec: {
-      label: 'Halka galaksi', body: 0.3,
+      label: 'Ring galaxy', body: 0.3,
       rings: [
         // tightly wound blue strands, a sharp inner edge and a fluffy outside
         { r: 0.76, w: 0.09, h: 0.035, skew: 1.8, wobble: 0.22, strands: 9, twist: 7, strandAmp: 0.6, light: 0.32, young: 0.85, knots: 0.9, dust: 0.15 },
@@ -97,10 +97,10 @@ export const PECULIAR_CATALOG: CatalogGalaxy[] = [
     },
   },
   {
-    name: 'Araba Tekerleği (ESO 350-40)', ra: 9.4213, dec: -33.7164, distMpc: 129, type: 'S0', diameterKpc: 50, absMag: -21.0, pa: 15, inc: 40,
-    desc: 'Birkaç yüz milyon yıl önce küçük bir galaksi bu sarmalın tam ortasından geçti. Çarpışmanın yarattığı dalga, suya atılan taşın halkası gibi dışa yayıldı ve geçtiği yerde gazı sıkıştırarak genç, mavi yıldızlardan dev bir halka yaktı. İç halkayı dış halkaya tekerlek parmaklıkları gibi ince kollar bağlar.',
+    name: 'Cartwheel Galaxy (ESO 350-40)', ra: 9.4213, dec: -33.7164, distMpc: 129, type: 'S0', diameterKpc: 50, absMag: -21.0, pa: 15, inc: 40,
+    desc: 'A few hundred million years ago a small galaxy passed right through the middle of this spiral. The wave of the collision spread outward like the ripple of a stone dropped in water, compressing the gas in its path and lighting a giant ring of young, blue stars. Thin arms join the inner ring to the outer one like the spokes of a wheel.',
     pec: {
-      label: 'Çarpışma halkası galaksisi', body: 0.2,
+      label: 'Collisional ring galaxy', body: 0.2,
       rings: [
         { r: 0.9, w: 0.055, h: 0.03, ox: 0.08, oz: -0.06, spokes: 14, spokeIn: 0.32, light: 0.42, young: 0.95, knots: 0.95, dust: 0.3 },
         { r: 0.27, w: 0.04, h: 0.03, light: 0.1, young: 0.15, knots: 0.35, dust: 0.9 },
@@ -108,82 +108,82 @@ export const PECULIAR_CATALOG: CatalogGalaxy[] = [
     },
   },
   {
-    name: 'Lindsay-Shapley Halkası (AM 0644-741)', ra: 100.7751, dec: -74.2362, distMpc: 92.9, type: 'S0', diameterKpc: 56, absMag: -22.3, pa: 90, inc: 55,
-    desc: 'Yaklaşık 150 bin ışık yılı çapında bir çarpışma halkası. Halkadaki pembe düğümler, çarpışmanın sıkıştırdığı gazda yeni doğan yıldızların aydınlattığı dev hidrojen bulutları. Eski çekirdek halkanın merkezinden belirgin biçimde kaymış duruyor.',
-    pec: { label: 'Çarpışma halkası galaksisi', body: 0.22, rings: [{ r: 0.75, w: 0.06, h: 0.03, ox: 0.3, oz: 0.05, arc: 0.7, arcPhase: 0, light: 0.55, young: 0.95, knots: 1, dust: 0.35 }] },
+    name: 'Lindsay-Shapley Ring (AM 0644-741)', ra: 100.7751, dec: -74.2362, distMpc: 92.9, type: 'S0', diameterKpc: 56, absMag: -22.3, pa: 90, inc: 55,
+    desc: 'A collisional ring about 150,000 light-years across. The pink knots in the ring are giant hydrogen clouds lit by stars newly born in the gas the collision compressed. The old core sits clearly off the ring\'s centre.',
+    pec: { label: 'Collisional ring galaxy', body: 0.22, rings: [{ r: 0.75, w: 0.06, h: 0.03, ox: 0.3, oz: 0.05, arc: 0.7, arcPhase: 0, light: 0.55, young: 0.95, knots: 1, dust: 0.35 }] },
   },
   {
-    name: 'Arp 147 (halka)', ra: 47.8266, dec: 1.3150, distMpc: 138, type: 'S0', diameterKpc: 30, absMag: -20.0, pa: 0, inc: 35,
-    desc: 'Komşusu tam içinden geçince ortaya çıkan neredeyse kusursuz bir halka. Mavi halkada yeni yıldızlar doğuyor; halkanın kenarındaki kızıl düğüm galaksinin eski çekirdeği olabilir.',
-    pec: { label: 'Çarpışma halkası galaksisi', body: 0.12, rings: [{ r: 0.6, w: 0.07, h: 0.035, ox: 0.35, oz: -0.25, light: 0.72, young: 0.95, knots: 1, dust: 0.3 }] },
+    name: 'Arp 147 (ring)', ra: 47.8266, dec: 1.3150, distMpc: 138, type: 'S0', diameterKpc: 30, absMag: -20.0, pa: 0, inc: 35,
+    desc: 'An almost perfect ring that appeared when its neighbour passed right through it. New stars are being born in the blue ring; the reddish knot on its edge may be the galaxy\'s old core.',
+    pec: { label: 'Collisional ring galaxy', body: 0.12, rings: [{ r: 0.6, w: 0.07, h: 0.035, ox: 0.35, oz: -0.25, light: 0.72, young: 0.95, knots: 1, dust: 0.3 }] },
   },
   {
-    name: 'Arp 147 (eşlikçi)', ra: 47.8349, dec: 1.3135, distMpc: 138, type: 'E', diameterKpc: 18, absMag: -20.6, axis: 0.75,
-    desc: 'Komşusunun içinden geçerek onu bir halkaya dönüştüren galaksi. Kendisi de çarpışmadan nasibini almış: çevresinde soluk bir yıldız halesi var.',
+    name: 'Arp 147 (companion)', ra: 47.8349, dec: 1.3135, distMpc: 138, type: 'E', diameterKpc: 18, absMag: -20.6, axis: 0.75,
+    desc: 'The galaxy that turned its neighbour into a ring by passing through it. It did not come out unscathed either: a faint halo of stars surrounds it.',
   },
   {
     name: 'NGC 922', ra: 36.2684, dec: -24.7882, distMpc: 43.9, type: 'SB', diameterKpc: 32, absMag: -20.6, pa: 0, inc: 30,
-    desc: 'Cüce bir galaksinin diskin içinden geçmesiyle oluşmuş, C harfine benzeyen yarım bir halka. Halka boyunca yoğun, pembe yıldız oluşum bölgeleri sıralanır; çarpan cüce galaksi bugün biraz ötede duruyor.',
-    pec: { label: 'Çarpışma halkası galaksisi', body: 0.4, rings: [{ r: 0.72, w: 0.08, h: 0.035, ox: -0.1, oz: 0.05, arc: 0.12, arcPhase: 200, light: 0.42, young: 0.95, knots: 0.95, dust: 0.3 }] },
+    desc: 'A half ring shaped like the letter C, formed when a dwarf galaxy plunged through the disc. Dense, pink star-forming regions line the ring; the dwarf that struck it now lies a little way off.',
+    pec: { label: 'Collisional ring galaxy', body: 0.4, rings: [{ r: 0.72, w: 0.08, h: 0.035, ox: -0.1, oz: 0.05, arc: 0.12, arcPhase: 200, light: 0.42, young: 0.95, knots: 0.95, dust: 0.3 }] },
   },
   {
     name: 'NGC 4650A', ra: 191.2044, dec: -40.7143, distMpc: 41.8, type: 'S0', diameterKpc: 34, absMag: -19.6, pa: 120, inc: 75,
-    desc: 'Kutup halkalı galaksilerin en ünlüsü: yaşlı yıldızlardan oluşan lentiküler bir galaksinin çevresinde, kutuplarının üzerinden geçen geniş bir gaz, toz ve genç yıldız halkası döner. Halka başka bir galaksiden koparılmış ya da kozmik ağdan süzülen gazdan oluşmuş olabilir.',
-    pec: { label: 'Kutup halkalı galaksi', body: 0.32, rings: [{ r: 0.55, w: 0.2, h: 0.03, tilt: 90, tiltAz: 90, light: 0.45, young: 0.75, knots: 0.6, dust: 1 }] },
+    desc: 'The most famous polar-ring galaxy: around a lenticular galaxy of old stars, a broad ring of gas, dust and young stars circles over its poles. The ring may have been torn from another galaxy or formed from gas streaming in from the cosmic web.',
+    pec: { label: 'Polar-ring galaxy', body: 0.32, rings: [{ r: 0.55, w: 0.2, h: 0.03, tilt: 90, tiltAz: 90, light: 0.45, young: 0.75, knots: 0.6, dust: 1 }] },
   },
   {
     name: 'NGC 660', ra: 25.7598, dec: 13.6457, distMpc: 12.2, type: 'S', diameterKpc: 36, absMag: -20.4, pa: 135, inc: 80,
-    desc: 'Kenardan gördüğümüz bir diski, ona eğik duran geniş bir yıldız, gaz ve toz halkası sarıyor. Halkanın geçmişteki bir galaksi karşılaşmasından kaldığı düşünülüyor.',
-    pec: { label: 'Kutup halkalı galaksi', body: 0.5, rings: [{ r: 0.7, w: 0.12, h: 0.035, tilt: 55, tiltAz: 90, arc: 0.6, arcPhase: 30, light: 0.35, young: 0.6, knots: 0.6, dust: 1 }] },
+    desc: 'A disc we see edge-on, wrapped in a broad ring of stars, gas and dust tilted against it. The ring is thought to be left over from a past encounter with another galaxy.',
+    pec: { label: 'Polar-ring galaxy', body: 0.5, rings: [{ r: 0.7, w: 0.12, h: 0.035, tilt: 55, tiltAz: 90, arc: 0.6, arcPhase: 30, light: 0.35, young: 0.6, knots: 0.6, dust: 1 }] },
   },
   {
-    name: 'Fareler (NGC 4676A)', ra: 191.5421, dec: 30.7319, distMpc: 93.6, type: 'S0', diameterKpc: 100, absMag: -21.6, pa: 0, inc: 65,
-    desc: 'Birbirinin çevresinde dönen iki galaksiden kuzeydeki. Kütle çekimi yıldızlarının bir bölümünü upuzun, dümdüz bir kuyruk hâlinde dışarı çekmiş; fare benzetmesi buradan geliyor. İkisi sonunda tek bir galaksiye dönüşecek.',
-    pec: { label: 'Etkileşen galaksi', body: 0.2, tails: [{ phase: 0, sweep: 12, r0: 0.12, r1: 1.25, lift: 0.12, w0: 0.045, w1: 0.11, light: 0.22, young: 0.6, knots: 0.4 }] },
+    name: 'The Mice (NGC 4676A)', ra: 191.5421, dec: 30.7319, distMpc: 93.6, type: 'S0', diameterKpc: 100, absMag: -21.6, pa: 0, inc: 65,
+    desc: 'The northern one of two galaxies circling each other. Gravity has drawn part of its stars out into a long, straight tail, hence the comparison with a mouse. In the end the two will become a single galaxy.',
+    pec: { label: 'Interacting galaxy', body: 0.2, tails: [{ phase: 0, sweep: 12, r0: 0.12, r1: 1.25, lift: 0.12, w0: 0.045, w1: 0.11, light: 0.22, young: 0.6, knots: 0.4 }] },
   },
   {
-    name: 'Fareler (NGC 4676B)', ra: 191.5467, dec: 30.7228, distMpc: 93.6, type: 'SB', diameterKpc: 80, absMag: -21.3, pa: 0, inc: 45,
-    desc: 'Farelerin güneydeki üyesi: çubuklu sarmalından kopan yıldızlar kıvrık bir kuyruk çiziyor. Samanyolu ile Andromeda\'nın karşılaşması da bir gün buna benzeyecek.',
-    pec: { label: 'Etkileşen galaksi', body: 0.25, tails: [{ phase: 185, sweep: -70, r0: 0.15, r1: 1.2, lift: -0.1, w0: 0.06, w1: 0.13, light: 0.2, young: 0.6, knots: 0.5 }] },
+    name: 'The Mice (NGC 4676B)', ra: 191.5467, dec: 30.7228, distMpc: 93.6, type: 'SB', diameterKpc: 80, absMag: -21.3, pa: 0, inc: 45,
+    desc: 'The southern member of the Mice: stars torn from its barred spiral trace a curving tail. The encounter between the Milky Way and Andromeda will one day look like this.',
+    pec: { label: 'Interacting galaxy', body: 0.25, tails: [{ phase: 185, sweep: -70, r0: 0.15, r1: 1.2, lift: -0.1, w0: 0.06, w1: 0.13, light: 0.2, young: 0.6, knots: 0.5 }] },
   },
   {
-    name: 'Antenler (NGC 4039)', ra: 180.4729, dec: -18.8861, distMpc: 22, type: 'S', diameterKpc: 100, absMag: -21.0, pa: 0, inc: 30,
-    desc: 'Antenlerin güneydeki üyesi. Kuzeydeki komşusuyla birkaç yüz milyon yıl içinde tek bir eliptik galaksiye dönüşecek; Samanyolu ile Andromeda\'nın geleceği de böyle görünecek.',
-    pec: { label: 'Birleşen galaksi', body: 0.16, tails: [{ phase: 160, sweep: -45, r0: 0.12, r1: 1.15, lift: -0.15, w0: 0.035, w1: 0.075, light: 0.14, young: 0.45, knots: 0.6 }] },
+    name: 'Antennae (NGC 4039)', ra: 180.4729, dec: -18.8861, distMpc: 22, type: 'S', diameterKpc: 100, absMag: -21.0, pa: 0, inc: 30,
+    desc: 'The southern member of the Antennae. Within a few hundred million years it and its northern neighbour will become a single elliptical galaxy; the future of the Milky Way and Andromeda will look much the same.',
+    pec: { label: 'Merging galaxy', body: 0.16, tails: [{ phase: 160, sweep: -45, r0: 0.12, r1: 1.15, lift: -0.15, w0: 0.035, w1: 0.075, light: 0.14, young: 0.45, knots: 0.6 }] },
   },
   {
-    name: 'İribaş (UGC 10214)', ra: 241.5169, dec: 55.4253, distMpc: 134.3, type: 'SB', diameterKpc: 170, absMag: -22.0, pa: 0, inc: 35,
-    desc: 'Yanından geçen küçük bir galaksinin kütle çekimi, diskinden yaklaşık 280 bin ışık yılı uzunluğunda bir yıldız ve gaz kuyruğu çekip çıkarmış. Kuyruk boyunca parlak, mavi yıldız kümeleri doğuyor; bunlar zamanla bağımsız cüce galaksilere dönüşebilir.',
-    pec: { label: 'Etkileşen galaksi', body: 0.17, tails: [{ phase: 95, sweep: 18, r0: 0.12, r1: 1.25, lift: 0.08, w0: 0.045, w1: 0.09, light: 0.25, young: 0.85, knots: 0.9 }] },
+    name: 'Tadpole (UGC 10214)', ra: 241.5169, dec: 55.4253, distMpc: 134.3, type: 'SB', diameterKpc: 170, absMag: -22.0, pa: 0, inc: 35,
+    desc: 'The gravity of a small galaxy passing by has pulled a tail of stars and gas about 280,000 light-years long out of its disc. Bright blue star clusters are forming along the tail; in time they may become dwarf galaxies of their own.',
+    pec: { label: 'Interacting galaxy', body: 0.17, tails: [{ phase: 95, sweep: 18, r0: 0.12, r1: 1.25, lift: 0.08, w0: 0.045, w1: 0.09, light: 0.25, young: 0.85, knots: 0.9 }] },
   },
   {
-    name: 'Gül (Arp 273, UGC 1810)', ra: 35.3696, dec: 39.3757, distMpc: 106.4, type: 'S', diameterKpc: 66, absMag: -22.2, pa: 0, inc: 35,
-    desc: 'Arp 273 çiftinin büyük üyesi. Küçük komşusu diskinin içinden geçmiş olabilir; kolları bu yüzden kaymış ve halkaya benzer bir biçim almış; çift uzaktan bir gülü andırıyor. Kolların ucundaki mavi düğümler, karşılaşmanın tetiklediği yıldız oluşumu.',
-    pec: { label: 'Etkileşen galaksi', body: 0.72, rings: [{ r: 0.82, w: 0.06, h: 0.03, ox: 0.06, oz: -0.08, arc: 0.25, arcPhase: 140, light: 0.25, young: 0.95, knots: 0.9, dust: 0.4 }] },
+    name: 'Rose (Arp 273, UGC 1810)', ra: 35.3696, dec: 39.3757, distMpc: 106.4, type: 'S', diameterKpc: 66, absMag: -22.2, pa: 0, inc: 35,
+    desc: 'The larger member of the Arp 273 pair. Its small neighbour may have passed through its disc; that is why its arms are displaced into a ring-like shape, and from afar the pair looks like a rose. The blue knots at the tips of the arms are star formation triggered by the encounter.',
+    pec: { label: 'Interacting galaxy', body: 0.72, rings: [{ r: 0.82, w: 0.06, h: 0.03, ox: 0.06, oz: -0.08, arc: 0.25, arcPhase: 140, light: 0.25, young: 0.95, knots: 0.9, dust: 0.4 }] },
   },
   {
     name: 'Arp 273 (UGC 1813)', ra: 35.3858, dec: 39.3568, distMpc: 106.4, type: 'S', diameterKpc: 40, absMag: -21.0, pa: 0, inc: 82,
-    desc: 'Arp 273\'ün kenardan görülen küçük üyesi; büyük komşusunun diskinin içinden geçtiği düşünülüyor.',
+    desc: 'The small, edge-on member of Arp 273; it is thought to have passed through the disc of its large neighbour.',
   },
   {
     name: 'NGC 2207', ra: 94.0921, dec: -21.3727, distMpc: 39.3, type: 'S', diameterKpc: 50, absMag: -21.9, pa: 0, inc: 35,
-    desc: 'IC 2163 ile iç içe geçmiş gibi duran dev sarmal. Kütle çekimleri birbirlerinin kollarını çekiştiriyor; birkaç milyar yıl içinde birleşmeleri bekleniyor.',
-    pec: { label: 'Etkileşen galaksi', body: 0.9, tails: [{ phase: 300, sweep: 35, r0: 0.7, r1: 1.2, lift: 0.08, w0: 0.05, w1: 0.09, light: 0.06, young: 0.8, knots: 0.7 }] },
+    desc: 'A giant spiral that seems interlocked with IC 2163. Their gravity tugs at each other\'s arms; they are expected to merge within a few billion years.',
+    pec: { label: 'Interacting galaxy', body: 0.9, tails: [{ phase: 300, sweep: 35, r0: 0.7, r1: 1.2, lift: 0.08, w0: 0.05, w1: 0.09, light: 0.06, young: 0.8, knots: 0.7 }] },
   },
   {
     name: 'IC 2163', ra: 94.1167, dec: -21.3758, distMpc: 39.3, type: 'SB', diameterKpc: 56, absMag: -21.5, pa: 0, inc: 55,
-    desc: 'NGC 2207\'nin yanından geçerken kolları gelgit kuvvetiyle göz kapağı biçiminde sıkışmış ve doğuya doğru uzun bir kuyruğa savrulmuş galaksi.',
+    desc: 'A galaxy whose arms, as it swung past NGC 2207, were squeezed by tidal forces into an eyelid shape and flung out eastward into a long tail.',
     pec: {
-      label: 'Etkileşen galaksi', body: 0.4,
+      label: 'Interacting galaxy', body: 0.4,
       rings: [{ r: 0.4, w: 0.045, h: 0.03, arc: 0.15, arcPhase: 90, light: 0.15, young: 0.8, knots: 0.6, dust: 0.8 }],
       tails: [{ phase: 80, sweep: 25, r0: 0.3, r1: 1.25, lift: 0.08, w0: 0.06, w1: 0.12, light: 0.22, young: 0.75, knots: 0.6 }],
     },
   },
   {
-    name: 'Penguen (NGC 2936)', ra: 144.4339, dec: 2.7609, distMpc: 98.4, type: 'S', diameterKpc: 70, absMag: -22.0, pa: 0, inc: 40,
-    desc: 'Bir zamanlar sıradan bir sarmaldı; yanındaki eliptik galaksinin kütle çekimi diskini bükerek bir penguen silueti çizdi: parlak çekirdek gözü, kıvrılan kollar gövdeyi ve gagayı oluşturuyor.',
+    name: 'Penguin (NGC 2936)', ra: 144.4339, dec: 2.7609, distMpc: 98.4, type: 'S', diameterKpc: 70, absMag: -22.0, pa: 0, inc: 40,
+    desc: 'Once an ordinary spiral; the gravity of the elliptical galaxy beside it has bent its disc into the silhouette of a penguin: the bright core is the eye, the curling arms form the body and the beak.',
     pec: {
-      label: 'Etkileşen galaksi', body: 0.3,
+      label: 'Interacting galaxy', body: 0.3,
       tails: [
         { phase: 20, sweep: 160, r0: 0.25, r1: 1.0, lift: 0.05, w0: 0.08, w1: 0.13, light: 0.33, young: 0.8, knots: 0.8 },
         { phase: 200, sweep: 60, r0: 0.25, r1: 0.8, lift: -0.05, w0: 0.06, w1: 0.1, light: 0.12, young: 0.7, knots: 0.6 },
@@ -191,14 +191,14 @@ export const PECULIAR_CATALOG: CatalogGalaxy[] = [
     },
   },
   {
-    name: 'Yumurta (NGC 2937)', ra: 144.4377, dec: 2.7474, distMpc: 98.4, type: 'E', diameterKpc: 28, absMag: -21.4, axis: 0.7,
-    desc: 'Penguenin yanındaki "yumurta": yıldız oluşumu çoktan durmuş, pürüzsüz bir eliptik galaksi. Penguenin biçimini bozan onun kütle çekimi.',
+    name: 'Egg (NGC 2937)', ra: 144.4377, dec: 2.7474, distMpc: 98.4, type: 'E', diameterKpc: 28, absMag: -21.4, axis: 0.7,
+    desc: 'The "egg" beside the Penguin: a smooth elliptical galaxy whose star formation stopped long ago. Its gravity is what bent the Penguin out of shape.',
   },
   {
-    name: 'Barış İçin Atomlar (NGC 7252)', ra: 335.1865, dec: -24.6783, distMpc: 68.5, type: 'E', diameterKpc: 150, absMag: -21.9, pa: 0, inc: 30, axis: 0.85,
-    desc: 'Yaklaşık bir milyar yıl önce iki sarmal galaksinin birleşmesinden kalan genç bir eliptik galaksi. Çekirdeğin çevresindeki ilmekler elektron yörüngeli atom çizimlerini andırdığı için adını Eisenhower\'ın 1953\'teki "Barış İçin Atomlar" konuşmasından alır; iki uzun kuyruk çarpışmanın izi.',
+    name: 'Atoms for Peace (NGC 7252)', ra: 335.1865, dec: -24.6783, distMpc: 68.5, type: 'E', diameterKpc: 150, absMag: -21.9, pa: 0, inc: 30, axis: 0.85,
+    desc: 'A young elliptical galaxy left over from the merger of two spirals about a billion years ago. The loops around its core recall drawings of atoms with electron orbits, so it is named after Eisenhower\'s 1953 "Atoms for Peace" speech; its two long tails are the trace of the collision.',
     pec: {
-      label: 'Birleşme kalıntısı', body: 0.14,
+      label: 'Merger remnant', body: 0.14,
       rings: [{ r: 0.2, w: 0.022, h: 0.04, arc: 0.3, arcPhase: 45, light: 0.06, young: 0.2, knots: 0.2, dust: 0.1 }],
       tails: [
         { phase: 340, sweep: 70, r0: 0.1, r1: 1.2, lift: 0.15, w0: 0.035, w1: 0.09, light: 0.12, young: 0.4, knots: 0.5 },
@@ -207,9 +207,9 @@ export const PECULIAR_CATALOG: CatalogGalaxy[] = [
     },
   },
   {
-    name: 'İntegral İşareti (UGC 3697)', ra: 107.8439, dec: 71.8364, distMpc: 44.8, type: 'S', diameterKpc: 50, absMag: -20.2, pa: 0, inc: 88,
-    desc: 'Kenardan gördüğümüz ince diskinin iki ucu zıt yönlere kıvrılmış; bu yüzden ∫ (integral) işaretine benziyor. Bükülmenin yakındaki küçük bir komşunun kütle çekiminden kaynaklandığı düşünülüyor.',
-    pec: { label: 'Bükülmüş disk', body: 0.85, bend: 0.12 },
+    name: 'Integral Sign (UGC 3697)', ra: 107.8439, dec: 71.8364, distMpc: 44.8, type: 'S', diameterKpc: 50, absMag: -20.2, pa: 0, inc: 88,
+    desc: 'The two ends of its thin, edge-on disc curl in opposite directions, so it looks like an integral sign (∫). The warp is thought to come from the gravity of a small nearby neighbour.',
+    pec: { label: 'Warped disc', body: 0.85, bend: 0.12 },
   },
 ];
 
@@ -704,7 +704,7 @@ export class GalaxyIndex {
   /** untranslated (source) name — use for matching catalogue references */
   rawName(i: number): string {
     if (this.guestName.has(i)) return this.guestName.get(i)!;
-    if (i === 0) return 'Samanyolu';
+    if (i === 0) return 'Milky Way';
     const h = this.handmade(i);
     if (h) return h.name;
     if (i >= this.surveyStart && i < this.surveyEnd) return this.surveyNames[i - this.surveyStart];
@@ -713,11 +713,11 @@ export class GalaxyIndex {
 
   name(i: number): string {
     if (this.guestName.has(i)) return this.guestName.get(i)!;
-    if (i === 0) return _('Samanyolu');
+    if (i === 0) return _('Milky Way');
     const h = this.handmade(i);
     if (h) return _(h.name);
     if (i >= this.surveyStart && i < this.surveyEnd) return this.surveyNames[i - this.surveyStart];
-    return _('Galaksi YE-{code}', { code: (this.seed[i] % 0xffffff).toString(16).toUpperCase().padStart(6, '0') });
+    return _('Galaxy YE-{code}', { code: (this.seed[i] % 0xffffff).toString(16).toUpperCase().padStart(6, '0') });
   }
 
   typeOf(i: number): GalaxyType { return TYPE_BY_CODE[this.type[i]]; }
@@ -753,11 +753,11 @@ export class GalaxyIndex {
       pitchDeg: this.pitch[i],
       axisRatio: this.axisRatio[i],
       description: i === 0
-        ? _('Ev galaksimiz: ~13 milyar yıllık, 100–400 milyar yıldızlı çubuklu sarmal. Güneş, merkezden ~8.2 kpc uzakta Orion Kolu\'nda yer alır.')
+        ? _('Our home galaxy: a ~13-billion-year-old barred spiral with 100–400 billion stars. The Sun sits in the Orion Arm, ~8.2 kpc from the centre.')
         : hand ? (hand.desc ? _(hand.desc) : undefined)
           : this.isReal(i) ? this.surveyDescription(i)
-          : this.isGuest(i) ? _('Uzak bir galaksi kümesinin üyesi; parlaklığı ve Hubble tipi kümenin morfoloji–yoğunluk ilişkisinden, yapısı tipinden türetildi.')
-          : _('Prosedürel olarak üretilmiş galaksi; konumu kozmik ağ yoğunluk modelinden, yapısı Hubble tipinden türetildi.'),
+          : this.isGuest(i) ? _('Member of a distant galaxy cluster; its luminosity and Hubble type follow the cluster’s morphology–density relation, its structure its type.')
+          : _('Procedurally generated galaxy; its position comes from the cosmic-web density model, its structure from the Hubble type.'),
       catalog: this.isReal(i),
       distancePc: this.distancePc(i),
       peculiar: hand?.pec,
@@ -799,13 +799,13 @@ export class GalaxyIndex {
   surveyDescription(i: number): string {
     const src = this.sourceOf(i);
     const parts = [src === 'ungc'
-      ? _('Updated Nearby Galaxy Catalog\'daki (Karachentsev ve ark. 2013) gerçek bir yakın galaksi; uzaklığı Hubble yasasından değil, doğrudan ölçüldü (kırmızı dev kolunun ucu, Sefeidler vb.).')
+      ? _('A real nearby galaxy of the Updated Nearby Galaxy Catalog (Karachentsev et al. 2013); its distance is measured directly (tip of the red-giant branch, Cepheids, …), not from Hubble’s law.')
       : src === '2mrs-cluster'
-        ? _('2MASS Kırmızıya Kayma Taraması\'ndaki (Huchra ve ark. 2012) gerçek bir galaksi; ait olduğu kümenin ölçülmüş uzaklığına yerleştirildi.')
-        : _('2MASS Kırmızıya Kayma Taraması\'ndaki (Huchra ve ark. 2012) gerçek bir galaksi; uzaklığı kırmızıya kaymasından, Hubble yasasıyla (H₀ = {h} km/s/Mpc) hesaplandı.', { h: this.surveyH0 })];
+        ? _('A real galaxy of the 2MASS Redshift Survey (Huchra et al. 2012), placed at the measured distance of its cluster.')
+        : _('A real galaxy of the 2MASS Redshift Survey (Huchra et al. 2012); its distance follows from its redshift through Hubble’s law (H₀ = {h} km/s/Mpc).', { h: this.surveyH0 })];
     parts.push(this.typeGuessed(i)
-      ? _('Morfolojisi ölçülmemiş: Hubble tipi tahmin, iç yapısı bu tipe göre kurulmuş bir modeldir.')
-      : _('Konum, uzaklık, boyut, parlaklık ve Hubble tipi gerçek; iç yapısı bu tipe göre kurulmuş bir modeldir.'));
+      ? _('Its morphology has not been measured: the Hubble type is a guess, and the inner structure is a model built for that type.')
+      : _('Position, distance, size, brightness and Hubble type are real; its inner structure is a model built for that type.'));
     return parts.join(' ');
   }
 

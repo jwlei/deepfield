@@ -231,12 +231,12 @@ export function planMission(req: MissionRequest, live: StarSystem, eph: Ephemeri
 }
 
 function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): MissionPlan {
-  if (req.far) return fail(req, _('{name} ışıktan hızlı değil: Güneş Sistemi dışına bu araçla gidilemez.', { name: _(req.ship.name) }));
-  if (!req.targetId) return fail(req, _('Hedef seçilmedi.'));
+  if (req.far) return fail(req, _('{name} is not faster than light: this ship cannot leave the Solar System.', { name: _(req.ship.name) }));
+  if (!req.targetId) return fail(req, _('No target selected.'));
   const O = eph.body(req.originId), T = eph.body(req.targetId);
-  if (!O || !T) return fail(req, _('Kalkış veya hedef gövdesi bulunamadı.'));
-  if (O === T) return fail(req, _('Kalkış ve hedef aynı.'));
-  if (T.data.type === 'star' || T.data.type === 'blackhole' || T.data.type === 'pulsar') return fail(req, _('Yıldızın kendisine yörünge hesaplanamıyor; bir gezegen ya da uydu seçin.'));
+  if (!O || !T) return fail(req, _('Departure or target body not found.'));
+  if (O === T) return fail(req, _('Departure and target are the same.'));
+  if (T.data.type === 'star' || T.data.type === 'blackhole' || T.data.type === 'pulsar') return fail(req, _('Cannot compute an orbit to the star itself; choose a planet or moon.'));
   const budget = req.ship.propulsion.kind === 'impulsive' ? req.ship.propulsion.dvBudget : NaN;
   const C = lca(O, T);
   const mu = C.gm;
@@ -251,7 +251,7 @@ function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): M
   const arriveDv = (vInf: number) => (req.arrival === 'orbit' && T.gm > 1
     ? ellipseCaptureDv(T.gm, capR, capRa, Math.sqrt(vInf * vInf + (2 * T.gm) / capR))
     : 0);
-  if (req.arrival === 'orbit' && T.gm > 1) notes.push(_('Varış: {name} çevresinde {a} km × {b} km eliptik yakalama yörüngesi.', { name: T.name, a: fmtNum(Math.round(capR - T.radius)), b: fmtNum(Math.round(capRa - T.radius)) }));
+  if (req.arrival === 'orbit' && T.gm > 1) notes.push(_('Arrival: {a} km × {b} km elliptical capture orbit around {name}.', { name: T.name, a: fmtNum(Math.round(capR - T.radius)), b: fmtNum(Math.round(capRa - T.radius)) }));
 
   /* ---- case A: origin is the centre (Earth → Moon): Hohmann from the parking orbit ---- */
   if (O === C || T === C) {
@@ -283,7 +283,7 @@ function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): M
       vInfDep = 0;
       vInfArr = Math.abs(vCircHigh - vHigh);
       dvArrival = arriveDv(vInfArr);
-      notes.push(_('{name} park yörüngesinden ({alt} km) Hohmann transferi.', { name: centre.name, alt: PARK_ALT_KM }));
+      notes.push(_('Hohmann transfer from a {alt} km parking orbit around {name}.', { name: centre.name, alt: PARK_ALT_KM }));
     } else {
       // leave from `other` (where the ship is parked), fall to the centre
       eph.state(other.id, t0, _r1, _v1, centre.id);
@@ -294,7 +294,7 @@ function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): M
       dvLaunch = launchDv(vInfDep);
       vInfArr = 0;
       dvArrival = req.arrival === 'orbit' ? ellipseCaptureDv(centre.gm, rIn, captureApoapsis(centre, rIn), vDeep) : 0;
-      notes.push(_("{from} çevresinden {to}'a Hohmann inişi.", { from: other.name, to: centre.name }));
+      notes.push(_("Hohmann descent from around {from} to {to}.", { from: other.name, to: centre.name }));
     }
     const phases: Phase[] = [
       { kind: 'docked', t0: -Infinity, t1: t0, system, bodyId: O.id },
@@ -311,13 +311,13 @@ function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): M
 
   /* ---- case B: siblings around a common centre (planet → planet, moon → moon) ---- */
   const O1 = topUnder(O, C), T1 = topUnder(T, C);
-  if (O1 !== O) notes.push(_("Kalkış {a} çevresinden; {b}'in Güneş çevresi hızı temel alındı.", { a: O.name, b: O1.name }));
-  if (T1 !== T) notes.push(_("Transfer {a}'e hesaplandı; {b} yörüngesine giriş {a} etki küresinde varsayıldı.", { a: T1.name, b: T.name }));
+  if (O1 !== O) notes.push(_("Departure from around {a}; {b}'s heliocentric velocity was used as the baseline.", { a: O.name, b: O1.name }));
+  if (T1 !== T) notes.push(_("Transfer computed to {a}; orbit insertion around {b} assumed inside {a}'s sphere of influence.", { a: T1.name, b: T.name }));
   let F: CelestialBody | null = null;
   if (req.flybyId) {
     F = eph.body(req.flybyId) ?? null;
-    if (!F || F.parent !== C) { notes.push(_('Sapan gövdesi aynı merkez etrafında değil; yok sayıldı.')); F = null; }
-    else if (F === O1 || F === T1) { notes.push(_('Sapan gövdesi kalkış/hedefle aynı; yok sayıldı.')); F = null; }
+    if (!F || F.parent !== C) { notes.push(_('Assist body does not orbit the same centre; ignored.')); F = null; }
+    else if (F === O1 || F === T1) { notes.push(_('Assist body is the departure/target; ignored.')); F = null; }
   }
 
   const t0s: number[] = [];
@@ -397,8 +397,8 @@ function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): M
   }
 
   const pick: Candidate | null = req.optimize === 'time' && bestFast ? bestFast : best;
-  if (!pick) return fail(req, _('Bu geometri için çözüm bulunamadı (sapan açısı yetersiz ya da transfer tanımsız). Başka bir tarih ya da sapan gövdesi deneyin.'));
-  if (req.optimize === 'time' && !bestFast) notes.push(_("Bütçe içinde çözüm yok; en düşük Δv'li rota gösteriliyor."));
+  if (!pick) return fail(req, _('No solution for this geometry (insufficient turn angle or undefined transfer). Try another date or assist body.'));
+  if (req.optimize === 'time' && !bestFast) notes.push(_("No solution within budget; showing the lowest-Δv route."));
 
   // Build the phases from the chosen candidate (recompute the exact states)
   const c = pick as Candidate;
@@ -427,7 +427,7 @@ function planImpulsive(req: MissionRequest, live: StarSystem, eph: Ephemeris): M
   }
   appendArrival(phases, req, T, c.t1, c.v2, system);
   const dvTotal = c.dvLaunch + c.dvFlyby + c.dvArrival;
-  if (req.ship.propulsion.kind === 'impulsive' && req.ship.propulsion.lowThrust) notes.push(_('İyon motoru: Δv anlık itki varsayımıyla hesaplandı; gerçek düşük itkili rota daha uzun sürer.'));
+  if (req.ship.propulsion.kind === 'impulsive' && req.ship.propulsion.lowThrust) notes.push(_('Ion engine: Δv computed with an impulsive-burn assumption; the real low-thrust trajectory takes longer.'));
   return {
     ok: true, request: req, ship: req.ship, originName: O.name, targetName: T.name, departureJd: c.t0, arrivalJd: c.t1,
     durationS: (c.t1 - c.t0) * DAY_S, distanceKm: dist, maxSpeedKms: c.maxSpeed, dvLaunch: c.dvLaunch, dvFlyby: c.dvFlyby,
@@ -495,7 +495,7 @@ export function lineProgress(tau: number, d: number, accel: number, vMax: number
 
 function planLine(req: MissionRequest, live: StarSystem, eph: Ephemeris): MissionPlan {
   const O = eph.body(req.originId);
-  if (!O) return fail(req, _('Kalkış gövdesi bulunamadı.'));
+  if (!O) return fail(req, _('Departure body not found.'));
   const p = req.ship.propulsion;
   const system = live.starId;
   const frameOrigin = live.origin.clone();
@@ -503,18 +503,18 @@ function planLine(req: MissionRequest, live: StarSystem, eph: Ephemeris): Missio
   let accel = Infinity, vMax = 0, modeLabel = '';
   if (p.kind === 'warp') {
     if (req.warpIndex >= 0 && req.warpIndex < p.warpFactors.length) { vMax = p.warpFactors[req.warpIndex].c * C_KM_S; modeLabel = _(p.warpFactors[req.warpIndex].label); }
-    else { vMax = p.impulseC * C_KM_S; modeLabel = _('İtki sürüşü ({c} c)', { c: p.impulseC }); }
+    else { vMax = p.impulseC * C_KM_S; modeLabel = _('Impulse drive ({c} c)', { c: p.impulseC }); }
   } else if (p.kind === 'hyperdrive') {
     vMax = (req.hyperspace ? p.hyperC : p.sublightC) * C_KM_S;
-    modeLabel = req.hyperspace ? _(p.hyperLabel) : _('Alt-ışık ({c} c)', { c: p.sublightC });
+    modeLabel = req.hyperspace ? _(p.hyperLabel) : _('Sublight ({c} c)', { c: p.sublightC });
   } else if (p.kind === 'brachistochrone') {
     accel = req.accelG * G_KMS2;
     vMax = p.maxC * C_KM_S;
-    modeLabel = _('{g} g sürekli ivme (flip-and-burn)', { g: req.accelG });
+    modeLabel = _('{g} g continuous acceleration (flip-and-burn)', { g: req.accelG });
   } else {
-    return fail(req, _('Bilinmeyen itki türü.'));
+    return fail(req, _('Unknown propulsion type.'));
   }
-  if (!(vMax > 0)) return fail(req, _('Hız tanımsız.'));
+  if (!(vMax > 0)) return fail(req, _('Speed undefined.'));
 
   const t0 = req.departureJd;
   const p0 = eph.position(O.id, t0).add(frameOrigin); // universe km
@@ -538,8 +538,8 @@ function planLine(req: MissionRequest, live: StarSystem, eph: Ephemeris): Missio
     const d = p0.distanceTo(p1);
     dur = lineDuration(d, accel, vMax);
     t1 = t0 + dur / DAY_S;
-    if (p.kind === 'brachistochrone') notes.push(_('Yıldızlararası mesafede göreli etkiler ve yakıt yok sayıldı — bu araç gerçekte Güneş Sistemi içi içindir.'));
-    if (dur > 100 * 365.25 * DAY_S) notes.push(_('Yolculuk bir insan ömründen uzun.'));
+    if (p.kind === 'brachistochrone') notes.push(_('Relativistic effects and fuel are ignored over interstellar distances — this ship is really meant for the Solar System.'));
+    if (dur > 100 * 365.25 * DAY_S) notes.push(_('The trip is longer than a human lifetime.'));
     phases.push({ kind: 'line', t0, t1, p0, p1, accel, vMax });
     if (far.kind === 'star') {
       const gmStar = (6.674e-11 * far.starMassKg) / 1e9;
@@ -556,7 +556,7 @@ function planLine(req: MissionRequest, live: StarSystem, eph: Ephemeris): Missio
       phases.push({ kind: 'rest', t0: t1, t1: Infinity, p: p1 });
     }
     const dvNote = modeLabel;
-    notes.unshift(`${dvNote} · ${fmtLightYears(d)} · ${_('ışık bu yolu {t} sürede alır.', { t: fmtDuration(d / C_KM_S) })}`);
+    notes.unshift(`${dvNote} · ${fmtLightYears(d)} · ${_('light covers this distance in {t}.', { t: fmtDuration(d / C_KM_S) })}`);
     return {
       ok: true, request: req, ship: req.ship, originName: O.name, targetName, departureJd: t0, arrivalJd: t1, durationS: dur,
       distanceKm: d, maxSpeedKms: Math.min(vMax, Number.isFinite(accel) ? Math.sqrt(accel * d) : vMax), dvLaunch: 0, dvFlyby: 0, dvArrival: 0, dvTotal: 0,
@@ -564,10 +564,10 @@ function planLine(req: MissionRequest, live: StarSystem, eph: Ephemeris): Missio
     };
   }
 
-  if (!req.targetId) return fail(req, _('Hedef seçilmedi.'));
+  if (!req.targetId) return fail(req, _('No target selected.'));
   const T = eph.body(req.targetId);
-  if (!T) return fail(req, _('Hedef gövdesi bulunamadı.'));
-  if (T === O) return fail(req, _('Kalkış ve hedef aynı.'));
+  if (!T) return fail(req, _('Target body not found.'));
+  if (T === O) return fail(req, _('Departure and target are the same.'));
   targetName = T.name;
   const standoff = T.radius + captureAltitude(T);
   // the target moves: iterate the arrival time
@@ -591,8 +591,8 @@ function planLine(req: MissionRequest, live: StarSystem, eph: Ephemeris): Missio
     phases.push({ kind: 'docked', t0: t1, t1: Infinity, system, bodyId: T.id });
   }
   const peak = Number.isFinite(accel) ? Math.min(vMax, Math.sqrt(accel * d)) : vMax;
-  notes.unshift(`${modeLabel} · ${fixed((d / AU_KM), 3)} AU · ${_('ışık bu yolu {t} sürede alır.', { t: fmtDuration(d / C_KM_S) })}`);
-  if (peak > 0.1 * C_KM_S && p.kind === 'brachistochrone') notes.push(_('0,1 c üzeri: göreli etkiler yok sayıldı.'));
+  notes.unshift(`${modeLabel} · ${fixed((d / AU_KM), 3)} AU · ${_('light covers this distance in {t}.', { t: fmtDuration(d / C_KM_S) })}`);
+  if (peak > 0.1 * C_KM_S && p.kind === 'brachistochrone') notes.push(_('Above 0.1 c: relativistic effects ignored.'));
   return {
     ok: true, request: req, ship: req.ship, originName: O.name, targetName, departureJd: t0, arrivalJd: t1, durationS: dur,
     distanceKm: d, maxSpeedKms: peak, dvLaunch: 0, dvFlyby: 0, dvArrival: 0, dvTotal: 0, budget: NaN, feasible: true,
@@ -672,14 +672,14 @@ export function evaluatePhase(ph: Phase, jd: number, frame: FrameLookup, outPos:
 /** human label of a phase */
 export function phaseLabel(ph: Phase, plan: MissionPlan): string {
   switch (ph.kind) {
-    case 'docked': return ph.t0 === -Infinity ? _('Fırlatma bekleniyor ({name})', { name: plan.originName }) : _('{name} yanında', { name: plan.targetName });
+    case 'docked': return ph.t0 === -Infinity ? _('Awaiting launch ({name})', { name: plan.originName }) : _('Alongside {name}', { name: plan.targetName });
     case 'conic': {
-      if (ph.t1 === Infinity && ph.centerId !== plan.request.originId && plan.request.arrival === 'orbit') return _('{name} yörüngesinde', { name: plan.targetName });
-      if (ph.t1 === Infinity) return _('{name} geçildi · hiperbolik yörünge', { name: plan.targetName });
-      return plan.flyby && ph.t0 === plan.flyby.jd ? _('{flyby} sapanından sonra · seyir → {name}', { flyby: plan.flyby.bodyName, name: plan.targetName }) : _('Seyir → {name}', { name: plan.targetName });
+      if (ph.t1 === Infinity && ph.centerId !== plan.request.originId && plan.request.arrival === 'orbit') return _('In orbit around {name}', { name: plan.targetName });
+      if (ph.t1 === Infinity) return _('Passed {name} · hyperbolic trajectory', { name: plan.targetName });
+      return plan.flyby && ph.t0 === plan.flyby.jd ? _('After the {flyby} assist · cruising → {name}', { flyby: plan.flyby.bodyName, name: plan.targetName }) : _('Cruising → {name}', { name: plan.targetName });
     }
-    case 'line': return _('Seyir → {name}', { name: plan.targetName });
-    case 'orbit': return _('{name} yörüngesinde', { name: plan.targetName });
-    case 'rest': return _('{name} — varıldı', { name: plan.targetName });
+    case 'line': return _('Cruising → {name}', { name: plan.targetName });
+    case 'orbit': return _('In orbit around {name}', { name: plan.targetName });
+    case 'rest': return _('{name} — arrived', { name: plan.targetName });
   }
 }

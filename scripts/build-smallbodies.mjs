@@ -33,7 +33,7 @@ const HAND_MADE = {
 };
 
 const GROUPS = [
-  { key: 'main', name: 'Asteroit Kuşağı', classes: ['IMB', 'MBA', 'OMB', 'MCA', 'AST'] },
+  { key: 'main', name: 'Asteroid Belt', classes: ['IMB', 'MBA', 'OMB', 'MCA', 'AST'] },
   { key: 'neo', name: "Dünya'ya yakın cisimler", classes: ['IEO', 'ATE', 'APO', 'AMO'] },
   { key: 'trojan', name: 'Truva Asteroitleri', classes: ['TJN'] },
   { key: 'outer', name: 'Kentaurlar ve Kuiper Kuşağı', classes: ['CEN', 'TNO', 'PAA', 'HYA'] },

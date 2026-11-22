@@ -80,7 +80,7 @@ export class ExoplanetCatalog {
 
   static async load(baseUrl: string): Promise<ExoplanetCatalog> {
     const r = await fetch(`${baseUrl}data/exoplanets.json?v=${__BUILD_ID__}`);
-    if (!r.ok) throw new Error('exoplanets.json yüklenemedi');
+    if (!r.ok) throw new Error('Could not load exoplanets.json');
     return new ExoplanetCatalog(await r.json());
   }
 

@@ -133,7 +133,7 @@ export class Welcome {
     Array.from(this.dots.children).forEach((d, k) => d.classList.toggle('on', k === i));
     this.back.disabled = i === 0;
     const last = i === this.pages.length - 1;
-    (this.next.firstElementChild as HTMLElement).textContent = last ? _('Keşfe başla') : _('Devam');
+    (this.next.firstElementChild as HTMLElement).textContent = last ? _('Start exploring') : _('Next');
     this.next.classList.toggle('go', last);
     // page content fades in anew
     const p = this.pages[i];

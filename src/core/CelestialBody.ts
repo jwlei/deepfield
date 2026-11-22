@@ -311,16 +311,16 @@ export class CelestialBody {
   get siderealDayDisplay(): string {
     const h = this.displayRotationHours;
     if (h === 0) return '—';
-    if (h < 48) return _('{n} sa', { n: fixed(h, 2) });
-    return _('{n} gün', { n: fixed((h / 24), 2) });
+    if (h < 48) return _('{n} h', { n: fixed(h, 2) });
+    return _('{n} days', { n: fixed((h / 24), 2) });
   }
 
   periodDisplay(): string {
     const d = this.periodDays;
     if (!d) return '—';
-    if (d < 1) return _('{n} sa', { n: fixed((d * 24), 2) });
-    if (d < 1000) return _('{n} gün', { n: fixed(d, 2) });
-    return _('{n} yıl', { n: fixed((d / 365.25), 2) });
+    if (d < 1) return _('{n} h', { n: fixed((d * 24), 2) });
+    if (d < 1000) return _('{n} days', { n: fixed(d, 2) });
+    return _('{n} years', { n: fixed((d / 365.25), 2) });
   }
 
   /** Equilibrium temperature estimate (K) from star luminosity and albedo */

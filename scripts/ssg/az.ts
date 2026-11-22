@@ -4,7 +4,7 @@ import { currentLang, esc, t, url, w, type Page } from './html';
 import type { Site } from './model';
 
 /** kinds in the order of the encyclopedia's contents; the search data refers to them by index */
-const KINDS = ['Yıldız', 'Ötegezegen', 'Takımyıldız', 'Güneş Sistemi', 'Derin gökyüzü', 'Galaksi', 'Kara delik', 'Gök olayı'];
+const KINDS = ['Star', 'Exoplanet', 'Constellation', 'Solar System', 'Deep sky', 'Galaxy', 'Black hole', 'Sky event'];
 
 export interface AzEntry { name: string; path: string; kind: number; alt?: string }
 
@@ -46,10 +46,10 @@ export function searchJson(entries: AzEntry[]): string {
 
 export function searchForm(withData: boolean): string {
   const data = withData
-    ? ` data-src="${esc(url(SEARCH_PATH))}" data-kinds="${esc(JSON.stringify(KINDS.map((k) => w(k))))}" data-none="${esc(w('Sonuç yok'))}" data-count="${esc(w('{n} sonuç'))}"`
+    ? ` data-src="${esc(url(SEARCH_PATH))}" data-kinds="${esc(JSON.stringify(KINDS.map((k) => w(k))))}" data-none="${esc(w('No results'))}" data-count="${esc(w('{n} results'))}"`
     : '';
   return `<form class="w-search" role="search" action="${esc(url(AZ_PATH))}"${data}>`
-    + `<input type="search" name="q" placeholder="${esc(w('Ara: Sirius, TRAPPIST-1 e, Andromeda, Orion…'))}" aria-label="${esc(w('Ansiklopedide ara'))}" autocomplete="off" spellcheck="false" />`
+    + `<input type="search" name="q" placeholder="${esc(w('Search: Sirius, TRAPPIST-1 e, Andromeda, Orion…'))}" aria-label="${esc(w('Search the encyclopedia'))}" autocomplete="off" spellcheck="false" />`
     + '</form>';
 }
 
@@ -58,26 +58,26 @@ export function azPages(entries: AzEntry[]): Page[] {
   const byLetter = new Map<string, AzEntry[]>(LETTERS.map((l) => [l, []]));
   for (const e of entries) byLetter.get(letterOf(e.name))!.push(e);
   const kinds = KINDS.map((k) => w(k));
-  const bar = (cur: string) => `<nav class="w-az" aria-label="${esc(w('Harfler'))}">${LETTERS.map((l) => {
+  const bar = (cur: string) => `<nav class="w-az" aria-label="${esc(w('Letters'))}">${LETTERS.map((l) => {
     const label = l === '#' ? '0–9' : l;
     if (!byLetter.get(l)!.length) return `<span>${label}</span>`;
     return `<a href="${esc(url(letterPath(l)))}"${l === cur ? ' aria-current="page"' : ''}>${label}</a>`;
   }).join('')}</nav>`;
-  const lede = esc(w('Ansiklopedideki {n} maddenin tamamı, harf sırasıyla. Arama kutusu hepsini birden tarar.', { n: fmtNum(entries.length) }));
+  const lede = esc(w('All {n} entries of the encyclopedia in alphabetical order. The search box covers all of them at once.', { n: fmtNum(entries.length) }));
   return LETTERS.filter((l) => byLetter.get(l)!.length).map((l) => {
     const list = byLetter.get(l)!;
     const label = l === '#' ? '0–9' : l;
     return {
       path: letterPath(l),
-      title: w('A\'dan Z\'ye ansiklopedi: {l} harfi', { l: label }),
+      title: w('Encyclopedia A to Z: {l}', { l: label }),
       description: plainLede(entries.length),
-      h1: w('A\'dan Z\'ye'),
+      h1: w('A to Z'),
       lede,
       crumbs: [],
       wide: true,
       scripts: ['/wiki/az.js'],
       body: searchForm(true) + bar(l)
-        + `<div class="w-az-body"><h2>${esc(label)} <span class="w-note">${esc(w('{n} madde', { n: fmtNum(list.length) }))}</span></h2>`
+        + `<div class="w-az-body"><h2>${esc(label)} <span class="w-note">${esc(w('{n} entries', { n: fmtNum(list.length) }))}</span></h2>`
         + `<ul class="w-list w-cols w-az-list">${list.map((e) => `<li><a href="${esc(e.path)}">${esc(e.name)}</a> <span class="w-note">${esc(kinds[e.kind])}</span></li>`).join('')}</ul></div>`
         + '<div class="w-az-results" hidden></div>',
     };
@@ -85,5 +85,5 @@ export function azPages(entries: AzEntry[]): Page[] {
 }
 
 function plainLede(n: number): string {
-  return w('Ansiklopedideki {n} maddenin tamamı, harf sırasıyla. Arama kutusu hepsini birden tarar.', { n: fmtNum(n) });
+  return w('All {n} entries of the encyclopedia in alphabetical order. The search box covers all of them at once.', { n: fmtNum(n) });
 }

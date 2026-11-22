@@ -62,12 +62,12 @@ const AVATAR_NAMES: Record<AvatarId, string> = {
   frog: 'Finn', bee: 'Barbara', flamingo: 'Fernando', spacesuit: 'Nova',
   'mech-panda': 'Rae', 'mech-frog': 'Mech Finn', 'mech-bee': 'Mech Barbara', 'mech-flamingo': 'Mech Fernando',
 };
-const EMOTE_LABELS: Record<Emote, string> = { wave: 'El salla', yes: 'Evet', no: 'Hayır', jump: 'Zıpla' };
-const MODE_LABELS: Record<Mode, string> = { free: 'Serbest', hunt: 'Hazine avı', hide: 'Saklambaç' };
+const EMOTE_LABELS: Record<Emote, string> = { wave: 'Wave', yes: 'Yes', no: 'No', jump: 'Jump' };
+const MODE_LABELS: Record<Mode, string> = { free: 'Free', hunt: 'Treasure hunt', hide: 'Hide and seek' };
 const MODE_HINTS: Record<Mode, string> = {
-  free: 'Herkes istediği yere uçar',
-  hunt: 'Tur tur hedefler: ilk bulan puanı alır',
-  hide: 'Biri saklanır, diğerleri sıcak/soğuk ipuçlarıyla arar',
+  free: 'Everyone flies wherever they like',
+  hunt: 'Targets round by round: first to find scores',
+  hide: 'One hides, the others search with hot/cold clues',
 };
 
 const esc = (s: string): string => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -78,7 +78,7 @@ let lobby: Lobby | null = null;
 
 /** The top bar's button / a shared link: the lobby, or straight into room `code` */
 export function openParty(app: PartyApp, code: string): void {
-  if (!partyAvailable) { app.ui.showToast(_('Çok oyunculu sunucusu bu kurulumda yapılandırılmamış'), 4000); return; }
+  if (!partyAvailable) { app.ui.showToast(_('The multiplayer server is not configured on this installation'), 4000); return; }
   const c = code.trim().toUpperCase();
   if (session && (!c || c === session.code)) { session.hud.show(); return; }
   session?.leave();
@@ -293,13 +293,13 @@ class Lobby {
     r.hidden = true;
     r.innerHTML = `
       <div class="modal-card party-card" role="dialog" aria-modal="true">
-        <div class="panel-title"><span>${esc(_('Çok oyunculu'))}</span><button class="icon-btn small" data-close aria-label="Close">×</button></div>
+        <div class="panel-title"><span>${esc(_('Multiplayer'))}</span><button class="icon-btn small" data-close aria-label="Close">×</button></div>
         <div class="party-profile">
           <div class="party-me">
-            <label class="party-field">${esc(_('Adın'))}<input type="text" data-nick maxlength="20" autocomplete="nickname" spellcheck="false" /></label>
+            <label class="party-field">${esc(_('Your name'))}<input type="text" data-nick maxlength="20" autocomplete="nickname" spellcheck="false" /></label>
             <div data-preview></div>
           </div>
-          <div class="party-field">${esc(_('Astronotun'))}<div class="party-skins">${AVATARS.map((id) => `
+          <div class="party-field">${esc(_('Your astronaut'))}<div class="party-skins">${AVATARS.map((id) => `
             <button class="party-skin" data-skin="${id}"><span class="ps-ph"></span>${esc(AVATAR_NAMES[id])}</button>`).join('')}
           </div></div>
         </div>
@@ -367,22 +367,22 @@ class Lobby {
     body.innerHTML = `
       <div class="party-cols">
         <section class="party-col">
-          <div class="caption"><span>${esc(_('Açık odalar'))}</span><button class="small-btn" data-refresh>${esc(_('Yenile'))}</button></div>
-          <ul class="party-rooms"><li><span class="pr-empty">${esc(_('Yükleniyor…'))}</span></li></ul>
-          <div class="caption">${esc(_('Kodla katıl'))}</div>
-          <form class="party-row" data-code-form><input type="text" data-code maxlength="6" placeholder="ABC234" spellcheck="false" autocomplete="off" /><button class="primary" type="submit">${esc(_('Katıl'))}</button></form>
+          <div class="caption"><span>${esc(_('Open rooms'))}</span><button class="small-btn" data-refresh>${esc(_('Refresh'))}</button></div>
+          <ul class="party-rooms"><li><span class="pr-empty">${esc(_('Loading…'))}</span></li></ul>
+          <div class="caption">${esc(_('Join with a code'))}</div>
+          <form class="party-row" data-code-form><input type="text" data-code maxlength="6" placeholder="ABC234" spellcheck="false" autocomplete="off" /><button class="primary" type="submit">${esc(_('Join'))}</button></form>
         </section>
         <section class="party-col">
-          <div class="caption">${esc(_('Oda kur'))}</div>
+          <div class="caption">${esc(_('Create a room'))}</div>
           <form class="party-col" data-create>
-            <label class="party-field">${esc(_('Oda adı'))}<input type="text" data-name maxlength="${MAX_ROOM_NAME}" spellcheck="false" /></label>
-            <label class="party-field">${esc(_('Şifre (isteğe bağlı)'))}<input type="password" data-pass maxlength="64" autocomplete="new-password" /></label>
-            <div class="party-field">${esc(_('Oyun'))}<div class="party-modes">${MODES.map((m, i) => `
+            <label class="party-field">${esc(_('Room name'))}<input type="text" data-name maxlength="${MAX_ROOM_NAME}" spellcheck="false" /></label>
+            <label class="party-field">${esc(_('Password (optional)'))}<input type="password" data-pass maxlength="64" autocomplete="new-password" /></label>
+            <div class="party-field">${esc(_('Game'))}<div class="party-modes">${MODES.map((m, i) => `
               <label class="party-mode"><input type="radio" name="party-mode" value="${m}"${i === 0 ? ' checked' : ''} /><b>${esc(_(MODE_LABELS[m]))}</b><small>${esc(_(MODE_HINTS[m]))}</small></label>`).join('')}
             </div></div>
-            <label class="party-field">${esc(_('Kişi sınırı'))}<select data-max>${Array.from({ length: PARTY_MAX - 1 }, (_v, i) => i + 2).map((n) => `<option value="${n}"${n === PARTY_MAX ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
-            <label class="party-check"><input type="checkbox" data-listed checked /> ${esc(_('Oda listesinde görünsün'))}</label>
-            <button class="primary" type="submit">${esc(_('Oda kur'))}</button>
+            <label class="party-field">${esc(_('Player limit'))}<select data-max>${Array.from({ length: PARTY_MAX - 1 }, (_v, i) => i + 2).map((n) => `<option value="${n}"${n === PARTY_MAX ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+            <label class="party-check"><input type="checkbox" data-listed checked /> ${esc(_('Show in the room list'))}</label>
+            <button class="primary" type="submit">${esc(_('Create a room'))}</button>
           </form>
         </section>
       </div>`;
@@ -391,11 +391,11 @@ class Lobby {
       e.preventDefault();
       const code = el<HTMLInputElement>(body, '[data-code]').value.trim().toUpperCase();
       if (/^[A-Z2-9]{6}$/.test(code)) void this.join(code);
-      else this.say(_('Oda kodu 6 karakterdir'));
+      else this.say(_('A room code has 6 characters'));
     });
     el(body, '[data-create]').addEventListener('submit', (e) => { e.preventDefault(); void this.create(); });
     const name = el<HTMLInputElement>(body, '[data-name]');
-    name.placeholder = _('{nick} ve arkadaşları', { nick: this.nick() || _('Kaşifler') });
+    name.placeholder = _('{nick} and friends', { nick: this.nick() || _('Explorers') });
     void this.refresh();
     clearInterval(this.timer);
     this.timer = window.setInterval(() => { if (!this.root.hidden) void this.refresh(); }, 8000);
@@ -405,11 +405,11 @@ class Lobby {
     const list = this.root.querySelector('.party-rooms');
     if (!list) return;
     const rooms = await listRooms();
-    if (!rooms) { list.innerHTML = `<li><span class="pr-empty">${esc(_('Sunucuya ulaşılamadı'))}</span></li>`; return; }
+    if (!rooms) { list.innerHTML = `<li><span class="pr-empty">${esc(_('Could not reach the server'))}</span></li>`; return; }
     list.innerHTML = rooms.length ? rooms.map((r) => `
-      <li><span class="pr-name">${esc(r.name)}${r.locked ? ` <small class="pr-meta">${esc(_('şifreli'))}</small>` : ''}</span><span class="pr-mode pr-${esc(r.mode ?? 'free')}">${esc(_(MODE_LABELS[r.mode ?? 'free'] ?? MODE_LABELS.free))}</span><span class="pr-meta">${r.count}/${r.max}</span>
-      <button class="small-btn" data-join="${esc(r.code)}"${r.count >= r.max ? ' disabled' : ''}>${esc(r.count >= r.max ? _('Dolu') : _('Katıl'))}</button></li>`).join('')
-      : `<li><span class="pr-empty">${esc(_('Şu an açık oda yok. İlkini sen kur!'))}</span></li>`;
+      <li><span class="pr-name">${esc(r.name)}${r.locked ? ` <small class="pr-meta">${esc(_('password'))}</small>` : ''}</span><span class="pr-mode pr-${esc(r.mode ?? 'free')}">${esc(_(MODE_LABELS[r.mode ?? 'free'] ?? MODE_LABELS.free))}</span><span class="pr-meta">${r.count}/${r.max}</span>
+      <button class="small-btn" data-join="${esc(r.code)}"${r.count >= r.max ? ' disabled' : ''}>${esc(r.count >= r.max ? _('Full') : _('Join'))}</button></li>`).join('')
+      : `<li><span class="pr-empty">${esc(_('No open rooms right now. Create the first one!'))}</span></li>`;
     list.querySelectorAll<HTMLButtonElement>('[data-join]').forEach((b) => b.addEventListener('click', () => void this.join(b.dataset.join!)));
   }
 
@@ -419,16 +419,16 @@ class Lobby {
     const name = el<HTMLInputElement>(body, '[data-name]');
     const pass = el<HTMLInputElement>(body, '[data-pass]').value;
     this.busy = true;
-    this.say(_('Oda kuruluyor…'), true);
+    this.say(_('Creating the room…'), true);
     try {
-      if (!(await identity(el(this.root, '.party-ts')))) { this.say(_('Doğrulama tamamlanamadı')); return; }
+      if (!(await identity(el(this.root, '.party-ts')))) { this.say(_('The verification could not be completed')); return; }
       const res = await createRoom({
         name: name.value.trim() || name.placeholder,
         pass, max: Number(el<HTMLSelectElement>(body, '[data-max]').value), listed: el<HTMLInputElement>(body, '[data-listed]').checked,
         mode: (body.querySelector<HTMLInputElement>('input[name="party-mode"]:checked')?.value as Mode | undefined) ?? 'free',
       });
       if ('error' in res) {
-        this.say(res.error === 'busy' ? _('Şu an yeni oda kurulamıyor, biraz sonra deneyin') : res.error === 'name' ? _('Bir oda adı yazın') : _('Oda kurulamadı'));
+        this.say(res.error === 'busy' ? _('No new rooms can be created right now, try again a little later') : res.error === 'name' ? _('Enter a room name') : _('The room could not be created'));
         return;
       }
       this.start(res.code, pass);
@@ -442,13 +442,13 @@ class Lobby {
     if (this.busy) return;
     this.busy = true;
     this.root.hidden = false;
-    this.say(_('Bağlanılıyor…'), true);
+    this.say(_('Connecting…'), true);
     try {
-      if (!(await identity(el(this.root, '.party-ts')))) { this.say(_('Doğrulama tamamlanamadı')); this.showRooms(); return; }
+      if (!(await identity(el(this.root, '.party-ts')))) { this.say(_('The verification could not be completed')); this.showRooms(); return; }
       const info = await roomInfo(code);
-      if (info === 'error') { this.say(_('Sunucuya ulaşılamadı')); this.showRooms(); return; }
-      if (!info) { this.say(_('{code} kodlu oda bulunamadı (kapanmış olabilir)', { code })); this.showRooms(); return; }
-      if (info.count >= info.max) { this.say(_('Oda dolu')); this.showRooms(); return; }
+      if (info === 'error') { this.say(_('Could not reach the server')); this.showRooms(); return; }
+      if (!info) { this.say(_('No room with the code {code} (it may have closed)', { code })); this.showRooms(); return; }
+      if (info.count >= info.max) { this.say(_('The room is full')); this.showRooms(); return; }
       if (info.locked && pass === undefined && !keyOf(code)) { this.askPassword(info, wrong); return; }
       this.start(code, pass ?? '');
     } finally {
@@ -461,11 +461,11 @@ class Lobby {
     const body = el(this.root, '.party-body');
     body.innerHTML = `
       <form class="party-lock">
-        <div>${esc(_('“{name}” şifreli bir oda.', { name: info.name }))}</div>
-        <input type="password" data-pass maxlength="64" autocomplete="off" placeholder="${esc(_('Şifre'))}" />
-        <div class="party-row"><button type="button" data-back>${esc(_('Geri'))}</button><button class="primary" type="submit">${esc(_('Katıl'))}</button></div>
+        <div>${esc(_('“{name}” is password-protected.', { name: info.name }))}</div>
+        <input type="password" data-pass maxlength="64" autocomplete="off" placeholder="${esc(_('Password'))}" />
+        <div class="party-row"><button type="button" data-back>${esc(_('Back'))}</button><button class="primary" type="submit">${esc(_('Join'))}</button></div>
       </form>`;
-    this.say(wrong ? _('Şifre yanlış') : '');
+    this.say(wrong ? _('Wrong password') : '');
     const input = el<HTMLInputElement>(body, '[data-pass]');
     input.focus();
     el(body, '[data-back]').addEventListener('click', () => { this.say(''); this.showRooms(); });
@@ -483,10 +483,10 @@ class Lobby {
     if (why === 'left') return;
     if (why === 'password') { void roomInfo(code).then((info) => { if (info && info !== 'error') this.askPassword(info, true); }); return; }
     const text: Partial<Record<PartyStatus, string>> = {
-      gone: _('Oda kapanmış'), kicked: _('Oda sahibi seni odadan çıkardı'), full: _('Oda dolu'),
-      replaced: _('Bu oda başka bir sekmede açıldı'), challenge: _('Oturumun yenilenmeli, tekrar katılın'),
+      gone: _('The room has closed'), kicked: _('The room owner removed you from the room'), full: _('The room is full'),
+      replaced: _('This room was opened in another tab'), challenge: _('Your session needs renewing, please join again'),
     };
-    this.app.ui.showToast(text[why] ?? _('Bağlantı kesildi'), 4000);
+    this.app.ui.showToast(text[why] ?? _('Disconnected'), 4000);
     if (why === 'gone' || why === 'full' || why === 'challenge') this.open('');
   }
 }
@@ -610,7 +610,7 @@ class Session {
         _pc.set(pose.g[0], pose.g[1], pose.g[2]).addScaledVector(this.followOff, 1 / PARSEC_KM), _q.copy(cam.quaternion));
       cam.setReference(null);
       this.followReady = false;
-      if (u.current.starId !== pose.s) { this.follow(null); this.app.ui.showToast(_('Bu sistem burada açılamıyor, takip bırakıldı')); }
+      if (u.current.starId !== pose.s) { this.follow(null); this.app.ui.showToast(_('This system can\'t be opened here; stopped following')); }
       return;
     }
     const at = this.avatars.positionOf(pid);
@@ -685,20 +685,20 @@ class Session {
   /** what a hide-and-seek hint says */
   hintText(x: HideHint): string {
     const u = this.app.universe;
-    if (x.kind === 'ly' && x.v) return _('Güneş’e uzaklığı yaklaşık {d} ışık yılı', { d: x.v[0].toLocaleString() });
+    if (x.kind === 'ly' && x.v) return _('About {d} light-years from the Sun', { d: x.v[0].toLocaleString() });
     if (x.kind === 'dir' && x.v) {
       const { ra, dec } = raDec(x.v);
-      return _('Güneş’ten bakınca yönü: sağ açıklık {ra} sa, dik açıklık {dec}°', { ra: ra.toFixed(1), dec: Math.round(dec) });
+      return _('Direction seen from the Sun: right ascension {ra} h, declination {dec}°', { ra: ra.toFixed(1), dec: Math.round(dec) });
     }
     if (x.kind === 'spectral' && x.s) {
       let sp = '';
       try { sp = u.starInfo(x.s).spectral; } catch { /* not a star */ }
-      return sp ? _('Saklandığı yıldızın tayf sınıfı: {sp}', { sp }) : _('Saklandığı yer bir yıldız sistemi değil');
+      return sp ? _('Spectral class of the hiding star: {sp}', { sp }) : _('The hiding place is not a star system');
     }
     if (x.kind === 'star' && x.s) {
       let name = '';
       try { name = u.starName(x.s); } catch { /* not a star */ }
-      return _('Saklandığı sistem: {name}', { name: name || x.s });
+      return _('Hiding in the system: {name}', { name: name || x.s });
     }
     return '';
   }
@@ -758,7 +758,7 @@ class Session {
     // the first sync on arrival is expected; a correction later means this visitor touched the clock
     if (changed && !this.clockNagged && performance.now() - this.joinedAt > 5000) {
       this.clockNagged = true;
-      this.app.ui.showToast(_('Bu odada zamanı oda sahibi yönetiyor'), 3000);
+      this.app.ui.showToast(_('In this room the owner controls the time'), 3000);
     }
   }
 
@@ -791,7 +791,7 @@ class Session {
         break;
       }
       case 'join':
-        if (!this.members.has(m.m.pid) && m.m.pid !== this.me) this.system(_('{nick} katıldı', { nick: m.m.nick }));
+        if (!this.members.has(m.m.pid) && m.m.pid !== this.me) this.system(_('{nick} joined', { nick: m.m.nick }));
         this.members.set(m.m.pid, m.m);
         if (m.m.pid !== this.me) this.avatars.set(m.m);
         this.hud.renderPlayers();
@@ -802,7 +802,7 @@ class Session {
         if (this.following === m.pid) this.follow(null);
         if (this.picked === m.pid) this.select(null);
         this.avatars.remove(m.pid);
-        if (who) this.system(_('{nick} ayrıldı', { nick: who.nick }));
+        if (who) this.system(_('{nick} left', { nick: who.nick }));
         this.hud.renderPlayers();
         break;
       }
@@ -811,10 +811,10 @@ class Session {
         this.members.set(m.m.pid, m.m);
         if (m.m.pid !== this.me) this.avatars.set(m.m);
         if (m.m.owner && !before?.owner) {
-          this.system(m.m.pid === this.me ? _('Artık oda sahibi sensin') : _('{nick} artık oda sahibi', { nick: m.m.nick }));
+          this.system(m.m.pid === this.me ? _('You are now the room owner') : _('{nick} is now the room owner', { nick: m.m.nick }));
           if (m.m.pid === this.me) this.clockRate = NaN;
         }
-        if (m.m.pid === this.me && before && m.m.muted !== before.muted) this.system(m.m.muted ? _('Oda sahibi seni susturdu') : _('Artık yazabilirsin'));
+        if (m.m.pid === this.me && before && m.m.muted !== before.muted) this.system(m.m.muted ? _('The room owner muted you') : _('You can write again'));
         this.hud.renderPlayers();
         break;
       }
@@ -826,12 +826,12 @@ class Session {
         this.hunt = m.hunt;
         const h = m.hunt;
         if (h.target && h.round !== old?.round) {
-          this.system(_('Hazine avı, tur {n}: {target}', { n: h.round, target: _(HUNT_LABELS[h.target]) }));
-          this.app.ui.showToast(_('Yeni hedef: {target}', { target: _(HUNT_LABELS[h.target]) }), 4000);
+          this.system(_('Treasure hunt, round {n}: {target}', { n: h.round, target: _(HUNT_LABELS[h.target]) }));
+          this.app.ui.showToast(_('New target: {target}', { target: _(HUNT_LABELS[h.target]) }), 4000);
         } else {
           for (const f of h.found.slice(old?.found.length ?? 0)) {
-            this.system(_('{nick} buldu: {name} (+{pts})', { nick: f.nick, name: f.name, pts: f.pts }));
-            if (f.pid === this.me) this.app.ui.showToast(_('Buldun! +{pts} puan', { pts: f.pts }), 3000);
+            this.system(_('{nick} found it: {name} (+{pts})', { nick: f.nick, name: f.name, pts: f.pts }));
+            if (f.pid === this.me) this.app.ui.showToast(_('Found it! +{pts} points', { pts: f.pts }), 3000);
           }
         }
         this.hud.renderGame();
@@ -847,7 +847,7 @@ class Session {
         this.avatars.setBeacon(m.at && this.hide?.phase === 'seek' ? m.at : null);
         if (!seen && this.avatars.beaconShown) {
           const nick = (this.hide?.hider && this.members.get(this.hide.hider)?.nick) || '?';
-          this.app.ui.showToast(_('{nick} oyuncusunun işaret ışığı görünüyor!', { nick }), 3500);
+          this.app.ui.showToast(_('{nick}\'s beacon is in sight!', { nick }), 3500);
         }
         break;
       }
@@ -859,7 +859,7 @@ class Session {
       case 'shot':
         this.shots = [...this.shots, m.shot];
         this.hud.renderShots();
-        if (m.shot.pid !== this.me) this.system(_('{nick} bir keşif paylaştı: {title}', { nick: m.shot.nick, title: m.shot.title }));
+        if (m.shot.pid !== this.me) this.system(_('{nick} shared a discovery: {title}', { nick: m.shot.nick, title: m.shot.title }));
         break;
       case 'vote':
         this.vote = m.vote;
@@ -869,11 +869,11 @@ class Session {
         if (this.vote?.id === m.id) this.vote = null;
         this.hud.renderVote();
         if (m.passed) {
-          this.system(_('Oylama kabul edildi: {title}', { title: m.title }));
+          this.system(_('Vote passed: {title}', { title: m.title }));
           this.goTo(m.place);
-          this.app.ui.showToast(_('Herkes {name} konumuna ışınlanıyor', { name: m.place.name || m.title }), 3200);
+          this.app.ui.showToast(_('Everyone is teleporting to {name}', { name: m.place.name || m.title }), 3200);
         } else {
-          this.system(_('Oylama reddedildi: {title}', { title: m.title }));
+          this.system(_('Vote rejected: {title}', { title: m.title }));
         }
         break;
       case 'clock':
@@ -885,8 +885,8 @@ class Session {
         break;
       case 'notice': {
         const text = {
-          muted: _('Oda sahibi seni susturdu'), slow: _('Biraz yavaş, lütfen'), 'vote-busy': _('Zaten bir oylama sürüyor'), 'shot-missing': _('Görüntü gönderilemedi'),
-          'need-two': _('Bu oyun için en az iki oyuncu gerekli'),
+          muted: _('The room owner muted you'), slow: _('A little slower, please'), 'vote-busy': _('A vote is already running'), 'shot-missing': _('The image could not be posted'),
+          'need-two': _('This game needs at least two players'),
         }[m.code];
         this.app.ui.showToast(text, 2600);
         break;
@@ -907,19 +907,19 @@ class Session {
       this.heat = this.prevHeat = null;
       const nick = (pid: string | null): string => (pid && this.members.get(pid)?.nick) || '?';
       if (news && h.phase === 'hide') {
-        if (h.hider === this.me) this.app.ui.showToast(_('Saklanma sırası sende! {s} saniye içinde uzaklaş ve bir yere saklan.', { s: Math.round((h.ends - this.serverNow) / 1000) }), 5000);
-        this.system(_('Saklambaç, tur {n}: {nick} saklanıyor. Arama {s} saniye sonra başlıyor.', { n: h.round, nick: nick(h.hider), s: Math.round((h.ends - this.serverNow) / 1000) }));
+        if (h.hider === this.me) this.app.ui.showToast(_('Your turn to hide! Get away and hide somewhere within {s} seconds.', { s: Math.round((h.ends - this.serverNow) / 1000) }), 5000);
+        this.system(_('Hide and seek, round {n}: {nick} is hiding. The search starts in {s} seconds.', { n: h.round, nick: nick(h.hider), s: Math.round((h.ends - this.serverNow) / 1000) }));
       } else if (news && h.phase === 'seek') {
-        this.system(_('Arama başladı! Uzaklık göstergesi ve ipuçlarıyla {nick} oyuncusunu bul.', { nick: nick(h.hider) }));
-        this.system(_('Saklanan oyuncunun yanıp sönen işaret ışığı 10 ışık yılı içinden görünür.'));
+        this.system(_('The search is on! Find {nick} with the distance meter and the hints.', { nick: nick(h.hider) }));
+        this.system(_('The hiding player\'s blinking beacon can be seen from within 10 light-years.'));
       } else if (news && h.phase === 'over' && old) {
         this.system(h.caught
-          ? _('{catcher}, {nick} oyuncusunu buldu! (+3)', { catcher: nick(h.caught), nick: nick(h.hider) })
-          : _('Süre doldu: {nick} bulunamadı (+3)', { nick: nick(h.hider) }));
-        if (h.caught === this.me) this.app.ui.showToast(_('Buldun! +3 puan'), 3000);
+          ? _('{catcher} found {nick}! (+3)', { catcher: nick(h.caught), nick: nick(h.hider) })
+          : _('Time is up: {nick} was not found (+3)', { nick: nick(h.hider) }));
+        if (h.caught === this.me) this.app.ui.showToast(_('Found! +3 points'), 3000);
       }
     }
-    if (news && h) for (const x of h.hints.slice(h.round === old?.round ? old.hints.length : 0)) this.system(_('İpucu: {text}', { text: this.hintText(x) }));
+    if (news && h) for (const x of h.hints.slice(h.round === old?.round ? old.hints.length : 0)) this.system(_('Hint: {text}', { text: this.hintText(x) }));
     this.hud.renderGame();
   }
 
@@ -948,17 +948,17 @@ class Session {
 
   proposeHere(): void {
     const name = this.hereName();
-    this.propose({ ...this.here(), name }, _('{name} konumuna gidelim mi?', { name }));
+    this.propose({ ...this.here(), name }, _('Shall we go to {name}?', { name }));
   }
 
   /** frame grab → R2 → everyone's discoveries */
   async share(title: string): Promise<boolean> {
     const place: Place = { ...this.here(), name: this.hereName() };
     const blob = await this.app.captureFrame(1280);
-    if (!blob) { this.app.ui.showToast(_('Ekran görüntüsü alınamadı')); return false; }
+    if (!blob) { this.app.ui.showToast(_('Could not take a screenshot')); return false; }
     const up = await uploadShot(this.code, blob);
     if ('error' in up) {
-      this.app.ui.showToast(up.error === 'slow' ? _('Bir sonraki görüntü için birkaç saniye bekleyin') : _('Görüntü yüklenemedi'), 3000);
+      this.app.ui.showToast(up.error === 'slow' ? _('Wait a few seconds before the next image') : _('The image could not be uploaded'), 3000);
       return false;
     }
     this.sock.send({ t: 'shot', id: up.id, title: title.trim().slice(0, MAX_TITLE), place });
@@ -967,7 +967,7 @@ class Session {
 
   private hiding(pid: string): boolean {
     if (pid !== this.avatars.hidden) return false;
-    this.app.ui.showToast(_('Saklambaç sürüyor: onu bulman gerek!'), 2600);
+    this.app.ui.showToast(_('Hide and seek is on: you have to find them!'), 2600);
     return true;
   }
 
@@ -982,13 +982,13 @@ class Session {
     if (this.hiding(pid)) return;
     const pose = this.avatars.poseOf(pid);
     const who = this.members.get(pid);
-    if (!pose || !who) { this.app.ui.showToast(_('Konumu henüz bilinmiyor')); return; }
+    if (!pose || !who) { this.app.ui.showToast(_('Their position is not known yet')); return; }
     _q.set(pose.q[0], pose.q[1], pose.q[2], pose.q[3]).normalize();
     _back.set(0, 0.002, 0.009).applyQuaternion(_q);
     this.app.teleportTo(pose.s, pose.b, _pos.set(pose.o[0], pose.o[1], pose.o[2]).add(_back), _pc.set(pose.g[0], pose.g[1], pose.g[2]), _q);
     this.followReady = false;
     if (pose.l && pose.b) this.app.landAt(pose.b, pose.l[0], pose.l[1]);
-    if (!quiet) this.app.ui.showToast(_('{nick} yanına ışınlandın', { nick: who.nick }), 2200);
+    if (!quiet) this.app.ui.showToast(_('You teleported to {nick}', { nick: who.nick }), 2200);
   }
 
   select(pid: string | null): void {
@@ -1014,7 +1014,7 @@ class Session {
     if (this.hiding(pid)) return;
     const pose = this.avatars.poseOf(pid);
     const who = this.members.get(pid);
-    if (!pose || !who) { this.app.ui.showToast(_('Konumu henüz bilinmiyor')); return; }
+    if (!pose || !who) { this.app.ui.showToast(_('Their position is not known yet')); return; }
     const at = this.avatars.positionOf(pid);
     if (pose.s !== u.current.starId || !at || at.distanceTo(cam.position) > FOLLOW_NEAR_KM) this.teleportToPlayer(pid, true);
     cam.autopilot = null;
@@ -1022,14 +1022,14 @@ class Session {
     this.following = pid;
     this.followReady = false;
     this.select(pid);
-    this.app.ui.showToast(_('{nick} takip ediliyor', { nick: who.nick }), 2200);
+    this.app.ui.showToast(_('Following {nick}', { nick: who.nick }), 2200);
   }
 
   /** turn to face a player, wherever they are */
   lookAt(pid: string): void {
     if (this.hiding(pid)) return;
     const at = this.avatars.positionOf(pid);
-    if (!at) { this.app.ui.showToast(_('Konumu henüz bilinmiyor')); return; }
+    if (!at) { this.app.ui.showToast(_('Their position is not known yet')); return; }
     this.app.camera.centerOnDirection(_pos.copy(at).sub(this.app.camera.position));
   }
 
@@ -1056,22 +1056,22 @@ class Hud {
     r.innerHTML = `
       <div class="ph-head">
         <div class="ph-title"><span class="ph-name"></span><span class="ph-sub"></span></div>
-        <button class="small-btn" data-copy title="${esc(_('Davet bağlantısını kopyala'))}">${esc(_('Davet et'))}</button>
-        <button class="icon-btn small" data-min title="${esc(_('Küçült'))}">–</button>
-        <button class="icon-btn small" data-leave title="${esc(_('Odadan ayrıl'))}">×</button>
+        <button class="small-btn" data-copy title="${esc(_('Copy the invite link'))}">${esc(_('Invite'))}</button>
+        <button class="icon-btn small" data-min title="${esc(_('Minimize'))}">–</button>
+        <button class="icon-btn small" data-leave title="${esc(_('Leave the room'))}">×</button>
       </div>
       <div class="ph-game" hidden></div>
       <div class="ph-pick" hidden></div>
       <div class="ph-tabs">
-        <button data-tab="chat">${esc(_('Sohbet'))}<span class="badge" data-badge="chat"></span></button>
-        <button data-tab="players">${esc(_('Oyuncular'))}<span class="badge" data-badge="players"></span></button>
-        <button data-tab="shots">${esc(_('Keşifler'))}<span class="badge" data-badge="shots"></span></button>
+        <button data-tab="chat">${esc(_('Chat'))}<span class="badge" data-badge="chat"></span></button>
+        <button data-tab="players">${esc(_('Players'))}<span class="badge" data-badge="players"></span></button>
+        <button data-tab="shots">${esc(_('Discoveries'))}<span class="badge" data-badge="shots"></span></button>
       </div>
       <div class="ph-body"></div>
       <div class="ph-foot">
-        <form class="party-row" data-chat><input type="text" maxlength="${MAX_CHAT}" placeholder="${esc(_('Mesaj yaz…'))}" autocomplete="off" /></form>
+        <form class="party-row" data-chat><input type="text" maxlength="${MAX_CHAT}" placeholder="${esc(_('Write a message…'))}" autocomplete="off" /></form>
         <div class="ph-emotes">${EMOTES.map((e) => `<button data-emote="${e}">${esc(_(EMOTE_LABELS[e]))}</button>`).join('')}</div>
-        <div class="party-row"><button class="primary" data-share style="flex:1">${esc(_('Keşfini paylaş'))}</button><button data-call style="flex:1" title="${esc(_('Herkesi bulunduğun yere çağırmak için oylama başlat'))}">${esc(_('Herkesi çağır'))}</button></div>
+        <div class="party-row"><button class="primary" data-share style="flex:1">${esc(_('Share a discovery'))}</button><button data-call style="flex:1" title="${esc(_('Start a vote to call everyone to where you are'))}">${esc(_('Call everyone'))}</button></div>
       </div>`;
     const ui = document.getElementById('ui') ?? document.body;
     ui.appendChild(r);
@@ -1087,8 +1087,8 @@ class Hud {
     el(r, '[data-leave]').addEventListener('click', () => s.leave());
     el(r, '[data-copy]').addEventListener('click', () => {
       void navigator.clipboard?.writeText(s.link).then(
-        () => s.app.ui.showToast(_('Davet bağlantısı kopyalandı: {link}', { link: s.link }), 3000),
-        () => prompt(_('Davet bağlantısı'), s.link),
+        () => s.app.ui.showToast(_('Invite link copied: {link}', { link: s.link }), 3000),
+        () => prompt(_('Invite link'), s.link),
       );
     });
     const chat = el<HTMLFormElement>(r, '[data-chat]');
@@ -1125,11 +1125,11 @@ class Hud {
     box.hidden = false;
     box.style.setProperty('--c', PARTY_COLORS[m.color] ?? '#fff');
     box.innerHTML = `
-      <div class="pp-who"><span class="ph-dot"></span><b>${esc(m.nick)}</b><span class="pp-skin">${esc(AVATAR_NAMES[m.avatar] ?? '')}</span><span class="pp-dist"></span><button class="icon-btn small" data-unpick title="${esc(_('Seçimi kaldır'))}">×</button></div>
+      <div class="pp-who"><span class="ph-dot"></span><b>${esc(m.nick)}</b><span class="pp-skin">${esc(AVATAR_NAMES[m.avatar] ?? '')}</span><span class="pp-dist"></span><button class="icon-btn small" data-unpick title="${esc(_('Deselect'))}">×</button></div>
       <div class="pp-actions">
-        <button class="${on ? 'active' : 'primary'}" data-follow>${esc(on ? _('Takibi bırak') : _('Takip et'))}</button>
-        <button data-look>${esc(_('Ona bak'))}</button>
-        <button data-go>${esc(_('Yanına ışınlan'))}</button>
+        <button class="${on ? 'active' : 'primary'}" data-follow>${esc(on ? _('Stop following') : _('Follow'))}</button>
+        <button data-look>${esc(_('Look at'))}</button>
+        <button data-go>${esc(_('Teleport to'))}</button>
       </div>`;
     el(box, '[data-unpick]').addEventListener('click', () => { if (s.following === m.pid) s.follow(null); s.select(null); });
     el(box, '[data-follow]').addEventListener('click', () => s.follow(s.following === m.pid ? null : m.pid));
@@ -1159,15 +1159,15 @@ class Hud {
       const top = Object.entries(sc).filter(([pid]) => s.members.has(pid)).sort((a, b) => b[1] - a[1]).slice(0, 6);
       return top.length ? `<div class="pg-scores">${top.map(([pid, n]) => `<span style="--c:${PARTY_COLORS[s.members.get(pid)!.color] ?? '#fff'}"><b>${esc(nick(pid))}</b> ${n}</span>`).join('')}</div>` : '';
     };
-    const roundBtn = (started: boolean): string => s.isOwner ? `<button class="primary" data-round>${esc(started ? _('Yeni tur') : _('Turu başlat'))}</button>` : '';
+    const roundBtn = (started: boolean): string => s.isOwner ? `<button class="primary" data-round>${esc(started ? _('New round') : _('Start round'))}</button>` : '';
     let html = '';
     if (mode === 'hunt') {
       const h = s.hunt;
       const t = h?.target;
       html = `
-        <div class="pg-head"><b>${esc(_('Hazine avı'))}${h?.round ? ` · ${esc(_('Tur {n}', { n: h.round }))}` : ''}</b><span class="pg-time"></span></div>
-        ${t ? `<div class="pg-target">${esc(_(HUNT_LABELS[t]))}</div><div class="pg-note">${esc(_('Hedefin yakınına git; doğru yerdeysen kendiliğinden sayılır. İlk bulan 3, sonrakiler 2 ve 1 puan alır.'))}</div>`
-          : `<div class="pg-note">${esc(s.isOwner ? _('Turu başlat: herkese aynı hedef verilir, ilk bulan kazanır.') : _('Oda sahibi turu başlatınca hedef burada görünür.'))}</div>`}
+        <div class="pg-head"><b>${esc(_('Treasure hunt'))}${h?.round ? ` · ${esc(_('Round {n}', { n: h.round }))}` : ''}</b><span class="pg-time"></span></div>
+        ${t ? `<div class="pg-target">${esc(_(HUNT_LABELS[t]))}</div><div class="pg-note">${esc(_('Go near the target; once you are in the right place it counts by itself. First finder gets 3 points, the next 2 and 1.'))}</div>`
+          : `<div class="pg-note">${esc(s.isOwner ? _('Start a round: everyone gets the same target, the first to find it wins.') : _('The target appears here when the room owner starts a round.'))}</div>`}
         ${h?.found.length ? `<ol class="pg-found">${h.found.map((f) => `<li style="--c:${PARTY_COLORS[f.color] ?? '#fff'}"><b>${esc(f.nick)}</b> ${esc(f.name)} <small>+${f.pts}</small></li>`).join('')}</ol>` : ''}
         ${h ? scores(h.scores) : ''}
         <div class="pg-actions">${roundBtn(!!h?.round)}</div>`;
@@ -1176,17 +1176,17 @@ class Hud {
       const me = h?.hider === s.me;
       const running = h && (h.phase === 'hide' || h.phase === 'seek');
       let state = '';
-      if (!h || h.phase === 'idle') state = s.isOwner ? _('Turu başlat: biri saklanır, diğerleri uzaklık göstergesi ve ipuçlarıyla arar.') : _('Oda sahibi turu başlatınca biri saklanır, diğerleri arar.');
-      else if (h.phase === 'hide') state = me ? _('Saklan! Başka bir yıldıza ya da gezegene kaç. Arama başlayınca uzaklığın her saniye arayanlara söylenir.') : _('{nick} saklanıyor… Arama başlayınca uzaklık göstergesi açılır.', { nick: nick(h.hider) });
-      else if (h.phase === 'seek') state = me ? _('Seni arıyorlar! Biri {km} yakınına gelirse yakalanırsın.', { km: fmtDistance(200_000) }) : _('{nick} oyuncusunu bul: {km} yakınına gelmen yeterli.', { nick: nick(h.hider), km: fmtDistance(200_000) });
-      else state = h.caught ? _('{catcher}, {nick} oyuncusunu buldu!', { catcher: nick(h.caught), nick: nick(h.hider) }) : _('Süre doldu: {nick} bulunamadı.', { nick: nick(h.hider) });
+      if (!h || h.phase === 'idle') state = s.isOwner ? _('Start a round: one player hides, the others search with a distance meter and hints.') : _('When the room owner starts a round, one player hides and the others search.');
+      else if (h.phase === 'hide') state = me ? _('Hide! Flee to another star or planet. Once the search starts, seekers see their distance to you every second.') : _('{nick} is hiding… The distance meter turns on when the search starts.', { nick: nick(h.hider) });
+      else if (h.phase === 'seek') state = me ? _('They are looking for you! If someone gets within {km}, you are caught.', { km: fmtDistance(200_000) }) : _('Find {nick}: getting within {km} is enough.', { nick: nick(h.hider), km: fmtDistance(200_000) });
+      else state = h.caught ? _('{catcher} found {nick}!', { catcher: nick(h.caught), nick: nick(h.hider) }) : _('Time is up: {nick} was not found.', { nick: nick(h.hider) });
       const star = s.hintStar();
       html = `
-        <div class="pg-head"><b>${esc(_('Saklambaç'))}${h?.round ? ` · ${esc(_('Tur {n}', { n: h.round }))}` : ''}</b><span class="pg-time"></span></div>
+        <div class="pg-head"><b>${esc(_('Hide and seek'))}${h?.round ? ` · ${esc(_('Round {n}', { n: h.round }))}` : ''}</b><span class="pg-time"></span></div>
         <div class="pg-note">${esc(state)}</div>
         ${h?.phase === 'seek' && !me ? '<div class="pg-heat"></div>' : ''}
         ${h?.hints.length && running ? `<ul class="pg-hints">${h.hints.map((x) => `<li>${esc(s.hintText(x))}</li>`).join('')}</ul>` : ''}
-        ${star && running && !me ? `<div class="pg-actions"><button data-star>${esc(_('O sisteme uç'))}</button></div>` : ''}
+        ${star && running && !me ? `<div class="pg-actions"><button data-star>${esc(_('Fly to that system'))}</button></div>` : ''}
         ${h ? scores(h.scores) : ''}
         <div class="pg-actions">${running ? '' : roundBtn(!!h?.round)}</div>`;
     }
@@ -1202,14 +1202,14 @@ class Hud {
     if (!box || box.hidden) return;
     const time = box.querySelector('.pg-time');
     const ends = s.mode === 'hunt' ? (s.hunt?.target ? s.hunt.ends : 0) : s.mode === 'hide' && s.hide && (s.hide.phase === 'hide' || s.hide.phase === 'seek') ? s.hide.ends : 0;
-    if (time) time.textContent = ends ? (ends > s.serverNow ? fmtSeconds(ends - s.serverNow) : _('bitti')) : '';
+    if (time) time.textContent = ends ? (ends > s.serverNow ? fmtSeconds(ends - s.serverNow) : _('over')) : '';
     const heat = box.querySelector<HTMLElement>('.pg-heat');
     if (heat) {
       const km = s.heat, prev = s.prevHeat;
       const trend = km === null || prev === null || Math.abs(km - prev) < km * 0.002 ? '' : km < prev ? 'hot' : 'cold';
       heat.className = `pg-heat ${trend}`;
-      heat.textContent = km === null ? _('Uzaklık ölçülüyor…')
-        : `${_('Uzaklık: {d}', { d: km < 1e8 ? fmtDistance(km) : fmtScaleDistance(km) })}${trend === 'hot' ? ` · ${_('ısınıyor')}` : trend === 'cold' ? ` · ${_('soğuyor')}` : ''}`;
+      heat.textContent = km === null ? _('Measuring distance…')
+        : `${_('Distance: {d}', { d: km < 1e8 ? fmtDistance(km) : fmtScaleDistance(km) })}${trend === 'hot' ? ` · ${_('warmer')}` : trend === 'cold' ? ` · ${_('colder')}` : ''}`;
     }
   }
 
@@ -1220,7 +1220,7 @@ class Hud {
     if (v && !this.voteBar.hidden) {
       const left = Math.max(0, Math.ceil((v.ends - Date.now() - 0) / 1000));
       const sub = this.voteBar.querySelector('.pvote-sub');
-      if (sub) sub.textContent = `${_('{yes} evet · {no} hayır', { yes: v.yes.length, no: v.no.length })} · ${left} s`;
+      if (sub) sub.textContent = `${_('{yes} yes · {no} no', { yes: v.yes.length, no: v.no.length })} · ${left} s`;
     }
   }
 
@@ -1236,7 +1236,7 @@ class Hud {
     const s = this.s;
     el(this.root, '.ph-name').textContent = s.room?.name ?? s.code;
     const sub = el(this.root, '.ph-sub');
-    const st = s.connected ? `${s.code} · ${_(MODE_LABELS[s.mode])} · ${s.members.size}/${s.room?.max ?? PARTY_MAX}` : `${s.code} · ${_('Bağlanılıyor…')}`;
+    const st = s.connected ? `${s.code} · ${_(MODE_LABELS[s.mode])} · ${s.members.size}/${s.room?.max ?? PARTY_MAX}` : `${s.code} · ${_('Connecting…')}`;
     sub.textContent = st;
     sub.classList.toggle('warn', !s.connected);
   }
@@ -1294,7 +1294,7 @@ class Hud {
     const s = this.s;
     const body = el(this.root, '.ph-body');
     if (this.tab === 'chat') {
-      body.innerHTML = `<div class="ph-chat">${s.chat.length ? s.chat.map((l) => this.chatLine(l)).join('') : `<div class="ph-empty">${esc(_('Henüz mesaj yok. Selam ver!'))}</div>`}</div>`;
+      body.innerHTML = `<div class="ph-chat">${s.chat.length ? s.chat.map((l) => this.chatLine(l)).join('') : `<div class="ph-empty">${esc(_('No messages yet. Say hello!'))}</div>`}</div>`;
       body.scrollTop = body.scrollHeight;
       return;
     }
@@ -1302,16 +1302,16 @@ class Hud {
       const list = [...s.members.values()].sort((a, b) => Number(b.owner) - Number(a.owner) || a.nick.localeCompare(b.nick));
       body.innerHTML = `<ul class="ph-players">${list.map((m) => `
         <li style="--c:${PARTY_COLORS[m.color] ?? '#fff'}"><span class="ph-dot"></span>
-          <span class="ph-nick"${m.pid !== s.me ? ` data-pick="${m.pid}" title="${esc(_('Seç'))}"` : ''}>${esc(m.nick)}${m.pid === s.me ? `<small>${esc(_('sen'))}</small>` : ''}${m.owner ? `<small>${esc(_('oda sahibi'))}</small>` : ''}${m.muted ? `<small>${esc(_('susturuldu'))}</small>` : ''}</span>
-          ${m.pid !== s.me ? `<button data-go="${m.pid}">${esc(_('Işınlan'))}</button>` : ''}
-          ${s.isOwner && m.pid !== s.me ? `<button data-mute="${m.pid}">${esc(m.muted ? _('Sesi aç') : _('Sustur'))}</button><button data-kick="${m.pid}">${esc(_('At'))}</button>` : ''}
+          <span class="ph-nick"${m.pid !== s.me ? ` data-pick="${m.pid}" title="${esc(_('Select'))}"` : ''}>${esc(m.nick)}${m.pid === s.me ? `<small>${esc(_('you'))}</small>` : ''}${m.owner ? `<small>${esc(_('owner'))}</small>` : ''}${m.muted ? `<small>${esc(_('muted'))}</small>` : ''}</span>
+          ${m.pid !== s.me ? `<button data-go="${m.pid}">${esc(_('Teleport'))}</button>` : ''}
+          ${s.isOwner && m.pid !== s.me ? `<button data-mute="${m.pid}">${esc(m.muted ? _('Unmute') : _('Mute'))}</button><button data-kick="${m.pid}">${esc(_('Kick'))}</button>` : ''}
         </li>`).join('')}</ul>`;
       body.querySelectorAll<HTMLElement>('[data-pick]').forEach((b) => b.addEventListener('click', () => s.select(b.dataset.pick!)));
       body.querySelectorAll<HTMLButtonElement>('[data-go]').forEach((b) => b.addEventListener('click', () => s.teleportToPlayer(b.dataset.go!)));
       body.querySelectorAll<HTMLButtonElement>('[data-mute]').forEach((b) => b.addEventListener('click', () => s.mute(b.dataset.mute!, !s.members.get(b.dataset.mute!)?.muted)));
       body.querySelectorAll<HTMLButtonElement>('[data-kick]').forEach((b) => b.addEventListener('click', () => {
         const who = s.members.get(b.dataset.kick!);
-        if (who && confirm(_('{nick} odadan çıkarılsın mı? Bir daha katılamaz.', { nick: who.nick }))) s.kick(who.pid);
+        if (who && confirm(_('Remove {nick} from the room? They will not be able to rejoin.', { nick: who.nick }))) s.kick(who.pid);
       }));
       return;
     }
@@ -1319,7 +1319,7 @@ class Hud {
     body.innerHTML = shots.length
       ? `<div class="ph-shots">${shots.map((sh) => `
           <button class="ph-shot" data-shot="${esc(sh.id)}" style="--c:${PARTY_COLORS[sh.color] ?? '#fff'}"><img src="${esc(shotUrl(sh.url))}" alt="" loading="lazy" /><span><b>${esc(sh.nick)}</b> ${esc(sh.title)}</span></button>`).join('')}</div>`
-      : `<div class="ph-empty">${esc(_('Bir şey bulduğunda “Keşfini paylaş” ile herkese göster. Görüntüler burada birikir; oylamayla hep birlikte oraya gidebilirsiniz.'))}</div>`;
+      : `<div class="ph-empty">${esc(_('When you find something, show everyone with “Share a discovery”. The images collect here, and a vote can take you all there together.'))}</div>`;
     body.querySelectorAll<HTMLButtonElement>('[data-shot]').forEach((b) => b.addEventListener('click', () => {
       const sh = s.shots.find((x) => x.id === b.dataset.shot);
       if (sh) this.view(sh);
@@ -1336,8 +1336,8 @@ class Hud {
     bar.innerHTML = `
       ${shot ? `<img src="${esc(shotUrl(shot.url))}" alt="" />` : ''}
       <div class="pvote-text"><span class="pvote-q">${esc(v.title)}</span><span class="pvote-sub"></span></div>
-      <button data-yes class="${mine === 'yes' ? 'mine' : ''}">${esc(_('Evet, gidelim'))}</button>
-      <button data-no class="${mine === 'no' ? 'mine' : ''}">${esc(_('Hayır'))}</button>`;
+      <button data-yes class="${mine === 'yes' ? 'mine' : ''}">${esc(_('Yes, let\'s go'))}</button>
+      <button data-no class="${mine === 'no' ? 'mine' : ''}">${esc(_('No'))}</button>`;
     el(bar, '[data-yes]').addEventListener('click', () => this.s.ballot(true));
     el(bar, '[data-no]').addEventListener('click', () => this.s.ballot(false));
     this.tick();
@@ -1349,7 +1349,7 @@ class Hud {
     const foot = el(this.root, '.ph-foot');
     if (foot.querySelector('.ph-share')) return;
     foot.insertAdjacentHTML('afterbegin', `
-      <form class="ph-share"><input type="text" maxlength="${MAX_TITLE}" placeholder="${esc(_('Ne buldun? (isteğe bağlı)'))}" /><button class="primary" type="submit">${esc(_('Gönder'))}</button><button type="button" data-cancel>×</button></form>`);
+      <form class="ph-share"><input type="text" maxlength="${MAX_TITLE}" placeholder="${esc(_('What did you find? (optional)'))}" /><button class="primary" type="submit">${esc(_('Send'))}</button><button type="button" data-cancel>×</button></form>`);
     const form = el<HTMLFormElement>(foot, '.ph-share');
     const input = el<HTMLInputElement>(form, 'input');
     input.focus();
@@ -1360,7 +1360,7 @@ class Hud {
       input.blur();
       void this.s.share(input.value)
         .then((ok) => { if (ok) { form.remove(); this.setTab('shots'); } })
-        .catch((err) => { console.warn('party share', err); this.s.app.ui.showToast(_('Görüntü yüklenemedi')); })
+        .catch((err) => { console.warn('party share', err); this.s.app.ui.showToast(_('The image could not be uploaded')); })
         .finally(() => { this.sharing = false; });
     });
   }
@@ -1372,11 +1372,11 @@ class Hud {
       <div class="modal-card">
         <img src="${esc(shotUrl(sh.url))}" alt="${esc(sh.title)}" />
         <div class="pv-meta">
-          <div><div class="pv-title">${esc(sh.title)}</div><div class="pv-by">${esc(_('{nick} paylaştı · {place}', { nick: sh.nick, place: sh.place.name }))}</div></div>
+          <div><div class="pv-title">${esc(sh.title)}</div><div class="pv-by">${esc(_('Shared by {nick} · {place}', { nick: sh.nick, place: sh.place.name }))}</div></div>
           <div class="pv-actions">
-            <button data-go>${esc(_('Oraya ışınlan'))}</button>
-            <button class="primary" data-vote>${esc(_('Oylamaya aç'))}</button>
-            <a class="small-btn" href="${esc(shotUrl(sh.url))}" target="_blank" rel="noopener">${esc(_('Bağlantı'))}</a>
+            <button data-go>${esc(_('Teleport there'))}</button>
+            <button class="primary" data-vote>${esc(_('Put to a vote'))}</button>
+            <a class="small-btn" href="${esc(shotUrl(sh.url))}" target="_blank" rel="noopener">${esc(_('Link'))}</a>
             <button data-close>×</button>
           </div>
         </div>
@@ -1387,7 +1387,7 @@ class Hud {
     el(m, '[data-close]').addEventListener('click', close);
     el(m, '[data-go]').addEventListener('click', () => { this.s.goTo(sh.place); close(); });
     el(m, '[data-vote]').addEventListener('click', () => {
-      this.s.propose(sh.place, _('{title}: oraya gidelim mi?', { title: sh.title }), sh.id);
+      this.s.propose(sh.place, _('{title}: shall we go there?', { title: sh.title }), sh.id);
       close();
     });
   }

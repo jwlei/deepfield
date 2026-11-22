@@ -93,16 +93,16 @@ export type PlanetClass = 'lava' | 'venusian' | 'temperate' | 'ocean' | 'eyeball
   | 'jungle' | 'dune' | 'salt' | 'toxic' | 'geothermal' | 'titan' | 'iron' | 'chthonian' | 'magmaeye' | 'hycean' | 'superpuff' | 'hotneptune';
 
 export const CLASS_LABEL: Record<PlanetClass, string> = {
-  lava: 'Lav gezegeni', venusian: 'Venüs benzeri (sera)', temperate: 'Ilıman (okyanuslu)', ocean: 'Okyanus dünyası',
-  eyeball: 'Göz küresi gezegeni (gelgit kilitli)', carbon: 'Karbon gezegeni', desert: 'Soğuk çöl gezegeni',
-  ice: 'Buz dünyası', barren: 'Çorak kaya', subneptune: 'Mini-Neptün (kalın H/He zarfı)', gasgiant: 'Gaz devi', icegiant: 'Buz devi', hotjupiter: 'Sıcak Jüpiter',
-  snowball: 'Kartopu gezegeni (küresel buzul çağı)', tidal: 'Gelgit ısıtmalı volkanik dünya (süper-Io)',
-  jungle: 'Orman dünyası (kesintisiz bitki örtüsü)', dune: 'Kum denizi gezegeni (sıcak çöl)', salt: 'Tuz gezegeni (kurumuş okyanuslar)',
-  toxic: 'Zehirli dünya (asit denizleri)', geothermal: 'Jeotermal dünya (sıcak kaynaklar ve gayzerler)',
-  titan: 'Titan benzeri dünya (hidrokarbon denizleri)', iron: 'Demir gezegeni (soyulmuş çekirdek)',
-  chthonian: 'Khthonik gezegen (buharlaşmış bir devin çekirdeği)', magmaeye: 'Lav gözü gezegeni (gündüz yüzü magma okyanusu)',
-  hycean: 'Hycean dünyası (hidrojen göğü altında okyanus)', superpuff: 'Süper-kabarık gezegen (pamuk şeker yoğunluğunda)',
-  hotneptune: 'Sıcak Neptün (buharlaşan atmosfer)',
+  lava: 'Lava planet', venusian: 'Venus-like (greenhouse)', temperate: 'Temperate (oceans)', ocean: 'Ocean world',
+  eyeball: 'Eyeball planet (tidally locked)', carbon: 'Carbon planet', desert: 'Cold desert planet',
+  ice: 'Ice world', barren: 'Barren rock', subneptune: 'Mini-Neptune (thick H/He envelope)', gasgiant: 'Gas giant', icegiant: 'Ice giant', hotjupiter: 'Hot Jupiter',
+  snowball: 'Snowball planet (global ice age)', tidal: 'Tidally heated volcanic world (super-Io)',
+  jungle: 'Jungle world (unbroken vegetation)', dune: 'Sand-sea planet (hot desert)', salt: 'Salt planet (dried-up oceans)',
+  toxic: 'Toxic world (acid seas)', geothermal: 'Geothermal world (hot springs and geysers)',
+  titan: 'Titan-like world (hydrocarbon seas)', iron: 'Iron planet (stripped core)',
+  chthonian: 'Chthonian planet (core of an evaporated giant)', magmaeye: 'Lava-eye planet (dayside magma ocean)',
+  hycean: 'Hycean world (ocean under a hydrogen sky)', superpuff: 'Super-puff planet (the density of cotton candy)',
+  hotneptune: 'Hot Neptune (evaporating atmosphere)',
 };
 
 /**
@@ -124,31 +124,31 @@ export function sudarskyClass(T: number): 1 | 2 | 3 | 4 | 5 {
 }
 
 const SUDARSKY_LABEL: Record<1 | 2 | 3 | 4 | 5, string> = {
-  1: 'Gaz devi (Sudarsky I: amonyak bulutları)', 2: 'Gaz devi (Sudarsky II: su bulutları)', 3: 'Gaz devi (Sudarsky III: bulutsuz)',
-  4: 'Sıcak Jüpiter (Sudarsky IV: alkali metal atmosfer)', 5: 'Çok sıcak Jüpiter (Sudarsky V: silikat bulutları)',
+  1: 'Gas giant (Sudarsky I: ammonia clouds)', 2: 'Gas giant (Sudarsky II: water clouds)', 3: 'Gas giant (Sudarsky III: cloudless)',
+  4: 'Hot Jupiter (Sudarsky IV: alkali-metal atmosphere)', 5: 'Ultra-hot Jupiter (Sudarsky V: silicate clouds)',
 };
 
 /** Extra flavour sentence per class (shown after the standard description) */
 export const CLASS_NOTE: Partial<Record<PlanetClass, string>> = {
-  ocean: 'Yüzeyin tamamı yüzlerce kilometre derinlikte bir okyanusla kaplı; kara yok, tabanda yüksek basınç buzu.',
-  eyeball: 'Yıldıza hep aynı yüzünü dönüyor: gündüz yarıküresinin ortasında sıvı bir okyanus "göz bebeği", çevresinde ve gece tarafında kalıcı buz.',
-  carbon: 'Oksijenden çok karbon içeren bir diskten doğdu: grafit ve karbür kabuk, katran rengi okyanuslar; derinlerde elmas tabakaları.',
-  hotjupiter: 'Yıldızına çok yakın; atmosferi kavrulup uzaya kaçıyor, gece tarafına rüzgârlar binlerce km/s hızla ısı taşıyor.',
-  subneptune: 'Kepler\'in en sık bulduğu gezegen türü: kayaç bir çekirdeğin üzerinde kalın bir hidrojen-helyum zarfı; yüzeyi yok, pus katmanları altında basınç yüzlerce bar.',
-  snowball: 'Yaşanabilir kuşakta olduğu halde baştan sona buzla kaplı: parlak buz güneş ışığını geri yansıttıkça gezegen daha da soğudu (Dünya da 700 milyon yıl önce böyleydi). Buzun altında sıvı bir okyanus olabilir.',
-  tidal: 'Komşu gezegenlerle yörünge rezonansında: yıldızın gelgiti iç kısmını sürekli yoğurup ısıtıyor (TRAPPIST-1 gezegenleri gibi). Yüzeyi kükürt lavları ve aktif volkanlarla kaplı.',
-  jungle: 'Karaların neredeyse tamamı bitki örtüsüyle kaplı: sıcak, nemli ve mevsimsiz bir iklim. Atmosferindeki oksijen ile metanın bir arada bulunması ancak yaşamla açıklanabilir.',
-  dune: 'Suyunun çoğunu uzaya kaçırmış sıcak bir çöl: kıtalar boyu kum denizleri ve rüzgârın oyduğu kayalıklar. Toz fırtınaları bazen bütün gezegeni sarıyor.',
-  salt: 'Okyanusları buharlaşıp gitti: geride kilometrelerce kalınlıkta tuz yatakları, göz kamaştıran düzlükler ve eski kıyı çizgileri kaldı.',
-  toxic: 'Kükürt ve klor bileşikleriyle yüklü bir atmosferin altında asit denizleri var: yağmuru sülfürik asit, kıyıları kükürt çökelleriyle sarı.',
-  geothermal: 'Kabuğu ince, iç ısısı yüksek: yüzeyi sıcak su kaynakları, mineral terasları ve turkuaz göllerle benekli. Gayzerleri yörüngeden görülecek kadar yükseğe fışkırıyor.',
-  titan: 'Kalın bir organik pus tabakasının altında metan yağmurları, etan nehirleri ve hidrokarbon denizleri var. Ana kayası su buzu, kumulları donmuş organik tanecikler.',
-  iron: 'Dev bir çarpışma ya da yıldızının ısısı kayaç mantosunu söküp almış: geriye neredeyse yalın bir demir-nikel çekirdek kaldı (Merkür\'ün uç örneği). Boyutuna göre çok yoğun.',
-  chthonian: 'Bir zamanlar gaz deviydi: yıldızına fazla yaklaşınca hidrojen-helyum zarfı uzaya savruldu, geriye çıplak, erimiş kaya-metal çekirdeği kaldı.',
-  magmaeye: 'Yıldıza hep aynı yüzünü dönüyor: gündüz tarafının ortası kalıcı bir magma okyanusu, gece tarafı katılaşmış kapkara kabuk. Buharlaşan kaya gece tarafına mineral karı olarak yağıyor.',
-  hycean: 'Kalın bir hidrojen atmosferinin altında gezegeni saran ılık bir su okyanusu olabilir (K2-18 b gibi). Bulutların arasından koyu mavi derinlik seçiliyor.',
-  superpuff: 'Kütlesi birkaç Dünya, çapı bir gaz devi kadar: yoğunluğu pamuk şekerinkine yakın (Kepler-51 gezegenleri gibi). Gördüğümüz, çok yükseklere uzanan bir pus tabakası.',
-  hotneptune: 'Yıldızına bu kadar yakın bir Neptün nadirdir ("sıcak Neptün çölü"): atmosferi buharlaşıyor, ardında kuyruklu yıldızınki gibi bir hidrojen kuyruğu bırakıyor.',
+  ocean: 'The whole surface is covered by an ocean hundreds of kilometres deep; no land, high-pressure ice on the floor.',
+  eyeball: 'It always shows the same face to its star: a liquid-ocean "pupil" at the centre of the day side, permanent ice around it and across the night side.',
+  carbon: 'Born from a disc with more carbon than oxygen: a crust of graphite and carbides, tar-coloured oceans; layers of diamond deep down.',
+  hotjupiter: 'Very close to its star; its atmosphere is scorched and escaping to space, winds of thousands of km/h carry heat to the night side.',
+  subneptune: 'Kepler\'s most common planet type: a thick hydrogen-helium envelope over a rocky core; no surface, with pressures of hundreds of bar beneath the haze layers.',
+  snowball: 'Although it lies in the habitable zone, it is covered in ice from pole to pole: as the bright ice reflected sunlight away, the planet cooled even further (Earth was like this 700 million years ago). There may be a liquid ocean beneath the ice.',
+  tidal: 'In orbital resonance with its neighbours: the star\'s tides constantly knead and heat its interior (like the TRAPPIST-1 planets). Its surface is covered in sulphur lavas and active volcanoes.',
+  jungle: 'Almost all the land is covered in vegetation: a hot, humid climate without seasons. Oxygen and methane together in its atmosphere can only be explained by life.',
+  dune: 'A hot desert that has lost most of its water to space: continent-wide sand seas and wind-carved cliffs. Dust storms sometimes engulf the whole planet.',
+  salt: 'Its oceans evaporated away: left behind are salt beds kilometres thick, dazzling flats and ancient shorelines.',
+  toxic: 'Beneath an atmosphere laden with sulphur and chlorine compounds lie seas of acid: its rain is sulphuric acid, its shores yellow with sulphur deposits.',
+  geothermal: 'A thin crust over a hot interior: the surface is dotted with hot springs, mineral terraces and turquoise lakes. Its geysers erupt high enough to be seen from orbit.',
+  titan: 'Beneath a thick organic haze there are methane rains, ethane rivers and hydrocarbon seas. Its bedrock is water ice, its dunes frozen organic grains.',
+  iron: 'A giant impact or its star\'s heat stripped away the rocky mantle: what remains is an almost bare iron-nickel core (an extreme version of Mercury). Very dense for its size.',
+  chthonian: 'Once a gas giant: it strayed too close to its star, its hydrogen-helium envelope was blown off into space, and only the bare, molten rock-metal core remains.',
+  magmaeye: 'It always shows the same face to its star: the middle of the day side is a permanent magma ocean, the night side a solidified pitch-black crust. Vaporised rock falls on the night side as mineral snow.',
+  hycean: 'Beneath a thick hydrogen atmosphere there may be a warm water ocean covering the whole planet (like K2-18 b). The deep blue shows through between the clouds.',
+  superpuff: 'A few Earth masses in the diameter of a gas giant: its density is close to that of cotton candy (like the Kepler-51 planets). What we see is a haze layer reaching very high up.',
+  hotneptune: 'A Neptune this close to its star is rare (the "hot Neptune desert"): its atmosphere is evaporating, leaving a comet-like tail of hydrogen behind it.',
 };
 
 /* ------------------------------------------------------------------ */
@@ -220,7 +220,7 @@ export function generateSystem(star: StarInfo, opts: GenerateOptions = {}): Gene
   const curated = knownMultiple(star) !== null;
   const measured = !curated && !!opts.measured;
   const tree = measured ? opts.measured! : multiplicityTree(new Rng(hashSeed(star.index, star.hip, 0xb1a)), star, opts.single);
-  const source = curated ? 'Gözlem (literatür)' : measured ? 'Gözlem (MSC / ORB6 kataloğu)' : 'Prosedürel (tahmini)';
+  const source = curated ? 'Observation (literature)' : measured ? 'Observed (MSC / ORB6 catalogue)' : 'Procedural (estimated)';
   const hosts = emitHierarchy(rng, star, tree, sysId, primary, bodies, source, opts.maxPlanetAU);
 
   /* ---- planets, belts, small bodies around every host ---- */
@@ -234,17 +234,17 @@ export function generateSystem(star: StarInfo, opts: GenerateOptions = {}): Gene
 /* ------------------------------------------------------------------ */
 
 const KIND_LABEL: Record<CompKind, string> = {
-  ms: 'Anakol yıldızı', giant: 'Dev yıldız', wd: 'Beyaz cüce', bd: 'Kahverengi cüce', ns: 'Nötron yıldızı', bh: 'Kara delik', wr: 'Wolf-Rayet yıldızı',
+  ms: 'Main-sequence star', giant: 'Giant star', wd: 'White dwarf', bd: 'Brown dwarf', ns: 'Neutron star', bh: 'Kara delik', wr: 'Wolf-Rayet stars',
 };
 
 const KIND_NOTE: Record<CompKind, string> = {
-  ms: 'Ana yıldızla aynı buluttan, aynı anda doğdu; daha az kütleli olduğu için anakolda ondan çok daha uzun kalacak.',
-  giant: 'Çekirdeğindeki hidrojeni tüketmiş, şişmiş ve soğumuş bir yıldız.',
-  wd: 'Bir zamanlar çiftin daha kütleli üyesiydi; önce o evrimleşti, dış katmanlarını yitirdi ve geriye Dünya boyutunda, bir ton/cm³ yoğunlukta sönmekte olan çekirdeği kaldı.',
-  bd: 'Hidrojen füzyonunu tutuşturamayacak kadar hafif (< 0,075 M☉); doğumundan kalan ısıyla kızılötesinde soluk soluk parlar, Jüpiter boyutundadır.',
-  ns: 'Daha kütleli doğan yoldaşın süpernova artığı: şehir boyutunda, Güneş kütlesinden ağır bir nötron yıldızı. Ana yıldızın rüzgârını yutarak X-ışını saçar.',
-  bh: 'Çiftin bir zamanlar çok daha kütleli olan üyesi çöktü: geriye birkaç on kilometrelik olay ufkuyla yıldız kütleli bir kara delik kaldı. Yoldaşın rüzgârından madde toplarsa X-ışınında parlar; toplamazsa yalnızca yıldızın sallanan yörüngesinden fark edilir.',
-  wr: 'Güçlü rüzgârlarıyla dış katmanlarını atmış, çıplak helyum çekirdeği görünen çok sıcak bir yıldız.',
+  ms: 'Born from the same cloud at the same time as the primary; being less massive, it will stay on the main sequence far longer.',
+  giant: 'A star that has exhausted the hydrogen in its core, swelled up and cooled.',
+  wd: 'Once the more massive member of the pair; it evolved first, shed its outer layers and left behind its fading, Earth-sized core at a density of a tonne per cm³.',
+  bd: 'Too light to ignite hydrogen fusion (< 0.075 M☉); it glows faintly in the infrared with the heat of its birth and is the size of Jupiter.',
+  ns: 'The supernova remnant of the companion born more massive: a city-sized neutron star heavier than the Sun. Swallowing the primary\'s wind, it shines in X-rays.',
+  bh: 'The once far more massive member of the pair collapsed, leaving a stellar-mass black hole with an event horizon a few tens of kilometres across. If it accretes the companion\'s wind it shines in X-rays; if not, only the star\'s wobbling orbit gives it away.',
+  wr: 'A very hot star whose fierce winds have blown off its outer layers, exposing the bare helium core.',
 };
 
 interface RLeaf { kind: 'leaf'; spec: 'primary' | CompanionSpec; label: string; id: string; mass: number; lum: number; radiusKm: number; temperature: number; phys: CompanionPhysics | null }
@@ -272,10 +272,10 @@ function jitterPole(rng: Rng, pole: PoleRaDec, sigmaDeg: number): PoleRaDec {
 }
 
 export function fmtPeriod(days: number): string {
-  if (days < 2) return _('{n} saat', { n: fixed(days * 24, 1) });
-  if (days < 1000) return _('{n} gün', { n: fixed(days, days < 20 ? 2 : 1) });
+  if (days < 2) return _('{n} h', { n: fixed(days * 24, 1) });
+  if (days < 1000) return _('{n} days', { n: fixed(days, days < 20 ? 2 : 1) });
   const y = days / 365.25;
-  return _('{n} yıl', { n: y < 100 ? fixed(y, 1) : fixed(y, 0) });
+  return _('{n} years', { n: y < 100 ? fixed(y, 1) : fixed(y, 0) });
 }
 
 export function fmtAU(a: number): string {
@@ -306,20 +306,20 @@ function emitHierarchy(rng: Rng, star: StarInfo, tree: NodeSpec, sysId: string, 
   const pairs: RPair[] = [];
   const collect = (n: RNode) => { if (n.kind === 'leaf') leaves.push(n); else { pairs.push(n); collect(n.a); collect(n.b); } };
   collect(root);
-  const order = leaves.length === 2 ? 'İkili sistem' : leaves.length === 3 ? 'Üçlü sistem' : leaves.length === 4 ? 'Dörtlü sistem' : 'Çoklu sistem';
+  const order = leaves.length === 2 ? 'Binary system' : leaves.length === 3 ? 'Triple system' : leaves.length === 4 ? 'Quadruple system' : 'Multiple system';
   const hierarchy = pairs.map((p) => `${p.a.label}–${p.b.label}`).join(', ');
 
   // the primary is now "Name A" (or whichever component it is)
   const primaryLeaf = leaves.find((l) => l.spec === 'primary')!;
   primary.name = `${star.name} ${primaryLeaf.label}`;
   const pf = primary.facts!;
-  pf['Çokluluk'] = `${_(order)} (${hierarchy})`;
+  pf['Multiplicity'] = `${_(order)} (${hierarchy})`;
   for (const l of leaves) {
     if (!l.phys) continue;
     const pr = pairs.find((p) => p.a === l || p.b === l)!;
-    pf[`Yoldaş ${l.label}`] = `${l.phys.spectral} · ${fixed(l.mass, l.mass < 0.1 ? 3 : 2)} M☉ · ${fmtPeriod(pr.spec.periodDays)}, ${fmtAU(pr.aAU)}, e = ${fixed(pr.spec.e, 2)}`;
+    pf[`Companion ${l.label}`] = `${l.phys.spectral} · ${fixed(l.mass, l.mass < 0.1 ? 3 : 2)} M☉ · ${fmtPeriod(pr.spec.periodDays)}, ${fmtAU(pr.aAU)}, e = ${fixed(pr.spec.e, 2)}`;
   }
-  primary.description += ' ' + _('{order}: {n} yıldızdan oluşur; bileşenler ortak kütle merkezleri etrafında dolanır.', { order: _(order), n: leaves.length });
+  primary.description += ' ' + _('{order}: made of {n} stars; the components orbit their common centres of mass.', { order: _(order), n: leaves.length });
 
   const emit = (node: RNode, parent: RPair | null, parentPole: PoleRaDec, first: boolean, argPeri: number, M0: number, outerLimitAU: number | null): void => {
     // orbit of this node around the parent barycentre (the pair's relative orbit scaled by the partner's mass share)
@@ -352,20 +352,20 @@ function emitHierarchy(rng: Rng, star: StarInfo, tree: NodeSpec, sysId: string, 
         const pr = parent!;
         const rSolar = ph.radiusKm / SUN_RADIUS_KM;
         const facts: Record<string, string> = {
-          'Sınıf': KIND_LABEL[ph.kind], 'Spektral sınıf': ph.spectral, 'Kütle': `${fixed(ph.massSolar, ph.massSolar < 0.1 ? 3 : 2)} M☉`,
-          'Yarıçap': ph.radiusKm < 100 ? `${fixed(ph.radiusKm, 0)} km` : `${fixed(rSolar, rSolar < 0.1 ? 4 : 2)} R☉`,
-          'Parlaklık': `${fmtLum(ph.luminosity)} L☉`, 'Yörünge periyodu': fmtPeriod(pr.spec.periodDays), 'Ayrıklık (a)': fmtAU(pr.aAU), 'Dış merkezlilik': fixed(pr.spec.e, 3),
-          'Kaynak': pr.spec.uncertain ? `${_(source)}; ${_('yörünge belirsiz')}` : source,
+          'Class': KIND_LABEL[ph.kind], 'Spectral class': ph.spectral, 'Mass': `${fixed(ph.massSolar, ph.massSolar < 0.1 ? 3 : 2)} M☉`,
+          'Radius': ph.radiusKm < 100 ? `${fixed(ph.radiusKm, 0)} km` : `${fixed(rSolar, rSolar < 0.1 ? 4 : 2)} R☉`,
+          'Luminosity': `${fmtLum(ph.luminosity)} L☉`, 'Orbital period': fmtPeriod(pr.spec.periodDays), 'Separation (a)': fmtAU(pr.aAU), 'Eccentricity': fixed(pr.spec.e, 3),
+          'Source': pr.spec.uncertain ? `${_(source)}; ${_('orbit uncertain')}` : source,
         };
         const spec = node.spec as CompanionSpec;
-        const desc = `${_('{name} sisteminin {label} bileşeni', { name: star.name, label: node.label })}: ${_(KIND_LABEL[ph.kind]).toLocaleLowerCase(localeTag())}, ${ph.spectral}. ${spec.note ? `${_(spec.note)}. ` : ''}${_(KIND_NOTE[ph.kind])}`;
+        const desc = `${_('Component {label} of the {name} system', { name: star.name, label: node.label })}: ${_(KIND_LABEL[ph.kind]).toLocaleLowerCase(localeTag())}, ${ph.spectral}. ${spec.note ? `${_(spec.note)}. ` : ''}${_(KIND_NOTE[ph.kind])}`;
         const isNS = ph.kind === 'ns', isBH = ph.kind === 'bh';
         // an accreting compact companion (X-ray binary) needs a close orbit; wide ones are dormant
         const accreting = (isNS || isBH) && pr.aAU < 0.5;
         if (isBH) {
           facts['Olay ufku'] = `${fixed(ph.radiusKm, 0)} km`;
-          facts['Durum'] = accreting ? _('X-ışını çifti (madde topluyor)') : _('Sessiz (madde toplamıyor)');
-          delete facts['Yarıçap']; delete facts['Parlaklık']; delete facts['Spektral sınıf'];
+          facts['Status'] = accreting ? _('X-ray binary (accreting)') : _('Dormant (not accreting)');
+          delete facts['Radius']; delete facts['Luminosity']; delete facts['Spectral class'];
         }
         bodies.push({
           id: node.id, name: `${star.name} ${node.label}`, type: isNS ? 'pulsar' : isBH ? 'blackhole' : 'star', parent: pr.id,
@@ -397,8 +397,8 @@ function emitHierarchy(rng: Rng, star: StarInfo, tree: NodeSpec, sysId: string, 
     bodies.push({
       id: node.id, name: parent ? `${star.name} ${node.label}` : star.name, type: 'barycenter', parent: parent?.id, radius: 0, mass: node.mass * SUN_MASS_KG,
       pole, orbit, appearance: { kind: 'none', seed: 0 },
-      description: _('{a} ve {b} bileşenlerinin ortak kütle merkezi: ikisi de bu noktanın etrafında {p} periyotla dolanır (ayrıklık {au}, e = {e}).', { a: node.a.label, b: node.b.label, p: fmtPeriod(node.spec.periodDays), au: fmtAU(node.aAU), e: fixed(node.spec.e, 2) }),
-      facts: { 'Bileşenler': `${node.a.label} + ${node.b.label}`, 'Periyot': fmtPeriod(node.spec.periodDays), 'Ayrıklık (a)': fmtAU(node.aAU), 'Dış merkezlilik': fixed(node.spec.e, 3), 'Toplam kütle': `${fixed(node.mass, 2)} M☉`, 'Kaynak': source },
+      description: _('Common centre of mass of components {a} and {b}: both circle this point with a period of {p} (separation {au}, e = {e}).', { a: node.a.label, b: node.b.label, p: fmtPeriod(node.spec.periodDays), au: fmtAU(node.aAU), e: fixed(node.spec.e, 2) }),
+      facts: { 'Components': `${node.a.label} + ${node.b.label}`, 'Period': fmtPeriod(node.spec.periodDays), 'Separation (a)': fmtAU(node.aAU), 'Eccentricity': fixed(node.spec.e, 3), 'Total mass': `${fixed(node.mass, 2)} M☉`, 'Source': source },
     });
     if (pMax > pMin * 1.6) {
       // circumbinary planets: common around tight pairs (Kepler-16, -34, -35 …), rare around wide ones
@@ -470,7 +470,7 @@ function populateHost(rng: Rng, star: StarInfo, host: Host, sysId: string, bodie
     if (best >= 0 && bestRatio > 1.9) {
       const lo = planets[best].aAU, hi = planets[best + 1].aAU;
       belts.push({
-        name: 'Asteroit kuşağı', count: 9000, aMin: lo * 1.28, aMax: hi * 0.78, eMax: 0.2, iSigmaDeg: rng.range(3, 10),
+        name: 'Asteroid belt', count: 9000, aMin: lo * 1.28, aMax: hi * 0.78, eMax: 0.2, iSigmaDeg: rng.range(3, 10),
         color: rng.tint([0.72, 0.68, 0.6], 0.06), opacity: 0.75, seed: hashSeed(seedBase, 77), centerId: host.id,
       });
     }
@@ -480,7 +480,7 @@ function populateHost(rng: Rng, star: StarInfo, host: Host, sysId: string, bodie
     const last = planets[planets.length - 1].aAU;
     if (last * 1.5 < aMax) {
       outerBelt = {
-        name: 'Dış kuşak', count: 12_000, aMin: last * 1.5, aMax: Math.min(last * 2.4, aMax), eMax: 0.2, iSigmaDeg: rng.range(4, 12),
+        name: 'Outer belt', count: 12_000, aMin: last * 1.5, aMax: Math.min(last * 2.4, aMax), eMax: 0.2, iSigmaDeg: rng.range(4, 12),
         color: rng.tint([0.55, 0.62, 0.8], 0.06), opacity: 0.6, seed: hashSeed(seedBase, 78), centerId: host.id,
       };
       belts.push(outerBelt);
@@ -495,7 +495,7 @@ function populateHost(rng: Rng, star: StarInfo, host: Host, sysId: string, bodie
     const L0 = o.node + o.argPeri + o.M0;
     for (const side of [60, -60]) {
       belts.push({
-        name: side > 0 ? 'Truva kampı (L4)' : 'Truva kampı (L5)', count: 2500, aMin: g.aAU * 0.985, aMax: g.aAU * 1.015, eMax: 0.12, iSigmaDeg: rng.range(6, 18),
+        name: side > 0 ? 'Trojan camp (L4)' : 'Trojan camp (L5)', count: 2500, aMin: g.aAU * 0.985, aMax: g.aAU * 1.015, eMax: 0.12, iSigmaDeg: rng.range(6, 18),
         color: rng.tint([0.6, 0.55, 0.5], 0.05), opacity: 0.7, seed: hashSeed(seedBase, side > 0 ? 81 : 82), trojan: { aAU: g.aAU, meanLongitudeDeg: L0 + side }, centerId: host.id,
       });
     }
@@ -521,12 +521,12 @@ function populateHost(rng: Rng, star: StarInfo, host: Host, sysId: string, bodie
           : { kind: 'terrestrial', seed, landLow: rng.tint([0.55, 0.58, 0.62]), landMid: rng.tint([0.8, 0.82, 0.86]), landHigh: [0.97, 0.98, 1.0], ice: [0.97, 0.98, 1.0], iceCaps: rng.range(0.3, 0.6), craters: rng.range(0.4, 0.9), roughness: 0.9, variation: 0.5, skin: 'moon-icy' },
         atmosphere: T > 35 && rng.chance(0.4) ? { color: [0.55, 0.65, 0.95], height: 0.05, density: 0.08 } : undefined,
         temperature: T,
-        description: `${_('Cüce gezegen')}. ${_('Dış kuşağın içinde dolanan, {r} km yarıçaplı buzlu bir dünya', { r: fixed(radius, 0) })}; ${describeTemp(T)}. ${reddish ? _('Yüzeyini kozmik ışınların kızıllaştırdığı tholin örtüyor.') : _('Parlak, taze buzla kaplı.')}`,
-        facts: { 'Sınıf': 'Cüce gezegen', 'Kaynak': 'Prosedürel (tahmini)' },
+        description: `${_('Dwarf planet')}. ${_('An icy world of {r} km radius orbiting inside the outer belt', { r: fixed(radius, 0) })}; ${describeTemp(T)}. ${reddish ? _('Its surface is coated in tholins reddened by cosmic rays.') : _('Covered in bright, fresh ice.')}`,
+        facts: { 'Class': 'Dwarf planet', 'Source': 'Procedural (estimated)' },
       };
       varyRocky(data.appearance, data.atmosphere, id, false);
       data.rings = dwarfRing(id, radius) ?? topUpRing(id, radius, T, 0.34, false);
-      if (data.rings) data.description += ` ${_('Dar, buzlu halkaları var: Haumea, Quaoar ve Chariklo gibi küçük buzlu cisimlerde de yıldız örtülmeleriyle keşfedilen türden.')}`;
+      if (data.rings) data.description += ` ${_('It has narrow icy rings, of the kind stellar occultations revealed around small icy bodies such as Haumea, Quaoar and Chariklo.')}`;
       bodies.push(data);
       if (rng.chance(0.5)) makeMoons(rng, data, true, 1, bodies, 'rocky');
     }
@@ -553,8 +553,8 @@ function populateHost(rng: Rng, star: StarInfo, host: Host, sysId: string, bodie
         M0: rng.range(0, 360), epoch: J2000_JD, period, frame: 'parentEquator',
       },
       appearance: { kind: 'terrestrial', seed, landLow: [0.05, 0.05, 0.05], landMid: [0.12, 0.11, 0.1], landHigh: [0.25, 0.24, 0.22], craters: 0.6, roughness: 2.5, variation: 0.4 },
-      description: `${_('Kuyruklu yıldız')}. ${_('Günberi {q} AU, günöte {Q} AU; periyodu {p} yıl', { q: fixed(q, 2), Q: fixed(Q, 1), p: fixed(period / 365.25, 1) })}${retro ? `; ${_('retrograd yörünge')}` : ''}. ${_('Yıldızına yaklaştıkça buzları süblimleşir, toz ve iyon kuyrukları açılır.')}`,
-      facts: { 'Sınıf': 'Kuyruklu yıldız', 'Kaynak': 'Prosedürel (tahmini)' },
+      description: `${_('Comet')}. ${_('Perihelion {q} AU, aphelion {Q} AU; period {p} years', { q: fixed(q, 2), Q: fixed(Q, 1), p: fixed(period / 365.25, 1) })}${retro ? `; ${_('retrograde orbit')}` : ''}. ${_('As it nears its star its ices sublimate and dust and ion tails unfurl.')}`,
+      facts: { 'Class': 'Comet', 'Source': 'Procedural (estimated)' },
     });
   }
 }
@@ -625,12 +625,12 @@ function makePlanet(
       appearance: gasAppearance(rng, T, false, id),
       atmosphere: { color: sud >= 4 ? [0.6, 0.55, 0.7] : sud === 3 ? rng.tint([0.5, 0.65, 1.0]) : sud === 2 ? rng.tint([0.9, 0.92, 1.0]) : rng.tint([0.95, 0.88, 0.75]), height: 0.012, density: 0.45 },
       rings: varyRings(rings, id, radius, T, true) ?? (cls === 'hotjupiter' ? undefined : topUpRing(id, radius, T, 0.5, true)), temperature: T,
-      facts: { 'Sınıf': label, 'Kaynak': 'Prosedürel (tahmini)' },
+      facts: { 'Class': label, 'Source': 'Procedural (estimated)' },
     };
     const notes = CLASS_NOTE[cls] ? [_(CLASS_NOTE[cls]!)] : [];
-    if (T > 1300) notes.push(_('Gece tarafı karanlık değil: bulutları kendi ısısıyla kor gibi parlıyor.'));
-    if (data.rings && data.rings.outer > radius * 4) notes.push(_('Halka sistemi olağanüstü geniş: gezegenin çapının birkaç katına uzanıyor. İçinde oluşmakta olan uydular halkalarda geniş boşluklar açmış.'));
-    data.description = `${_(label)}. ${_('{m} Jüpiter kütlesinde', { m: fixed(massJ, 2) })}; ${describeTemp(T)}.${notes.length ? ` ${notes.join(' ')}` : ''}`;
+    if (T > 1300) notes.push(_('Its night side is not dark: the clouds glow like embers with their own heat.'));
+    if (data.rings && data.rings.outer > radius * 4) notes.push(_('Its ring system is extraordinarily wide: it reaches out to several times the planet\'s diameter. Moons forming inside it have carved broad gaps in the rings.'));
+    data.description = `${_(label)}. ${_('{m} Jupiter masses', { m: fixed(massJ, 2) })}; ${describeTemp(T)}.${notes.length ? ` ${notes.join(' ')}` : ''}`;
     bodies.push(data);
     makeMoons(rng, data, beyondFrost, rng.int(2, 6), bodies, 'giant');
   } else if (cls === 'icegiant') {
@@ -646,8 +646,8 @@ function makePlanet(
       atmosphere: { color: rng.tint([0.55, 0.75, 1.0]), height: 0.02, density: 0.5 },
       rings: varyRings(rng.chance(0.8) ? makeRings(rng, radius, rng.chance(0.6) ? 'narrow' : 'dusty') : undefined, id, radius, T, true) ?? topUpRing(id, radius, T, 0.5, true),
       temperature: T,
-      description: `${_(CLASS_LABEL[cls])}. ${_('{m} Dünya kütlesinde, metan katkılı hidrojen-helyum atmosferi', { m: fixed(massE, 1) })}; ${describeTemp(T)}.`,
-      facts: { 'Sınıf': CLASS_LABEL[cls], 'Kaynak': 'Prosedürel (tahmini)' },
+      description: `${_(CLASS_LABEL[cls])}. ${_('{m} Earth masses, hydrogen-helium atmosphere laced with methane', { m: fixed(massE, 1) })}; ${describeTemp(T)}.`,
+      facts: { 'Class': CLASS_LABEL[cls], 'Source': 'Procedural (estimated)' },
     };
     bodies.push(data);
     makeMoons(rng, data, true, rng.int(1, 4), bodies, 'giant');
@@ -670,8 +670,8 @@ function makePlanet(
         : { color: T > 700 ? rng.tint([0.85, 0.75, 0.65]) : rng.tint([0.6, 0.75, 1.0], 0.08), height: 0.035, density: 0.7 },
       rings: varyRings(rng.chance(0.12) ? makeRings(rng, radius, 'dusty') : undefined, id, radius, T, false) ?? topUpRing(id, radius, T, 0.45, false),
       temperature: T,
-      description: `${_(CLASS_LABEL[cls])}. ${_('{m} Dünya kütlesinde', { m: fixed(massE, 1) })}; ${describeTemp(T)}${tidallyLocked ? `; ${_('yıldızına gelgitle kilitli')}` : ''}. ${_(CLASS_NOTE[cls]!)}`,
-      facts: { 'Sınıf': CLASS_LABEL[cls], 'Kaynak': 'Prosedürel (tahmini)' },
+      description: `${_(CLASS_LABEL[cls])}. ${_('{m} Earth masses', { m: fixed(massE, 1) })}; ${describeTemp(T)}${tidallyLocked ? `; ${_('tidally locked to its star')}` : ''}. ${_(CLASS_NOTE[cls]!)}`,
+      facts: { 'Class': CLASS_LABEL[cls], 'Source': 'Procedural (estimated)' },
     };
     bodies.push(data);
     if (!tidallyLocked && rng.chance(0.3)) makeMoons(rng, data, beyondFrost, 1, bodies, 'rocky');
@@ -730,14 +730,14 @@ function makePlanet(
       // a few rocky worlds keep a thin ring of dust
       rings: varyRings(massE > 0.5 && T < 400 && rng.chance(0.05) ? makeRings(rng, radius, 'dusty') : undefined, id, radius, T, false),
       description: '',
-      facts: { 'Sınıf': CLASS_LABEL[cls], 'Kaynak': 'Prosedürel (tahmini)' },
+      facts: { 'Class': CLASS_LABEL[cls], 'Source': 'Procedural (estimated)' },
     };
     // a few more the debris of a shattered moon
     if (!data.rings) {
       data.rings = debrisRing(id, radius, T) ?? topUpRing(id, radius, T, 0.48, false);
-      if (data.rings) notes.push(_('Halkası, Roche sınırının içine düşüp parçalanmış bir uydunun enkazı; böyle halkalar jeolojik ölçekte kısa ömürlüdür.'));
+      if (data.rings) notes.push(_('Its ring is the debris of a moon that strayed inside the Roche limit and broke apart; rings like this are short-lived on geological timescales.'));
     }
-    data.description = `${_(CLASS_LABEL[cls])}. ${_('{m} Dünya kütlesinde', { m: fixed(massE, 2) })}; ${describeTemp(T)}${tidallyLocked && cls !== 'eyeball' && cls !== 'magmaeye' ? `; ${_('yıldızına gelgitle kilitli')}` : ''}.${notes.length ? ` ${notes.join(' ')}` : ''}`;
+    data.description = `${_(CLASS_LABEL[cls])}. ${_('{m} Earth masses', { m: fixed(massE, 2) })}; ${describeTemp(T)}${tidallyLocked && cls !== 'eyeball' && cls !== 'magmaeye' ? `; ${_('tidally locked to its star')}` : ''}.${notes.length ? ` ${notes.join(' ')}` : ''}`;
     bodies.push(data);
     if (massE > 0.4 && rng.chance(0.45)) makeMoons(rng, data, beyondFrost, rng.int(1, 2), bodies, 'rocky');
   }
@@ -745,12 +745,12 @@ function makePlanet(
 }
 
 export function describeTemp(T: number): string {
-  if (T > 1500) return _('yüzeyi erimiş kaya sıcaklığında');
-  if (T > 700) return _('kavurucu sıcak');
-  if (T > 330) return _('çok sıcak');
-  if (T > 235) return _('ılıman sıcaklıkta');
-  if (T > 140) return _('soğuk');
-  return _('dondurucu soğuk');
+  if (T > 1500) return _('surface at molten-rock temperature');
+  if (T > 700) return _('scorching hot');
+  if (T > 330) return _('very hot');
+  if (T > 235) return _('temperate');
+  if (T > 140) return _('cold');
+  return _('freezing cold');
 }
 
 /* ------------------------------------------------------------------ */
@@ -1151,10 +1151,10 @@ const PALETTES_BY_SKIN: Record<string, Palette[]> = {
  */
 const FLORA: Array<{ w: number; turn: number; note: string }> = [
   { w: 14, turn: 0, note: '' },
-  { w: 2.2, turn: -2.4, note: 'Bitki örtüsü yeşil değil mor: pigmentleri yeşil ışığı soğurup kırmızıyla maviyi yansıtıyor (ilk Dünya\'nın da böyle olduğu öne sürülür).' },
-  { w: 1.5, turn: 2.0, note: 'Bitki örtüsü kızıl: fotosentez pigmentleri yıldızının ışığına göre evrilmiş.' },
-  { w: 1.5, turn: -0.75, note: 'Bitki örtüsü mavi-yeşil: pigmentleri kırmızı ışığın tamamını soğuruyor.' },
-  { w: 1.2, turn: 1.0, note: 'Bitki örtüsü altın sarısı: ormanları yörüngeden sonbahar renginde görünüyor.' },
+  { w: 2.2, turn: -2.4, note: 'Its vegetation is purple, not green: the pigments absorb green light and reflect red and blue (the early Earth is thought to have been like this too).' },
+  { w: 1.5, turn: 2.0, note: 'Its vegetation is red: the photosynthetic pigments evolved to suit its star\'s light.' },
+  { w: 1.5, turn: -0.75, note: 'Its vegetation is blue-green: the pigments absorb all of the red light.' },
+  { w: 1.2, turn: 1.0, note: 'Its vegetation is golden yellow: from orbit its forests look the colour of autumn.' },
 ];
 
 /** Titan-like hazes: tholin orange, a paler gold, salmon where nitriles dominate, blue-green where the haze is thin over methane */
@@ -1572,7 +1572,7 @@ function binaryPlanet(data: BodyData, cls: PlanetClass, host: Host, bodies: Body
   const node = 360 * h(2), M0 = 360 * h(3), incl = 4 * h(4);
   const baryId = `${data.id}-bary`;
   const bary: BodyData = {
-    id: baryId, name: _('{name} kütle merkezi', { name: data.name }), type: 'barycenter', parent: data.parent,
+    id: baryId, name: _('{name} barycentre', { name: data.name }), type: 'barycenter', parent: data.parent,
     radius: 0, mass: M, orbit: { ...o }, appearance: { kind: 'none', seed: 0 },
   };
   const around = (a: number, argPeri: number): SimpleElements => ({
@@ -1589,11 +1589,11 @@ function binaryPlanet(data: BodyData, cls: PlanetClass, host: Host, bodies: Body
     ...structuredClone(data), id: id2, name: `${data.name}′`, radius: r2, mass: m2,
     orbit: around(d * (m1 / M), 180), appearance, rings: undefined, activity: undefined,
     rotationPeriod: 'sync', tilt: 0,
-    description: `${_('{name} ile birlikte bir çift gezegen oluşturur: kütleleri birbirine yakın, ortak kütle merkezlerinin çevresinde dolanırlar.', { name: data.name })} ${_('Kütle oranı {q}, aralarındaki uzaklık {d}; birbirlerinin çevresinde {p} günde bir dolanırlar.', { q: fixed(q, 2), d: fmtDistance(d), p: fixed(period, 1) })}`,
-    facts: { ...data.facts, 'Çift gezegen': data.name },
+    description: `${_('Forms a double planet with {name}: their masses are close, and they circle their common centre of mass.', { name: data.name })} ${_('Mass ratio {q}, separation {d}; they orbit each other once every {p} days.', { q: fixed(q, 2), d: fmtDistance(d), p: fixed(period, 1) })}`,
+    facts: { ...data.facts, 'Double planet': data.name },
   };
-  data.facts = { ...data.facts, 'Çift gezegen': twin.name };
-  data.description += ` ${_('Çift gezegen: eşi {name} ({q} kütle oranıyla) onunla ortak bir kütle merkezinin çevresinde {p} günde bir dolanıyor.', { name: twin.name, q: fixed(q, 2), p: fixed(period, 1) })}`;
+  data.facts = { ...data.facts, 'Double planet': twin.name };
+  data.description += ` ${_('A double planet: its partner {name} (mass ratio {q}) circles a common centre of mass with it once every {p} days.', { name: twin.name, q: fixed(q, 2), p: fixed(period, 1) })}`;
   // the barycentre goes in before the planet (parents before children), the partner after it
   const at = bodies.indexOf(data);
   bodies.splice(at, 0, bary);
@@ -1652,8 +1652,8 @@ function makeMoons(
         M0: rng.range(0, 360), epoch: J2000_JD, period, frame: 'parentEquator',
       },
       appearance,
-      description: `${_('{name} gezegeninin {n}. uydusu.', { name: _(planet.name), n: j + 1 })} ${volcanic ? _('Gelgit ısıtmasıyla volkanik olarak aktif.') : cryo ? _('Buzlu kabuğun çatlaklarından su buharı ve buz püskürten gayzerler: altında bir okyanus saklı.') : icy ? _('Buzlu, kraterli yüzey.') : _('Kraterli kaya yüzeyi.')}`,
-      facts: { 'Kaynak': 'Prosedürel (tahmini)' },
+      description: `${_('Moon {n} of planet {name}.', { name: _(planet.name), n: j + 1 })} ${volcanic ? _('Volcanically active through tidal heating.') : cryo ? _('Geysers of water vapour and ice erupt through cracks in the icy crust: an ocean hides beneath.') : icy ? _('Icy, cratered surface.') : _('Cratered rocky surface.')}`,
+      facts: { 'Source': 'Procedural (estimated)' },
     });
     a *= rng.range(1.5, 2.4);
   }
@@ -1676,8 +1676,8 @@ function makeMoons(
           M0: rng.range(0, 360), epoch: J2000_JD, period, frame: 'parentEquator',
         },
         appearance: { kind: 'terrestrial', seed, landLow: rng.tint([0.12, 0.11, 0.1]), landMid: rng.tint([0.22, 0.2, 0.18]), landHigh: rng.tint([0.35, 0.33, 0.3]), craters: 1.0, roughness: 2.0, variation: 0.5 },
-        description: `${_('{name} gezegeninin düzensiz uydusu: yakalanmış bir asteroit.', { name: _(planet.name) })} ${retro ? _('Uzak, eğik ve retrograd bir yörüngede dolanır.') : _('Uzak ve eğik bir yörüngede dolanır.')}`,
-        facts: { 'Kaynak': 'Prosedürel (tahmini)' },
+        description: `${_('Irregular moon of {name}: a captured asteroid.', { name: _(planet.name) })} ${retro ? _('It follows a distant, tilted, retrograde orbit.') : _('It follows a distant, tilted orbit.')}`,
+        facts: { 'Source': 'Procedural (estimated)' },
       });
     }
   }
@@ -1694,22 +1694,22 @@ function isSubstellar(s: StarInfo): boolean {
 
 function starDescription(s: StarInfo): string {
   const lumDesc = LUM_CLASS_DESC[s.lumClass];
-  const cls = s.isWhiteDwarf ? _('beyaz cüce') : isSubstellar(s) ? _('kahverengi cüce') : (lumDesc ? _(lumDesc) : _('yıldız')).toLocaleLowerCase(localeTag());
-  const parts = [_('{sp} sınıfı {cls}', { sp: s.catalogSpectral || s.spectral, cls })];
-  parts.push(_("Güneş'e uzaklığı {ly} ({km})", { ly: fmtLightYears(s.distancePc * PARSEC_KM), km: fmtDistance(s.distancePc * PARSEC_KM) }));
-  if (s.names?.constellation) parts.push(_('{name} takımyıldızında', { name: s.names.constellation }));
+  const cls = s.isWhiteDwarf ? _('white dwarf') : isSubstellar(s) ? _('brown dwarf') : (lumDesc ? _(lumDesc) : _('star')).toLocaleLowerCase(localeTag());
+  const parts = [_('{sp}-type {cls}', { sp: s.catalogSpectral || s.spectral, cls })];
+  parts.push(_("Distance from the Sun {ly} ({km})", { ly: fmtLightYears(s.distancePc * PARSEC_KM), km: fmtDistance(s.distancePc * PARSEC_KM) }));
+  if (s.names?.constellation) parts.push(_('In the constellation {name}', { name: s.names.constellation }));
   const tail = s.procedural
-    ? _('Yıldız ve gezegen sistemi, galaksi modelinden deterministik olarak prosedürel üretilmiştir.')
-    : _('Gezegen sistemi gerçek yıldız verilerinden (HYG) türetilerek prosedürel olarak üretilmiştir.');
+    ? _('The star and its planetary system are generated procedurally and deterministically from the galaxy model.')
+    : _('The planetary system is generated procedurally from real star data (HYG).');
   return parts.join('. ') + '. ' + tail;
 }
 
 export function starFacts(s: StarInfo): Record<string, string> {
   const f: Record<string, string> = {
-    'Spektral sınıf': s.catalogSpectral || s.spectral,
-    'Görünür kadir': fixed(s.mag, 2),
-    'Mutlak kadir': fixed(s.absMag, 2),
-    'Parlaklık': `${fmtLum(s.luminosity)} L☉`,
+    'Spectral class': s.catalogSpectral || s.spectral,
+    'Apparent magnitude': fixed(s.mag, 2),
+    'Absolute magnitude': fixed(s.absMag, 2),
+    'Luminosity': `${fmtLum(s.luminosity)} L☉`,
     'B−V': fixed(s.bv, 2),
   };
   if (s.hip) f['Hipparcos'] = `HIP ${s.hip}`;

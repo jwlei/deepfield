@@ -4,7 +4,7 @@ import { _, LOCALES, type Locale } from '../../src/i18n';
 import type { ScopeTarget } from '../../src/scope/types';
 
 export const SITE = 'https://youreyesinspace.com';
-export const LANGS: Locale[] = ['en', 'tr', 'de', 'es', 'fr'];
+export const LANGS: Locale[] = ['en', 'de', 'es', 'fr'];
 
 /* ------------------------------------------------------------------ strings */
 
@@ -15,7 +15,7 @@ export const missing = new Map<Locale, Set<string>>();
 export function setWikiLocale(root: string, l: Locale): void {
   lang = l;
   const f = path.join(root, `scripts/ssg/locales/${l}.json`);
-  wiki = l !== 'tr' && fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {};
+  wiki = l !== 'en' && fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {};
 }
 
 export function currentLang(): Locale { return lang; }
@@ -34,7 +34,7 @@ export function t(key: string, params?: Record<string, string | number>): string
 
 /** a wiki template string: must exist in every dictionary (reported at the end of the run) */
 export function w(key: string, params?: Record<string, string | number>): string {
-  if (lang !== 'tr' && wiki[key] === undefined) {
+  if (lang !== 'en' && wiki[key] === undefined) {
     let m = missing.get(lang);
     if (!m) missing.set(lang, (m = new Set()));
     m.add(key);
@@ -105,16 +105,16 @@ export function scopeFigure(target: ScopeTarget | null): string {
 
 export function locatorStrings(): Record<string, string> {
   return {
-    sky: w('Gökyüzünde'), all: w('Tüm gökyüzü'), top: w('Yukarıdan'), fov: w('Görüş alanı'), scale: w('Ölçek'), reset: w('Ortala'),
-    ra: w('Sağ açıklık'), dec: w('Dik açıklık'), con: w('Takımyıldız'), mag: w('Görünür parlaklık'), dist: w('Uzaklık'),
-    l: w('Galaktik boylam'), b: w('Galaktik enlem'),
-    ly: w('ışık yılı'), kly: w('bin ışık yılı'), Mly: w('milyon ışık yılı'), Gly: w('milyar ışık yılı'),
-    hintSky: w('Sürükleyerek gezinin; bir yıldıza tıklayınca sayfası açılır.'),
-    hintAll: w('Tüm gökyüzü: bir noktaya tıklayınca o bölgeye yakınlaşır. Kesikli çizgi Samanyolu\'nun düzlemi, noktalı çizgi ekliptik.'),
-    hintTop: w('Galaksiye tepeden bakış: Güneş ortada, Samanyolu\'nun merkezi yukarıda. Kollar şematiktir; cismin konumu galaksi düzlemine izdüşürülmüştür.'),
-    north: w('K'), east: w('D'), gc: w('Samanyolu merkezi'), ecl: w('Ekliptik'), mw: w('Samanyolu'), sun: w('Güneş'),
-    embed: w('Yerleştir'), embedHint: w('Bu haritayı kendi sitenizde göstermek için kodu sayfanıza yapıştırın.'), copy: w('Kopyala'), copied: w('Kopyalandı'),
-    more: w('Ansiklopedide aç'),
+    sky: w('In the sky'), all: w('Whole sky'), top: w('From above'), fov: w('Field of view'), scale: w('Scale'), reset: w('Recentre'),
+    ra: w('Right ascension'), dec: w('Declination'), con: w('Constellation'), mag: w('Apparent magnitude'), dist: w('Distance'),
+    l: w('Galactic longitude'), b: w('Galactic latitude'),
+    ly: w('light-years'), kly: w('thousand light-years'), Mly: w('million light-years'), Gly: w('billion light-years'),
+    hintSky: w('Drag to look around; click a star to open its page.'),
+    hintAll: w('The whole sky: click anywhere to zoom in there. The dashed line is the plane of the Milky Way, the dotted line the ecliptic.'),
+    hintTop: w('The galaxy seen from above: the Sun in the middle, the centre of the Milky Way at the top. The arms are schematic; the object is projected onto the galactic plane.'),
+    north: w('N'), east: w('E'), gc: w('Galactic centre'), ecl: w('Ecliptic'), mw: w('Milky Way'), sun: w('Sun'),
+    embed: w('Embed'), embedHint: w('To show this map on your own site, paste the code into your page.'), copy: w('Copy'), copied: w('Copied'),
+    more: w('Open in the encyclopedia'),
   };
 }
 
@@ -142,7 +142,7 @@ export function renderEmbed(buildId: string): string {
 `;
 }
 
-export function openButton(href: string, label = w('Simülasyonda aç')): string {
+export function openButton(href: string, label = w('Open in the simulation')): string {
   return `<p class="w-open"><a class="w-btn" href="${esc(href)}">${esc(label)} <span aria-hidden="true">→</span></a></p>`;
 }
 
@@ -168,16 +168,16 @@ export interface Page {
 }
 
 const NAV: Array<[string, string]> = [
-  ['/stars', 'Yıldızlar'], ['/exoplanets', 'Ötegezegenler'], ['/constellations', 'Takımyıldızlar'], ['/solar-system', 'Güneş Sistemi'],
-  ['/deep-sky', 'Derin gökyüzü'], ['/galaxies', 'Galaksiler'], ['/black-holes', 'Kara delikler'], ['/sky-events', 'Gök olayları'],
-  ['/encyclopedia/a-z', 'A\'dan Z\'ye'],
+  ['/stars', 'Stars'], ['/exoplanets', 'Exoplanets'], ['/constellations', 'Constellations'], ['/solar-system', 'Solar System'],
+  ['/deep-sky', 'Deep sky'], ['/galaxies', 'Galaxies'], ['/black-holes', 'Black holes'], ['/sky-events', 'Sky events'],
+  ['/encyclopedia/a-z', 'A to Z'],
 ];
 
 export function render(p: Page, buildId: string, available: Locale[] = LANGS): string {
   const self = SITE + url(p.path);
   const alternates = available.map((l) => `<link rel="alternate" hreflang="${l}" href="${SITE}${url(p.path, l)}" />`).join('\n    ')
     + `\n    <link rel="alternate" hreflang="x-default" href="${SITE}${url(p.path, 'en')}" />`;
-  const crumbs = p.path === '/encyclopedia' ? [] : [[w('Ansiklopedi'), '/encyclopedia'] as [string, string], ...p.crumbs];
+  const crumbs = p.path === '/encyclopedia' ? [] : [[w('Encyclopedia'), '/encyclopedia'] as [string, string], ...p.crumbs];
   const crumbLd = {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [...crumbs, [p.h1, p.path]].map(([name, cp], k) => ({ '@type': 'ListItem', position: k + 1, name, item: SITE + url(cp) })),
@@ -214,9 +214,9 @@ export function render(p: Page, buildId: string, available: Locale[] = LANGS): s
     <header class="w-top">
       <div class="w-mast">
         <a class="w-brand" href="${homeUrl()}"><img src="/logo-white.png" alt="" /><span>Your Eyes In Space</span></a>
-        <a class="w-cta" href="${homeUrl()}">${esc(w('Simülasyonu aç'))} <span aria-hidden="true">→</span></a>
+        <a class="w-cta" href="${homeUrl()}">${esc(w('Open the simulation'))} <span aria-hidden="true">→</span></a>
       </div>
-      <nav class="w-nav" aria-label="${esc(w('Ansiklopedi'))}">${nav}</nav>
+      <nav class="w-nav" aria-label="${esc(w('Encyclopedia'))}">${nav}</nav>
     </header>
     <main class="w-main">
       <nav class="w-crumbs" aria-label="breadcrumb">${crumbs.map(([n, cp]) => `<a href="${url(cp)}">${esc(n)}</a>`).join('<span aria-hidden="true">/</span>')}</nav>
@@ -229,8 +229,8 @@ export function render(p: Page, buildId: string, available: Locale[] = LANGS): s
     </main>
     <footer class="w-foot">
       <div class="w-langs">${langLinks}</div>
-      <p>${esc(w('Your Eyes In Space, gözlemlenebilir evreni gerçek verilerle tarayıcıda gezdiren ücretsiz ve açık kaynaklı bir simülasyondur. Bu sayfadaki değerler simülasyonun kullandığı kataloglardan hesaplanmıştır.'))}</p>
-      <p>${esc(w('Kaynaklar'))}: HYG / AT-HYG (David Nash, CC BY-SA 4.0) · ESA Gaia · NASA Exoplanet Archive · NASA/JPL · ATNF Pulsar Catalogue · HEASARC · NED · IAU. <a href="https://github.com/berkcomba/youreyesinspace">${esc(w('Kaynak kodu'))}</a> (AGPL-3.0)</p>
+      <p>${esc(w('Your Eyes In Space is a free, open-source simulation of the observable universe built on real data, running in the browser. The values on this page are computed from the catalogues the simulation uses.'))}</p>
+      <p>${esc(w('Sources'))}: HYG / AT-HYG (David Nash, CC BY-SA 4.0) · ESA Gaia · NASA Exoplanet Archive · NASA/JPL · ATNF Pulsar Catalogue · HEASARC · NED · IAU. <a href="https://github.com/berkcomba/youreyesinspace">${esc(w('Source code'))}</a> (AGPL-3.0)</p>
     </footer>${[...(p.scripts ?? []), ...(p.body.includes('class="w-loc"') ? ['/wiki/locator.js'] : []), ...(p.body.includes('class="w-scope"') ? ['/wiki/scope.js'] : [])].map((s) => `\n    <script src="${s}?v=${buildId}" defer></script>`).join('')}
   </body>
 </html>

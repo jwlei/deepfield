@@ -1,14 +1,13 @@
 /**
  * Minimal gettext-style i18n.
  *
- * Source strings are Turkish (the language the app was written in); dictionaries map them to the
- * other locales. `_()` is identity for Turkish and for any string without a translation, so new
- * text degrades gracefully. Dictionaries are code-split and loaded once in `initI18n()` before
+ * Source strings are English; dictionaries map them to the other locales. `_()` is identity for
+ * English and for any string without a translation, so new text degrades gracefully. Dictionaries are code-split and loaded once in `initI18n()` before
  * the app boots — therefore `_()` must only be called at *runtime* (render / event time), never
  * at module top level.
  */
 
-export type Locale = 'tr' | 'en' | 'de' | 'es' | 'fr';
+export type Locale = 'en' | 'de' | 'es' | 'fr';
 
 export interface LocaleInfo {
   code: Locale;
@@ -19,7 +18,6 @@ export interface LocaleInfo {
 }
 
 export const LOCALES: readonly LocaleInfo[] = [
-  { code: 'tr', label: 'Türkçe', tag: 'tr-TR' },
   { code: 'en', label: 'English', tag: 'en-US' },
   { code: 'de', label: 'Deutsch', tag: 'de-DE' },
   { code: 'es', label: 'Español', tag: 'es-ES' },
@@ -27,7 +25,7 @@ export const LOCALES: readonly LocaleInfo[] = [
 ];
 
 const STORAGE_KEY = 'yeits.locale';
-let current: Locale = 'tr';
+let current: Locale = 'en';
 let dict: Record<string, string> = {};
 const missing = new Set<string>();
 
@@ -35,7 +33,7 @@ export function isLocale(x: string | null | undefined): x is Locale {
   return !!x && LOCALES.some((l) => l.code === x);
 }
 
-/** `?lang=` → saved preference → browser languages → English (Turkish for Turkish browsers) */
+/** `?lang=` → saved preference → browser languages → English */
 export function detectLocale(): Locale {
   try {
     const q = new URLSearchParams(location.search).get('lang');
@@ -55,7 +53,7 @@ export function detectLocale(): Locale {
 export async function initI18n(forced?: Locale): Promise<Locale> {
   current = forced ?? detectLocale();
   dict = {};
-  if (current !== 'tr') {
+  if (current !== 'en') {
     const mod = await loadDict(current);
     dict = mod;
   }
@@ -90,14 +88,14 @@ export function setLocale(code: Locale): void {
 }
 
 /**
- * Translate a source (Turkish) string. `{name}` placeholders are substituted from `params`
+ * Translate a source (English) string. `{name}` placeholders are substituted from `params`
  * after translation, so word order can differ per language.
  */
 export function _(key: string, params?: Record<string, string | number>): string {
   let s = dict[key];
   if (s === undefined) {
     s = key;
-    if (current !== 'tr' && import.meta.env.DEV && /\p{L}{2}/u.test(key)) missing.add(key);
+    if (current !== 'en' && import.meta.env.DEV && /\p{L}{2}/u.test(key)) missing.add(key);
   }
   if (params) {
     for (const k of Object.keys(params)) s = s.split(`{${k}}`).join(String(params[k]));
@@ -137,41 +135,37 @@ export function fixed(n: number, digits: number): string {
  * Translate static markup: elements carrying `data-i18n` (text), `data-i18n-html` (innerHTML),
  * `data-i18n-title`, `data-i18n-placeholder`, `data-i18n-content` (meta tags). The attribute
  * value is the source string; when it is empty the element's current text is used as the key
- * and written back so the markup can stay in Turkish.
- *
- * Elements with an explicit key may carry *English* static content (so crawlers and link
- * previews, which don't run JS, see English); they are rewritten for every locale including
- * Turkish, where `_()` is the identity and therefore yields the Turkish key itself.
+ * and written back. In English the markup already holds the source text and is left alone.
  */
 export function applyDom(root: ParentNode = document): void {
-  const tr = current === 'tr';
+  const en = current === 'en';
   const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
   root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
-    if (tr && !el.dataset.i18n) return;
+    if (en && !el.dataset.i18n) return;
     const key = el.dataset.i18n || norm(el.textContent ?? '');
     if (!el.dataset.i18n) el.dataset.i18n = key;
     el.textContent = _(key);
   });
   root.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => {
-    if (tr && !el.dataset.i18nHtml) return;
+    if (en && !el.dataset.i18nHtml) return;
     const key = el.dataset.i18nHtml || norm(el.innerHTML);
     if (!el.dataset.i18nHtml) el.dataset.i18nHtml = key;
     el.innerHTML = _(key);
   });
   root.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((el) => {
-    if (tr && !el.dataset.i18nTitle) return;
+    if (en && !el.dataset.i18nTitle) return;
     const key = el.dataset.i18nTitle || el.title;
     if (!el.dataset.i18nTitle) el.dataset.i18nTitle = key;
     el.title = _(key);
   });
   root.querySelectorAll<HTMLInputElement>('[data-i18n-placeholder]').forEach((el) => {
-    if (tr && !el.dataset.i18nPlaceholder) return;
+    if (en && !el.dataset.i18nPlaceholder) return;
     const key = el.dataset.i18nPlaceholder || el.placeholder;
     if (!el.dataset.i18nPlaceholder) el.dataset.i18nPlaceholder = key;
     el.placeholder = _(key);
   });
   root.querySelectorAll<HTMLMetaElement>('[data-i18n-content]').forEach((el) => {
-    if (tr && !el.dataset.i18nContent) return;
+    if (en && !el.dataset.i18nContent) return;
     const key = el.dataset.i18nContent || el.content;
     if (!el.dataset.i18nContent) el.dataset.i18nContent = key;
     el.content = _(key);

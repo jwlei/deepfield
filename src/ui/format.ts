@@ -6,7 +6,7 @@ export function fmtDistance(km: number): string {
   if (a < 1) return `${fixed((km * 1000), 1)} m`;
   if (a < 1e4) return `${fixed(km, 2)} km`;
   if (a < 1e6) return `${fmtNum(km, { maximumFractionDigits: 0 })} km`;
-  if (a < AU_KM * 0.05) return _('{n} milyon km', { n: fixed((km / 1e6), 3) });
+  if (a < AU_KM * 0.05) return _('{n} million km', { n: fixed((km / 1e6), 3) });
   if (a < LIGHT_YEAR_KM * 0.1) return `${fixed((km / AU_KM), km / AU_KM < 10 ? 4 : 2)} AU`;
   if (a < PARSEC_KM * 1000) return `${fixed((km / LIGHT_YEAR_KM), 2)} ly`;
   if (a < PARSEC_KM * 1e6) return `${fixed((km / PARSEC_KM / 1000), 2)} kpc`;
@@ -32,8 +32,8 @@ export function fmtScaleDistance(km: number): string {
 export function fmtLightYears(km: number): string {
   const ly = km / LIGHT_YEAR_KM;
   if (ly < 1000) return `${fixed(ly, 1)} ly`;
-  if (ly < 1e6) return _('{n} bin ly', { n: fixed((ly / 1000), 1) });
-  return _('{n} milyon ly', { n: fixed((ly / 1e6), 2) });
+  if (ly < 1e6) return _('{n} thousand ly', { n: fixed((ly / 1000), 1) });
+  return _('{n} million ly', { n: fixed((ly / 1e6), 2) });
 }
 
 export function fmtSpeed(kms: number): string {
@@ -84,28 +84,28 @@ export function fmtDeg(d: number, digits = 2): string {
 export function fmtDuration(seconds: number): string {
   const a = Math.abs(seconds);
   if (a < 60) return `${fixed(seconds, 1)} s`;
-  if (a < 3600) return _('{n} dk', { n: fixed((seconds / 60), 1) });
-  if (a < 86400 * 2) return _('{n} sa', { n: fixed((seconds / 3600), 2) });
-  if (a < 86400 * 365.25 * 2) return _('{n} gün', { n: fixed((seconds / 86400), 2) });
+  if (a < 3600) return _('{n} min', { n: fixed((seconds / 60), 1) });
+  if (a < 86400 * 2) return _('{n} h', { n: fixed((seconds / 3600), 2) });
+  if (a < 86400 * 365.25 * 2) return _('{n} days', { n: fixed((seconds / 86400), 2) });
   const years = seconds / (86400 * 365.25);
-  if (a < 86400 * 365.25 * 1e4) return _('{n} yıl', { n: fixed(years, 2) });
-  if (years < 1e6) return _('{n} bin yıl', { n: fixed((years / 1e3), 1) });
-  if (years < 1e9) return _('{n} milyon yıl', { n: fixed((years / 1e6), 2) });
-  return _('{n} milyar yıl', { n: fixed((years / 1e9), 2) });
+  if (a < 86400 * 365.25 * 1e4) return _('{n} years', { n: fixed(years, 2) });
+  if (years < 1e6) return _('{n} thousand years', { n: fixed((years / 1e3), 1) });
+  if (years < 1e9) return _('{n} million years', { n: fixed((years / 1e6), 2) });
+  return _('{n} billion years', { n: fixed((years / 1e9), 2) });
 }
 
-/** Source (Turkish) labels — display through `typeLabel()` */
+/** Source labels — display through `typeLabel()` */
 export const TYPE_LABELS: Record<string, string> = {
-  star: 'Yıldız',
-  planet: 'Gezegen',
-  dwarf: 'Cüce Gezegen',
-  moon: 'Uydu',
-  asteroid: 'Asteroit',
-  comet: 'Kuyruklu Yıldız',
-  barycenter: 'Kütle Merkezi',
-  spacecraft: 'Uzay Aracı',
-  blackhole: 'Kara Delik',
-  pulsar: 'Pulsar / Nötron Yıldızı',
+  star: 'Star',
+  planet: 'Planet',
+  dwarf: 'Dwarf Planet',
+  moon: 'Moon',
+  asteroid: 'Asteroid',
+  comet: 'Comet',
+  barycenter: 'Barycentre',
+  spacecraft: 'Spacecraft',
+  blackhole: 'Black Hole',
+  pulsar: 'Pulsar / Neutron Star',
 };
 
 export function typeLabel(type: string): string {
@@ -114,7 +114,7 @@ export function typeLabel(type: string): string {
 
 /** Mass in solar masses, e.g. "9,6 M☉" or "4,3 milyon M☉" */
 export function fmtSolarMass(m: number): string {
-  if (m >= 1e9) return _('{n} milyar M☉', { n: fmtNum(m / 1e9, { maximumFractionDigits: 1 }) });
-  if (m >= 1e6) return _('{n} milyon M☉', { n: fmtNum(m / 1e6, { maximumFractionDigits: 2 }) });
+  if (m >= 1e9) return _('{n} billion M☉', { n: fmtNum(m / 1e9, { maximumFractionDigits: 1 }) });
+  if (m >= 1e6) return _('{n} million M☉', { n: fmtNum(m / 1e6, { maximumFractionDigits: 2 }) });
   return `${fmtNum(m, { maximumFractionDigits: 1 })} M☉`;
 }

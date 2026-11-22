@@ -64,7 +64,7 @@ export interface ForeignBodyHit {
   name: string;
 }
 
-/** lower-case, dotless-ı and accent folded (Turkish & western names) */
+/** lower-case, dotless-ı and accent folded (any Latin-script name) */
 export function normalizeQuery(s: string): string {
   return s.toLowerCase().replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 }
@@ -335,7 +335,7 @@ export class Universe {
         if (normalizeQuery(name).includes(q) || normalizeQuery(d.name).includes(q) || d.id === q) out.push({ starId, systemName, body: d, name });
       }
     };
-    if (this.current.starId !== 'c0') consider('c0', _('Güneş Sistemi'), SOLAR_SYSTEM);
+    if (this.current.starId !== 'c0') consider('c0', _('Solar System'), SOLAR_SYSTEM);
     for (const [id, ex] of this.extraSystems) if (id !== this.current.starId) consider(id, ex.name, ex.bodies());
     return out;
   }
@@ -360,7 +360,7 @@ export class Universe {
     if (real) return real;
     const id = `bg${i}`;
     const galaxyName = g.name(i);
-    const name = _('{name} merkez kara deliği', { name: galaxyName });
+    const name = _('{name} central black hole', { name: galaxyName });
     const k = this.blackHoles.findIndex((b) => b.entry.id === id);
     if (k >= 0) {
       if (this.blackHoles[k].entry.name === name) return this.blackHoles[k];
@@ -464,7 +464,7 @@ export class Universe {
     const ex = this.extraSystems.get(id);
     if (ex) {
       const origin = ex.positionPc.clone().multiplyScalar(PARSEC_KM);
-      const bodies = toBarycentric(ex.bodies(), `${id}-bary`, _('{name} kütle merkezi', { name: ex.name }));
+      const bodies = toBarycentric(ex.bodies(), `${id}-bary`, _('{name} barycentre', { name: ex.name }));
       sys = new StarSystem(`x-${id}`, id, -1, origin, bodies, [], []);
     } else if (ci === 0) {
       sys = new StarSystem('sol', 'c0', 0, new Vector3(), SOLAR_SYSTEM, SOLAR_BELTS, PLANET_HOTKEYS);
@@ -498,7 +498,7 @@ export class Universe {
           for (const body of gen.bodies) body.name = body.name.replace(old, host.hostName);
         }
         gen.bodies.push(b.entry.companionBody(gen.bodies[0].id, info.massKg));
-        bodies = toBarycentric(gen.bodies, `${b.entry.id}-bary`, _('{name} kütle merkezi', { name: b.entry.name }));
+        bodies = toBarycentric(gen.bodies, `${b.entry.id}-bary`, _('{name} barycentre', { name: b.entry.name }));
       }
       sys = new StarSystem(gen.id, id, ci, origin, bodies, gen.belts, gen.planetIds);
     }

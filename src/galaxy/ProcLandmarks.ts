@@ -79,39 +79,39 @@ const ORDER: ProcKind[] = ['hii', 'reflection', 'planetary', 'open', 'globular',
 /* ---------------- naming ---------------- */
 
 const ADJ = [
-  'Kızıl', 'Mavi', 'Zümrüt', 'Kehribar', 'Gümüş', 'Altın', 'Uyuyan', 'Yitik', 'Fısıldayan', 'Donmuş', 'Kırık', 'Sessiz',
-  'Yalnız', 'Çifte', 'Ters', 'Gölge', 'Yanık', 'Soluk', 'Parlak', 'Gizli', 'Uzak', 'Dönen', 'Ağlayan', 'Kör', 'Uyanan', 'Yırtık',
-  'Yanan', 'Şakıyan', 'Süzülen', 'Kanayan', 'Uluyan', 'Titreyen', 'Kaçan', 'Unutulmuş', 'Kadim', 'Yaralı', 'Zincirli', 'Kanatlı',
-  'Taçlı', 'Hayalet', 'Kükreyen', 'Uykusuz', 'Sonsuz', 'Yorgun', 'Kıvrılan', 'Gözleyen', 'Utangaç', 'Vahşi', 'Dalgın', 'Paslı',
-  'Billur', 'Fırtınalı', 'Tutsak', 'Gülen', 'Yüzen', 'Asi', 'Lanetli', 'Sisli', 'Çılgın',
+  'Crimson', 'Blue', 'Emerald', 'Amber', 'Silver', 'Golden', 'Sleeping', 'Lost', 'Whispering', 'Frozen', 'Broken', 'Silent',
+  'Lonely', 'Twin', 'Inverted', 'Shadow', 'Burnt', 'Pale', 'Bright', 'Hidden', 'Distant', 'Spinning', 'Weeping', 'Blind', 'Waking', 'Torn',
+  'Burning', 'Singing', 'Drifting', 'Bleeding', 'Howling', 'Trembling', 'Fleeing', 'Forgotten', 'Ancient', 'Wounded', 'Chained', 'Winged',
+  'Crowned', 'Ghostly', 'Roaring', 'Restless', 'Endless', 'Weary', 'Coiling', 'Watching', 'Shy', 'Wild', 'Dreaming', 'Rusted',
+  'Crystal', 'Stormy', 'Captive', 'Laughing', 'Floating', 'Rebel', 'Cursed', 'Misty', 'Mad',
 ];
 /** adjectives that name a colour: a drawn one is swapped for the one matching the object's actual tint */
-const COLOUR_ADJ = ['Kızıl', 'Mavi', 'Zümrüt', 'Kehribar', 'Gümüş', 'Altın'];
+const COLOUR_ADJ = ['Crimson', 'Blue', 'Emerald', 'Amber', 'Silver', 'Golden'];
 
 function colourAdjective(c: readonly number[] | undefined): string {
-  if (!c) return 'Gümüş';
+  if (!c) return 'Silver';
   const [r, g, b] = c, max = Math.max(r, g, b), min = Math.min(r, g, b);
-  if (max - min < 0.14 * max) return 'Gümüş';
-  if (b >= r && b >= g) return 'Mavi';
-  if (g >= r) return 'Zümrüt';
-  if (g < 0.62 * r) return 'Kızıl';
-  return b < 0.55 * r && g < 0.82 * r ? 'Kehribar' : 'Altın';
+  if (max - min < 0.14 * max) return 'Silver';
+  if (b >= r && b >= g) return 'Blue';
+  if (g >= r) return 'Emerald';
+  if (g < 0.62 * r) return 'Crimson';
+  return b < 0.55 * r && g < 0.82 * r ? 'Amber' : 'Golden';
 }
 
 const NOUN = [
-  'Kelebek', 'Göz', 'Taç', 'Yelken', 'Fener', 'Çan', 'Kalp', 'Kuğu', 'Yılan', 'Kılıç', 'Kapı', 'Ayna', 'Kanat', 'Çiçek', 'Kum Saati',
-  'Örümcek', 'Halka', 'Mızrak', 'Deniz Kabuğu', 'Ejderha', 'Kule', 'Balina', 'Köpük', 'Mum', 'Pusula', 'Köprü', 'Tilki', 'Baykuş', 'Nar', 'Lamba',
-  'Anka Kuşu', 'Kurt', 'Gül', 'Yusufçuk', 'Denizanası', 'Ahtapot', 'Aygır', 'Fırtına', 'Şimşek', 'Arp', 'Hançer', 'Çelenk',
-  'Zambak', 'Pençe', 'Boynuz', 'Tüy', 'Mağara', 'Şelale', 'Kraliçe', 'Bekçi', 'Gezgin', 'Kehanet', 'Ruh', 'Rüya', 'Labirent',
-  'Yanardağ', 'Kaplan', 'Mercan', 'İnci', 'Yaprak', 'Tohum', 'Çapa', 'Kale', 'Taht', 'Maske', 'Fısıltı', 'Yankı', 'Şafak',
-  'Gözyaşı', 'Asa',
+  'Butterfly', 'Eye', 'Crown', 'Sail', 'Lantern', 'Bell', 'Heart', 'Swan', 'Serpent', 'Sword', 'Gate', 'Mirror', 'Wing', 'Flower', 'Hourglass',
+  'Spider', 'Ring', 'Spear', 'Seashell', 'Dragon', 'Tower', 'Whale', 'Foam', 'Candle', 'Compass', 'Bridge', 'Fox', 'Owl', 'Pomegranate', 'Lamp',
+  'Phoenix', 'Wolf', 'Rose', 'Dragonfly', 'Jellyfish', 'Octopus', 'Stallion', 'Storm', 'Lightning', 'Harp', 'Dagger', 'Wreath',
+  'Lily', 'Claw', 'Horn', 'Feather', 'Cave', 'Waterfall', 'Queen', 'Sentinel', 'Wanderer', 'Prophecy', 'Spirit', 'Dream', 'Labyrinth',
+  'Volcano', 'Tiger', 'Coral', 'Pearl', 'Leaf', 'Seed', 'Anchor', 'Fortress', 'Throne', 'Mask', 'Whisper', 'Echo', 'Dawn',
+  'Tear', 'Staff',
 ];
 
 const NAME_TEMPLATE: Record<ProcKind, string> = {
-  hii: '{adj} {noun} Bulutsusu', reflection: '{adj} {noun} Bulutsusu', planetary: '{adj} {noun} Bulutsusu',
-  open: '{adj} {noun} Kümesi', globular: '{adj} {noun} Küresel Kümesi', snr: '{adj} {noun} Kalıntısı', bubble: '{adj} {noun} Kabarcığı',
-  hypergiant: 'Hiperdev YE-H {code}', wr: 'Wolf–Rayet YE-WR {code}', magnetar: 'Magnetar YE-M {code}',
-  dark: '{adj} {noun} Karanlık Bulutsusu',
+  hii: '{adj} {noun} Nebula', reflection: '{adj} {noun} Nebula', planetary: '{adj} {noun} Nebula',
+  open: '{adj} {noun} Cluster', globular: '{adj} {noun} Globular Cluster', snr: '{adj} {noun} Remnant', bubble: '{adj} {noun} Bubble',
+  hypergiant: 'Hypergiant YE-H {code}', wr: 'Wolf–Rayet YE-WR {code}', magnetar: 'Magnetar YE-M {code}',
+  dark: '{adj} {noun} Dark Nebula',
 };
 
 /* ---------------- colours ---------------- */
@@ -348,7 +348,7 @@ export class ProcLandmarks {
     // glowing clouds and shells: their own procedural colour cast (the volume takes the same one)
     const vk = KIND_OF[kind];
     if (kind !== 'dark' && (vk === 'nebula' || vk === 'planetary' || vk === 'remnant')) def.color = chromaRgb(def.color, nebulaChroma(def));
-    const adj = _(kind === 'dark' && (COLOUR_ADJ.includes(adjKey) || adjKey === 'Parlak') ? 'Gölge' : COLOUR_ADJ.includes(adjKey) ? colourAdjective(def.color) : adjKey);
+    const adj = _(kind === 'dark' && (COLOUR_ADJ.includes(adjKey) || adjKey === 'Bright') ? 'Shadow' : COLOUR_ADJ.includes(adjKey) ? colourAdjective(def.color) : adjKey);
     def.name = _(NAME_TEMPLATE[kind], { adj, noun, code });
     return { def, positionPc, galaxy: g, procKind: kind };
   }
@@ -371,13 +371,13 @@ export class ProcLandmarks {
         if (rng.chance(0.35)) gas.scatter = rng.range(0.3, 1);
         const def: LandmarkDef = {
           ...base, kind: 'nebula', radiusPc: R, absMag, color: hiiTint(gas), gas,
-          summary: _('Genç yıldızların iyonize ettiği yıldız oluşum bölgesi'),
+          summary: _('Star-forming region ionised by young stars'),
           description: [
-            _('{n} sıcak O/B yıldızının morötesi ışığıyla parlayan {d} genişliğinde bir hidrojen bulutu. Kenarlarındaki karanlık toz sütunlarında hâlâ yeni yıldızlar doğuyor.', { n: stars, d: ly(R * 2) }),
-            _('Bir dev moleküler bulutun yakın zamanda ateşlenmiş köşesi: en kütleli yıldızları çevrelerindeki gazı oyarak {d} çapında bir boşluk açmış. Rüzgârlarıyla sıkışan kabukta ikinci bir yıldız kuşağı oluşuyor.', { d: ly(R * 2) }),
-            _('Kızıl Hα ışığı ve yeşilimsi [O III] çizgileriyle parlayan, {d} genişliğinde bir yıldız doğumevi. Merkezindeki genç küme birkaç milyon yıl içinde bulutun kalanını dağıtacak.', { d: ly(R * 2) }),
+            _('A hydrogen cloud {d} across, lit by the ultraviolet of {n} hot O/B stars. New stars are still being born in the dark dust pillars along its edges.', { n: stars, d: ly(R * 2) }),
+            _('A recently ignited corner of a giant molecular cloud: its most massive stars have carved a cavity {d} across. In the shell compressed by their winds a second generation of stars is forming.', { d: ly(R * 2) }),
+            _('A stellar nursery {d} across, glowing in red Hα and greenish [O III]. The young cluster at its heart will disperse the rest of the cloud within a few million years.', { d: ly(R * 2) }),
           ][variant],
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Yaş': _('~{n} milyon yıl', { n: fixed(age, 1) }), 'Kütle': `~${fmtNum(mass)} M☉`, 'Uyarıcı yıldız': `${stars}`, 'Kaynak': _('Prosedürel (keşif)') },
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Age': _('~{n} million years', { n: fixed(age, 1) }), 'Mass': `~${fmtNum(mass)} M☉`, 'Exciting stars': `${stars}`, 'Source': _('Procedural (discovery)') },
         };
         // the exciting cluster: real, selectable member stars (ClusterStars) sitting where the
         // nebula's primary light is, inside the cavity they have blown
@@ -385,7 +385,7 @@ export class ProcLandmarks {
         const centre = lightPositionPc(profile, 0);
         const count = Math.min(MAX_OPEN, stars * 12);
         def.cluster = { ageMyr: age, count, centrePc: [centre.x, centre.y, centre.z], radiusPc: R * profile.cavityScale * 0.6 };
-        def.facts['Seçilebilen üye'] = fmtNum(count);
+        def.facts['Selectable members'] = fmtNum(count);
         return def;
       }
       case 'dark': {
@@ -404,20 +404,20 @@ export class ProcLandmarks {
           ...base, kind: 'nebula', radiusPc: R, absMag, color: [0.11, 0.085, 0.07],
           // the dust scatters the light of the young stars inside it (scatter → reflection sheen)
           gas: { excitation: 0.1, lowIon: 0.9, scatter: rng.range(0.75, 1) },
-          summary: _('Arkasındaki yıldızların ışığını kesen soğuk, yoğun toz ve molekül bulutu'),
+          summary: _('A cold, dense cloud of dust and molecules that blocks the light of the stars behind it'),
           description: [
-            _('Karanlık bir bulutsu: {d} genişliğinde, yalnızca {T} K sıcaklığında bir toz ve moleküler hidrojen bulutu. Kendi ışığı yok; arkasındaki yıldız alanında kapkara bir delik gibi görünüyor.', { d: ly(R * 2), T }),
-            _('Yıldız alanını oyan bir toz bulutu: içinden geçen görünür ışık {a} kadir sönükleşiyor. İçindeki {n} yoğun çekirdek kendi kütleçekimiyle çökmekte; birkaç yüz bin yıl içinde bunlar yeni yıldızlar olacak.', { a: fixed(Av, 0), n: cores }),
-            _('Soğuk, karanlık bir moleküler bulut (Bok küreciği türünden ya da daha büyük bir bulutun parçası). Kenarları yakındaki bir yıldızın ışığıyla soluk bir sarımsı parıltı alıyor; içi kızılötesinde bakılmadıkça görünmez.'),
+            _('A dark nebula: a cloud of dust and molecular hydrogen {d} across at only {T} K. It has no light of its own and looks like a pitch-black hole in the star field behind it.', { d: ly(R * 2), T }),
+            _('A dust cloud carved out of the star field: visible light passing through it dims by {a} magnitudes. Its {n} dense cores are collapsing under their own gravity and will become new stars within a few hundred thousand years.', { a: fixed(Av, 0), n: cores }),
+            _('A cold, dark molecular cloud (a Bok globule, or part of a larger cloud). Its edges catch a faint yellowish glow from a nearby star; its interior is invisible except in the infrared.'),
           ][variant],
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Tür': _('Karanlık bulutsu'), 'Sıcaklık': `${T} K`, 'Kütle': `~${fmtNum(mass)} M☉`, 'Sönükleştirme (A_V)': _('{n} kadir', { n: fixed(Av, 0) }), 'Çöken çekirdek': `${cores}`, 'Gömülü genç yıldız': `${yso}`, 'Kaynak': _('Prosedürel (keşif)') },
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Type': _('Dark nebula'), 'Temperature': `${T} K`, 'Mass': `~${fmtNum(mass)} M☉`, 'Extinction (A_V)': _('{n} mag', { n: fixed(Av, 0) }), 'Collapsing cores': `${cores}`, 'Embedded young stars': `${yso}`, 'Source': _('Procedural (discovery)') },
         };
         // the young stars embedded in it: real, selectable members round the primary light, a
         // million years old or so, in the pocket they have blown into the dust
         const profile = resolveNebulaProfile(def, 'dark');
         const centre = lightPositionPc(profile, 0);
         def.cluster = { ageMyr: rng.range(0.5, 2), count: yso, centrePc: [centre.x, centre.y, centre.z], radiusPc: R * profile.cavityScale * 1.2 };
-        def.facts['Seçilebilen üye'] = fmtNum(yso);
+        def.facts['Selectable members'] = fmtNum(yso);
         return def;
       }
       case 'reflection': {
@@ -428,11 +428,11 @@ export class ProcLandmarks {
         const cool = star.e < 0.3;
         return {
           ...base, kind: 'nebula', radiusPc: R, absMag, color: reflectionTint(star.e), gas,
-          summary: cool ? _('Soğuk dev bir yıldızın ışığını saçan sarımsı toz bulutu') : _('Yakındaki yıldızların ışığını saçan mavi toz bulutu'),
+          summary: cool ? _('A yellowish dust cloud scattering the light of a cool giant star') : _('Blue dust cloud scattering the light of nearby stars'),
           description: cool
-            ? _('Kendi ışığı olmayan bir toz bulutu: içindeki soğuk dev yıldızın ışığını saçıyor. Toz mavi ışığı daha çok saçsa da yıldızın kendisi sarı-turuncu olduğu için bulut da sarımsı görünüyor (Antares bulutsusu gibi). {d} genişliğinde.', { d: ly(R * 2) })
-            : _('Kendi ışığı olmayan bir toz bulutu: içine gömülü birkaç parlak yıldızın ışığını saçıyor, mavi ışığı daha çok saçtığı için gökyüzünün mavisi gibi görünüyor. {d} genişliğinde; yıldızları onu iyonize edecek kadar sıcak değil.', { d: ly(R * 2) }),
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Aydınlatan yıldız': star.type, 'Kaynak': _('Prosedürel (keşif)') },
+            ? _('A dust cloud with no light of its own: it scatters the light of the cool giant inside it. The dust scatters blue light more, but the star itself is yellow-orange, so the cloud looks yellowish too (like the nebula around Antares). {d} across.', { d: ly(R * 2) })
+            : _('A dust cloud with no light of its own: it scatters the light of a few bright stars embedded in it, and looks blue for the same reason the sky does. {d} across; its stars are not hot enough to ionise it.', { d: ly(R * 2) }),
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Illuminating star': star.type, 'Source': _('Procedural (discovery)') },
         };
       }
       case 'planetary': {
@@ -446,13 +446,13 @@ export class ProcLandmarks {
         const gas: NebulaGas = { excitation: clamp01((T - 50_000) / 140_000 + rng.range(-0.08, 0.08)), lowIon: shape === 1 ? rng.range(0.65, 0.95) : rng.range(0.2, 0.6) };
         return {
           ...base, kind: 'planetary', radiusPc: R, absMag, color: shellTint(gas), gas,
-          summary: _('Ölmekte olan bir yıldızın savurduğu parlayan kabuk'),
+          summary: _('Glowing shell cast off by a dying star'),
           description: [
-            _('Güneş benzeri bir yıldızın son nefesi: dış katmanlarını saniyede onlarca kilometreyle savurmuş, ortada kalan {T} K sıcaklığındaki çıplak çekirdek bu kabuğu iyonize edip parlatıyor. Halka biçimli, {d} genişliğinde.', { T: fmtNum(T), d: ly(R * 2) }),
-            _('Çift loblu (bipolar) bir gezegenimsi bulutsu: merkezdeki yıldızın (muhtemelen bir çift yıldızın) savurduğu gaz, ekvator çevresindeki yoğun bir kuşak yüzünden iki yöne fışkırmış. Beyaz cüce adayı çekirdek {T} K sıcaklığında.', { T: fmtNum(T) }),
-            _('Eşmerkezli kabuklardan oluşan bir gezegenimsi bulutsu; her kabuk merkez yıldızın bir başka kütle kaybı nöbetini kaydediyor. Kızıl dış kenar [N II] ve Hα, yeşilimsi iç kısım [O III] ışığında parlıyor.'),
+            _('The last breath of a Sun-like star: it has flung off its outer layers at tens of kilometres per second, and the bare {T} K core left behind ionises the shell and makes it glow. Ring-shaped, {d} across.', { T: fmtNum(T), d: ly(R * 2) }),
+            _('A bipolar planetary nebula: the gas shed by the central star (probably a binary) was funnelled in two directions by a dense belt around the equator. The white-dwarf-to-be at the centre is {T} K.', { T: fmtNum(T) }),
+            _('A planetary nebula of concentric shells, each recording another episode of mass loss by the central star. The red outer rim glows in [N II] and Hα, the greenish interior in [O III].'),
           ][shape],
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Merkez yıldız sıcaklığı': `${fmtNum(T)} K`, 'Genişleme yaşı': _('~{n} yıl', { n: fmtNum(age) }), 'Kaynak': _('Prosedürel (keşif)') },
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Central star temperature': `${fmtNum(T)} K`, 'Expansion age': _('~{n} years', { n: fmtNum(age) }), 'Source': _('Procedural (discovery)') },
         };
       }
       case 'open': {
@@ -462,11 +462,11 @@ export class ProcLandmarks {
         const young = age < 100;
         return {
           ...base, kind: 'cluster', radiusPc: R, absMag: -(young ? 5 : 3.5) - 1.3 * Math.log10(n / 300) + rng.range(-0.5, 0.5), color: C.open[young ? 0 : age < 600 ? 1 : 2],
-          summary: young ? _('Aynı buluttan doğmuş genç, mavi yıldızlar topluluğu') : _('Dağılmakta olan orta yaşlı açık küme'),
+          summary: young ? _('A company of young blue stars born from the same cloud') : _('Middle-aged open cluster slowly dispersing'),
           description: young
-            ? _('{n} yıldızlık, yalnızca {a} milyon yaşında bir açık küme: en parlak üyeleri hâlâ mavi-beyaz B yıldızları. Doğdukları bulutun kalıntıları kümeyi soluk bir yansıma bulutsusu olarak sarıyor.', { n: fmtNum(n), a: fixed(age, 0) })
-            : _('{a} milyon yaşında, {n} üyeli açık küme. Kütleli yıldızları çoktan kırmızı dev olup tükenmiş; kalan Güneş benzeri yıldızlar galaksinin gelgit kuvvetleriyle yavaş yavaş dağılıyor.', { a: fixed(age, 0), n: fmtNum(n) }),
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Yaş': _('~{n} milyon yıl', { n: fixed(age, 0) }), 'Yıldız sayısı': `~${fmtNum(n)}`, 'Seçilebilen üye': fmtNum(Math.min(n, MAX_OPEN)), 'Kaynak': _('Prosedürel (keşif)') },
+            ? _('An open cluster of {n} stars only {a} million years old: its brightest members are still blue-white B stars. The remains of their birth cloud wrap the cluster in a faint reflection nebula.', { n: fmtNum(n), a: fixed(age, 0) })
+            : _('An open cluster {a} million years old with {n} members. Its massive stars have long since become red giants and burnt out; the remaining Sun-like stars are slowly being pulled apart by the tides of the galaxy.', { a: fixed(age, 0), n: fmtNum(n) }),
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Age': _('~{n} million years', { n: fixed(age, 0) }), 'Number of stars': `~${fmtNum(n)}`, 'Selectable members': fmtNum(Math.min(n, MAX_OPEN)), 'Source': _('Procedural (discovery)') },
           cluster: { ageMyr: age, count: n },
         };
       }
@@ -477,9 +477,9 @@ export class ProcLandmarks {
         const feh = -rng.range(0.6, 2.3);
         return {
           ...base, kind: 'globular', radiusPc: R, absMag: -7.2 - 2.5 * Math.log10(mass / 2e5) + rng.range(-0.3, 0.3), color: rng.pick(C.globular),
-          summary: _('Galaksinin halesinde dolanan yüz binlerce yaşlı yıldızın küresi'),
-          description: _('{m} Güneş kütlesinde, {a} milyar yaşında bir küresel küme: galaksinin kendisi kadar yaşlı. Demir bolluğu Güneş\'in {z} katı — ilk yıldız kuşaklarından. Çekirdeğinde yıldızlar o kadar sıkışık ki gece gökyüzünde binlerce Sirius parlar.', { m: fmtNum(Math.round(mass / 1e4) * 1e4), a: fixed(age, 1), z: fixed(Math.pow(10, feh), 3) }),
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Kütle': `~${fmtNum(Math.round(mass / 1e4) * 1e4)} M☉`, 'Yaş': _('~{n} milyar yıl', { n: fixed(age, 1) }), '[Fe/H]': fixed(feh, 2), 'Seçilebilen üye': fmtNum(Math.min(Math.round(mass / 2.5), MAX_GLOBULAR)), 'Kaynak': _('Prosedürel (keşif)') },
+          summary: _('A sphere of hundreds of thousands of old stars roaming the galactic halo'),
+          description: _('A globular cluster of {m} solar masses and {a} billion years: as old as the galaxy itself. Its iron abundance is {z} times the Sun\'s — one of the first stellar generations. In its core the stars are packed so tightly that thousands of Siriuses would shine in the night sky.', { m: fmtNum(Math.round(mass / 1e4) * 1e4), a: fixed(age, 1), z: fixed(Math.pow(10, feh), 3) }),
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Mass': `~${fmtNum(Math.round(mass / 1e4) * 1e4)} M☉`, 'Age': _('~{n} billion years', { n: fixed(age, 1) }), '[Fe/H]': fixed(feh, 2), 'Selectable members': fmtNum(Math.min(Math.round(mass / 2.5), MAX_GLOBULAR)), 'Source': _('Procedural (discovery)') },
           cluster: { ageMyr: age * 1000, count: Math.round(mass / 2.5), feh },
         };
       }
@@ -492,11 +492,11 @@ export class ProcLandmarks {
         const gas = remnantGas(rng, typeIa, age, v);
         return {
           ...base, kind: 'remnant', radiusPc: R, absMag, color: remnantTint(gas), gas,
-          summary: typeIa ? _('Bir beyaz cücenin termonükleer patlamasının genişleyen kabuğu') : _('Çökmüş bir dev yıldızın süpernova kalıntısı'),
+          summary: typeIa ? _('The expanding shell of a white dwarf\'s thermonuclear explosion') : _('Supernova remnant of a collapsed giant star'),
           description: typeIa
-            ? _('Yaklaşık {a} yıl önce bir beyaz cüce eşinden çaldığı maddeyle sınırı aşıp tümüyle patladı. Geriye yıldız kalmadı: yalnızca saniyede {v} km ile genişleyen, demir ve silisyumca zengin, {d} çapında bir kabuk.', { a: fmtNum(age), v: fmtNum(v), d: ly(R * 2) })
-            : _('Yaklaşık {a} yıl önce patlayan kütleli bir yıldızın kabuğu; {d} çapına ulaştı ve hâlâ saniyede {v} km ile yıldızlararası ortama çarpıyor. Şok dalgası gazı milyonlarca dereceye ısıtıyor; merkezde bir nötron yıldızı saklanıyor olmalı.', { a: fmtNum(age), d: ly(R * 2), v: fmtNum(v) }),
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Yaş': _('~{n} yıl', { n: fmtNum(age) }), 'Genişleme hızı': `${fmtNum(v)} km/s`, 'Tür': typeIa ? 'Ia' : 'II / Ib/c', 'Kaynak': _('Prosedürel (keşif)') },
+            ? _('About {a} years ago a white dwarf, fed by matter stolen from its companion, crossed the limit and exploded completely. No star is left: only a shell {d} across, rich in iron and silicon, expanding at {v} km/s.', { a: fmtNum(age), v: fmtNum(v), d: ly(R * 2) })
+            : _('The shell of a massive star that exploded about {a} years ago; it has reached {d} across and still slams into the interstellar medium at {v} km/s. The shock heats the gas to millions of degrees; a neutron star must be hiding at the centre.', { a: fmtNum(age), d: ly(R * 2), v: fmtNum(v) }),
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Age': _('~{n} years', { n: fmtNum(age) }), 'Expansion speed': `${fmtNum(v)} km/s`, 'Type': typeIa ? 'Ia' : 'II / Ib/c', 'Source': _('Procedural (discovery)') },
         };
       }
       case 'bubble': {
@@ -508,9 +508,9 @@ export class ProcLandmarks {
         const gas: NebulaGas = { excitation: clamp01(wr.e + rng.range(-0.1, 0.1)), lowIon: wr.n + rng.range(-0.1, 0.1) };
         return {
           ...base, kind: 'remnant', radiusPc: R, absMag, color: shellTint(gas), gas,
-          summary: _('Bir Wolf–Rayet yıldızının rüzgârının şişirdiği kabarcık'),
-          description: _('Merkezdeki dev yıldız dış katmanlarını saniyede binlerce kilometreyle üflüyor; bu rüzgâr daha önce savurduğu yavaş gazı önüne katıp {d} çapında parlayan bir kabarcık oluşturdu. Yıldız birkaç yüz bin yıl içinde süpernova olacak.', { d: ly(R * 2) }),
-          facts: { 'Uzaklık': dist, 'Çap': ly(R * 2), 'Merkez yıldız': wr.type, 'Rüzgâr hızı': `${fmtNum(rng.int(12, 30) * 100)} km/s`, 'Kaynak': _('Prosedürel (keşif)') },
+          summary: _('A bubble blown by the wind of a Wolf–Rayet star'),
+          description: _('The giant star at the centre blows off its outer layers at thousands of kilometres per second; this wind has swept up the slower gas it shed earlier into a glowing bubble {d} across. The star will go supernova within a few hundred thousand years.', { d: ly(R * 2) }),
+          facts: { 'Distance': dist, 'Diameter': ly(R * 2), 'Central star': wr.type, 'Wind speed': `${fmtNum(rng.int(12, 30) * 100)} km/s`, 'Source': _('Procedural (discovery)') },
         };
       }
       case 'hypergiant': {
@@ -521,11 +521,11 @@ export class ProcLandmarks {
         const mass = rng.range(18, 40);
         return {
           ...base, kind: 'star', radiusPc: 0.05, absMag: 4.74 - 2.5 * Math.log10(L) - (red ? 1.3 : 0.1), color: red ? [1, 0.6, 0.4] : [1, 0.92, 0.75],
-          summary: red ? _('Galaksinin en büyük yıldızlarından: kırmızı bir hiperdev') : _('Kararsız sarı hiperdev — bir süpernova adayı'),
+          summary: red ? _('One of the largest stars in the galaxy: a red hypergiant') : _('Unstable yellow hypergiant — a supernova candidate'),
           description: red
-            ? _('Güneş\'in {r} katı yarıçapında bir kırmızı hiperdev: Güneş\'in yerine konsa Jüpiter\'in yörüngesini yutardı. Yılda bir Dünya kütlesinden fazla gazı tozlu bir rüzgârla kaybediyor; birkaç yüz bin yıl içinde patlayacak.', { r: fmtNum(Math.round(Rs)) })
-            : _('Güneş\'in {l} katı ışınım gücünde sarı bir hiperdev. Kararsız evrede: birkaç on yılda bir dış katmanlarını fırlatıp görünür parlaklığını yüzlerce kat değiştiriyor; çevresinde bu nöbetlerin bıraktığı gaz kabukları var.', { l: fmtNum(Math.round(L / 1000) * 1000) }),
-          facts: { 'Uzaklık': dist, 'Yarıçap': `${fmtNum(Math.round(Rs))} R☉`, 'Parlaklık': `${fmtNum(Math.round(L / 1000) * 1000)} L☉`, 'Kütle': `~${fixed(mass, 0)} M☉`, 'Sıcaklık': `${fmtNum(Math.round(T / 50) * 50)} K`, 'Kaynak': _('Prosedürel (keşif)') },
+            ? _('A red hypergiant {r} times the Sun\'s radius: put in the Sun\'s place it would swallow Jupiter\'s orbit. It loses more than an Earth mass of gas a year in a dusty wind; it will explode within a few hundred thousand years.', { r: fmtNum(Math.round(Rs)) })
+            : _('A yellow hypergiant {l} times as luminous as the Sun. In an unstable phase: every few decades it throws off its outer layers and changes its visible brightness a hundredfold; shells of gas from these outbursts surround it.', { l: fmtNum(Math.round(L / 1000) * 1000) }),
+          facts: { 'Distance': dist, 'Radius': `${fmtNum(Math.round(Rs))} R☉`, 'Luminosity': `${fmtNum(Math.round(L / 1000) * 1000)} L☉`, 'Mass': `~${fixed(mass, 0)} M☉`, 'Temperature': `${fmtNum(Math.round(T / 50) * 50)} K`, 'Source': _('Procedural (discovery)') },
           star: { massSolar: mass, radiusSolar: Rs, temperature: T, luminosity: L, spectral: red ? 'M2 Ia-0' : 'F8 Ia-0' },
         };
       }
@@ -536,9 +536,9 @@ export class ProcLandmarks {
         const mass = rng.range(10, 30);
         return {
           ...base, kind: 'star', radiusPc: 0.05, absMag: 4.74 - 2.5 * Math.log10(L) + 3.5, color: [0.7, 0.8, 1.0],
-          summary: _('Zarfını yitirmiş, çıplak helyum çekirdeğiyle yanan Wolf–Rayet yıldızı'),
-          description: _('Hidrojen zarfını güçlü rüzgârlarla çoktan savurmuş kütleli bir yıldız; {T} K\'lik yüzeyinden saniyede binlerce kilometreyle gaz fışkırıyor. Tayfında geniş helyum ve karbon salma çizgileri var. Son evre: önümüzdeki birkaç yüz bin yıl içinde Ib/c tipi bir süpernova ya da gama ışını patlaması.', { T: fmtNum(Math.round(T / 1000) * 1000) }),
-          facts: { 'Uzaklık': dist, 'Sıcaklık': `${fmtNum(Math.round(T / 1000) * 1000)} K`, 'Parlaklık': `${fmtNum(Math.round(L / 1000) * 1000)} L☉`, 'Kütle': `~${fixed(mass, 0)} M☉`, 'Kütle kaybı': `10⁻⁵ M☉/yıl`, 'Kaynak': _('Prosedürel (keşif)') },
+          summary: _('A Wolf–Rayet star burning as a bare helium core, its envelope lost'),
+          description: _('A massive star that long ago blew away its hydrogen envelope in fierce winds; gas streams off its {T} K surface at thousands of kilometres per second. Its spectrum shows broad helium and carbon emission lines. The final stage: a type Ib/c supernova or a gamma-ray burst within the next few hundred thousand years.', { T: fmtNum(Math.round(T / 1000) * 1000) }),
+          facts: { 'Distance': dist, 'Temperature': `${fmtNum(Math.round(T / 1000) * 1000)} K`, 'Luminosity': `${fmtNum(Math.round(L / 1000) * 1000)} L☉`, 'Mass': `~${fixed(mass, 0)} M☉`, 'Mass loss': `10⁻⁵ M☉/yr`, 'Source': _('Procedural (discovery)') },
           star: { massSolar: mass, radiusSolar: Rs, temperature: T, luminosity: L, spectral: rng.pick(['WN5', 'WN7', 'WC8', 'WO3']) },
         };
       }
@@ -547,9 +547,9 @@ export class ProcLandmarks {
         const B = rng.range(1, 8);
         return {
           ...base, kind: 'pulsar', radiusPc: 0.05, absMag: 5, color: [1.0, 0.6, 0.8],
-          summary: _('Evrenin en güçlü mıknatısı: bir magnetar'),
-          description: _('Yüzey manyetik alanı {B} × 10¹⁴ gauss olan genç bir nötron yıldızı — Dünya\'nınkinin katrilyon katı. Kabuğu alanın gerilimiyle kırıldıkça dev X-ışını patlamaları saçıyor; {p} saniyelik ağır dönüşü alanın onu hızla frenlediğini gösteriyor.', { B: fixed(B, 1), p: fixed(periodMs / 1000, 2) }),
-          facts: { 'Uzaklık': dist, 'Periyot': `${fixed(periodMs / 1000, 2)} s`, 'Manyetik alan': `${fixed(B, 1)} × 10¹⁴ G`, 'Yaş': _('~{n} yıl', { n: fmtNum(rng.int(2, 30) * 1000) }), 'Kaynak': _('Prosedürel (keşif)') },
+          summary: _('The universe\'s strongest magnet: a magnetar'),
+          description: _('A young neutron star with a surface magnetic field of {B} × 10¹⁴ gauss — a quadrillion times Earth\'s. As the field\'s stress cracks its crust it hurls out giant X-ray flares; its slow {p}-second spin shows how fast the field is braking it.', { B: fixed(B, 1), p: fixed(periodMs / 1000, 2) }),
+          facts: { 'Distance': dist, 'Period': `${fixed(periodMs / 1000, 2)} s`, 'Magnetic field': `${fixed(B, 1)} × 10¹⁴ G`, 'Age': _('~{n} years', { n: fmtNum(rng.int(2, 30) * 1000) }), 'Source': _('Procedural (discovery)') },
           pulsar: { periodMs, massSolar: 1.4, radiusKm: 12, temperature: 4e6, pole: { ra: rng.range(0, 360), dec: rng.range(-90, 90) }, magneticTilt: rng.range(20, 80), beamHalfAngle: rng.range(8, 16), beamLength: 40, beamColor: [1.0, 0.55, 0.75] },
         };
       }

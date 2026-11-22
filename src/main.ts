@@ -78,9 +78,9 @@ import type { MissionPlan } from './astro/mission';
 
 const IDENTITY = new Matrix3();
 
-/** short kind labels for the discovery list (Turkish source strings) */
+/** short kind labels for the discovery list (source strings) */
 const DISCOVERY_KIND: Partial<Record<LandmarkKind, string>> = {
-  nebula: 'Bulutsu', remnant: 'Kalıntı', cluster: 'Açık küme', globular: 'Küresel küme', planetary: 'Gezegenimsi bulutsu', star: 'Yıldız', pulsar: 'Magnetar',
+  nebula: 'Nebula', remnant: 'Remnant', cluster: 'Open cluster', globular: 'Globular cluster', planetary: 'Planetary nebula', star: 'Star', pulsar: 'Magnetar',
 };
 /** Flight time of a tour cue's hop (overview and back): a slow, even glide rather than a snap */
 const TOUR_HOP_S = 2.8;
@@ -273,11 +273,11 @@ class App implements UIHost {
       const wasEvent = this.currentEvent !== null;
       if (wasEvent) this.endEvent();
       if (why === 'finished' && !wasEvent) {
-        this.ui.showToast(_('Tur tamamlandı'), 2400);
+        this.ui.showToast(_('Tour complete'), 2400);
         // the second finished tour (then every third) brings the donation card
         this.supportAsk?.noteTourFinished();
       } else {
-        this.ui.showToast(why === 'finished' ? _('Sahne tamamlandı') : _('Tur bitirildi'), 2400);
+        this.ui.showToast(why === 'finished' ? _('Scene complete') : _('Tour ended'), 2400);
       }
       // a finished tour hands back to the circling backdrop; an interrupted one (or an event
       // scene, which is a single composed shot) leaves the camera where it is
@@ -535,7 +535,7 @@ class App implements UIHost {
     const arrive = ref.member >= 0 ? R * 2.6 : R * 3;
     this.camera.goToPoint(centre, arrive, fromCam, { radius: R * (ref.member >= 0 ? 0.02 : 0.05), name: this.farName(ref) });
     const dist = new Vector3().copy(centre).sub(this.camera.position).length();
-    this.ui.showToast(_('{name} hedefine uçuluyor… ({dist})', { name: this.farName(ref), dist: fmtLightYears(dist) }), 2600);
+    this.ui.showToast(_('Flying to {name}… ({dist})', { name: this.farName(ref), dist: fmtLightYears(dist) }), 2600);
   }
 
   centerFar(ref: FarRef): void {
@@ -585,7 +585,7 @@ class App implements UIHost {
       const absMag = c.absMag[m];
       const luminosity = Math.pow(10, (4.83 - absMag) / 2.5);
       return {
-        name: c.name(m), kind: _('Küme üyesi galaksi'), distKm, distSunPc: pos.length(), radiusPc: c.radius[m], absMag,
+        name: c.name(m), kind: _('Cluster member galaxy'), distKm, distSunPc: pos.length(), radiusPc: c.radius[m], absMag,
         luminosity, massSolar: 0, richness: 0, typeCode: c.type[m], resolved: live,
         apparentMag: absMag + 5 * Math.log10(Math.max(distKm / PARSEC_KM, 1e-3)) - 5,
         coreMassSolar: nucleusMass(TYPE_BY_CODE[c.type[m]], luminosity, c.seed[m]),
@@ -642,7 +642,7 @@ class App implements UIHost {
     }
     this.adoptNearMembers(this.farCluster!);
     // arriving at a knot is a discovery
-    if (want.ratio < 6) this.noteDiscovery(farKey({ tier: want.tier, index: want.index, member: -1 }), this.farCluster!.clusterName, false, this.farUniverse.tiers[want.tier].spec.mode === 'web' ? 'Galaksi kümesi' : 'Süperküme düğümü');
+    if (want.ratio < 6) this.noteDiscovery(farKey({ tier: want.tier, index: want.index, member: -1 }), this.farCluster!.clusterName, false, this.farUniverse.tiers[want.tier].spec.mode === 'web' ? 'Galaxy cluster' : 'Supercluster node');
   }
 
   /**
@@ -674,7 +674,7 @@ class App implements UIHost {
       const ref = { tier: c.tierIndex, index: c.index, member: n.m };
       const slot = g.adopt(c, n.m, farKey(ref), c.name(n.m), keep, (s) => this.releaseGuest(s));
       if (slot >= 0) this.guestMember.set(slot, n.m);
-      if (slot >= 0 && n.ratio < 6) this.noteDiscovery(farKey(ref), c.name(n.m), false, 'Küme üyesi galaksi');
+      if (slot >= 0 && n.ratio < 6) this.noteDiscovery(farKey(ref), c.name(n.m), false, 'Cluster member galaxy');
     }
   }
 
@@ -730,7 +730,7 @@ class App implements UIHost {
     const arrive = l.def.kind === 'remnant' ? R * 5 : R * 3.2;
     this.camera.goToPoint(centre, arrive, fromCam, { radius: R * 0.3, name: _(l.def.name) });
     const dist = new Vector3().copy(centre).sub(this.camera.position).length();
-    this.ui.showToast(_('{name} hedefine uçuluyor… ({dist})', { name: l.def.name, dist: fmtLightYears(dist) }), 2600);
+    this.ui.showToast(_('Flying to {name}… ({dist})', { name: l.def.name, dist: fmtLightYears(dist) }), 2600);
   }
 
   /** Turn toward a sky direction (search by coordinates) */
@@ -745,7 +745,7 @@ class App implements UIHost {
     // arrive a parsec off (a few light years: the neighbourhood of the point is in view)
     this.camera.goToPoint(centre, PARSEC_KM, fromCam, { radius: PARSEC_KM * 0.05, name: label });
     const dist = centre.clone().sub(this.camera.position).length();
-    this.ui.showToast(_('{name} hedefine uçuluyor… ({dist})', { name: label, dist: fmtLightYears(dist) }), 2600);
+    this.ui.showToast(_('Flying to {name}… ({dist})', { name: label, dist: fmtLightYears(dist) }), 2600);
   }
 
   centerLandmark(i: number): void {
@@ -759,7 +759,7 @@ class App implements UIHost {
   goTo(b: CelestialBody): void {
     this.select(b);
     this.camera.goTo(b, this.universe.hostStar(b).position);
-    this.ui.showToast(_('{name} hedefine uçuluyor…', { name: b.name }));
+    this.ui.showToast(_('Flying to {name}…', { name: b.name }));
   }
 
   /** Solid worlds the visitor can land on */
@@ -807,7 +807,7 @@ class App implements UIHost {
   land(b: CelestialBody | null = this.selected ?? this.camera.target ?? this.camera.nearest, at?: { lat: number; lon: number }): void {
     if (!b || !this.canLand(b)) return;
     if (this.groundWaits(b)) {
-      this.ui.showToast(_('{name} yüzeyine iniliyor…', { name: b.name }));
+      this.ui.showToast(_('Landing on {name}…', { name: b.name }));
       this.whenGroundReady(b, () => this.land(b, at));
       return;
     }
@@ -825,11 +825,11 @@ class App implements UIHost {
     hit.applyQuaternion(new Quaternion().copy(b.rotation).invert());
     const aim = at ?? geodetic(b, hit);
     if (!this.standOn(b, aim, !at)) return;
-    this.ui.showToast(_('{name} yüzeyine iniliyor…', { name: b.name }));
+    this.ui.showToast(_('Landing on {name}…', { name: b.name }));
     if (!this.landingHintShown) {
       this.landingHintShown = true;
       window.setTimeout(() => {
-        if (this.landedOn) this.ui.showToast(_('Yüzeydesiniz: fareyle bakın · W A S D yürü · tekerlek yakınlaştır · zamanı hızlandırıp gökyüzünü izleyin · I kalk'), 7000);
+        if (this.landedOn) this.ui.showToast(_('You are on the surface: look with the mouse · W A S D to walk · wheel to zoom · speed up time and watch the sky · I to take off'), 7000);
       }, 4000);
     }
   }
@@ -1119,7 +1119,7 @@ class App implements UIHost {
     const up = new Vector3().copy(cam.position).sub(b.position).normalize();
     const dur = 4.5;
     cam.goToVantage(b, up, b.radius * 3.6, dur, new Vector3().copy(b.pole));
-    this.ui.showToast(_('Kalkış…'));
+    this.ui.showToast(_('Taking off…'));
   }
 
   /** HUD line while on the ground: where we stand and the local solar time there. */
@@ -1128,7 +1128,7 @@ class App implements UIHost {
     if (!st || this.camera.mode !== 'surface') return null;
     const { lat, lon } = this.camera.standLatLon(st);
     const b = st.body;
-    const place = `${Math.abs(lat).toFixed(2)}° ${lat >= -0.005 ? _('K') : _('G')}, ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? _('D') : _('B')}`;
+    const place = `${Math.abs(lat).toFixed(2)}° ${lat >= -0.005 ? _('N') : _('S')}, ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? _('E') : _('W')}`;
     // local solar time from the sub-solar longitude: noon where the Sun crosses the meridian
     _dir.copy(this.universe.hostStar(b).position).sub(b.position).applyQuaternion(this.tmpQ.copy(b.rotation).invert());
     const subsolar = Math.atan2(-_dir.z, _dir.x) / DEG;
@@ -1176,7 +1176,7 @@ class App implements UIHost {
     this.camera.shiftFrame(delta, u.star);
     this.select(u.star);
     this.camera.goTo(u.star, u.star.position);
-    this.ui.showToast(_('{name} sistemine uçuluyor… ({dist})', { name: u.star.name, dist: fmtLightYears(delta.length()) }), 2600);
+    this.ui.showToast(_('Flying to the {name} system… ({dist})', { name: u.star.name, dist: fmtLightYears(delta.length()) }), 2600);
   }
 
   /** Intergalactic travel: fly to a vantage point ~2.5 radii from the galaxy centre, above its disc. */
@@ -1193,7 +1193,7 @@ class App implements UIHost {
     // arrive in orbit around the centre; the wheel may descend deep into the galaxy
     this.camera.goToPoint(centre, R * 2.6, approach, { radius: R * 0.02, name: g.name(i) });
     const dist = new Vector3().copy(centre).sub(this.camera.position).length();
-    this.ui.showToast(_('{name} galaksisine uçuluyor… ({dist})', { name: g.name(i), dist: fmtLightYears(dist) }), 2600);
+    this.ui.showToast(_('Flying to the {name} galaxy… ({dist})', { name: g.name(i), dist: fmtLightYears(dist) }), 2600);
   }
 
   center(b: CelestialBody): void {
@@ -1244,16 +1244,16 @@ class App implements UIHost {
   private onLockChange(locked: boolean): void {
     this.overlay.crosshair = locked;
     if (locked) {
-      this.ui.showToast(_('Serbest dolaşım: fare ile bak · W A S D uç · R F yukarı/aşağı · Q E yatış · tekerlek hız · Esc çık'), 4200);
+      this.ui.showToast(_('Free roam: look with the mouse · W A S D fly · R F up/down · Q E roll · wheel speed · Esc exit'), 4200);
       // at the plain size every star and planet is a pixel or so: once a session, point at the setting
       if (!this.landedOn && !this.objectSizeHinted && this.settings.objectSize <= 1) {
         this.objectSizeHinted = true;
         window.setTimeout(() => {
-          if (this.input.locked) this.ui.showToast(_('Yıldızları ve gezegenleri daha iyi görebilmek için Ayarlar › Nesne boyutu ile büyütebilirsiniz'), 7000);
+          if (this.input.locked) this.ui.showToast(_('To see the stars and planets better, you can draw them larger under Settings › Object size'), 7000);
         }, 4300);
       }
     } else {
-      this.ui.showToast(_('Serbest dolaşım kapatıldı'));
+      this.ui.showToast(_('Free roam disabled'));
     }
   }
 
@@ -1261,17 +1261,17 @@ class App implements UIHost {
   goToBlackHole(id: string): void {
     const u = this.universe;
     const bh = u.blackHole(id);
-    if (!bh) { this.ui.showToast(_('Kara delik bulunamadı')); return; }
+    if (!bh) { this.ui.showToast(_('Black hole not found')); return; }
     if (bh.systemStarId !== u.current.starId) {
       const delta = u.switchTo(bh.systemStarId, this.time.jd, this.time.t);
       this.camera.shiftFrame(delta, u.star);
     }
     const body = u.get(bh.entry.bodyId);
-    if (!body) { this.ui.showToast(_('Kara delik bulunamadı')); return; }
+    if (!body) { this.ui.showToast(_('Black hole not found')); return; }
     this.select(body);
     this.camera.goTo(body, u.hostStar(body).position);
     const dist = body.position.distanceTo(this.camera.position);
-    this.ui.showToast(_('{name} kara deliğine uçuluyor… ({dist})', { name: body.name, dist: fmtLightYears(dist) }), 2600);
+    this.ui.showToast(_('Flying to the black hole {name}… ({dist})', { name: body.name, dist: fmtLightYears(dist) }), 2600);
   }
 
   /** Point the camera at a black hole (no travel). */
@@ -1465,12 +1465,12 @@ class App implements UIHost {
       this.camera.shiftFrame(delta, u.star);
     }
     const b = u.get(id);
-    if (!b) { this.ui.showToast(_('Hedef bulunamadı')); return; }
+    if (!b) { this.ui.showToast(_('Target not found')); return; }
     if (b.data.orbit?.kind === 'ephemeris') void ephemeris.prioritize(b.data.orbit.table);
     this.select(b);
     if (App.backlitKind(b)) this.camera.goToBacklit(b, u.hostStar(b).position);
     else this.camera.goTo(b, u.hostStar(b).position);
-    this.ui.showToast(_('{name} hedefine uçuluyor…', { name: b.name }));
+    this.ui.showToast(_('Flying to {name}…', { name: b.name }));
   }
 
   /** Pull back above `bodyId`'s orbit around its parent so the whole orbit is in view. */
@@ -2148,7 +2148,7 @@ class App implements UIHost {
         if (sec < 90) return `${sec.toFixed(1)} s`;
         const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), ss = Math.floor(sec % 60);
         return h >= 24
-          ? `${Math.floor(h / 24)} ${_('gün')} ${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
+          ? `${Math.floor(h / 24)} ${_('d')} ${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
           : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
       }
       case 'separation': {
@@ -2186,7 +2186,7 @@ class App implements UIHost {
     }
     const b = u.get(bodyId);
     if (b) this.goTo(b);
-    else this.ui.showToast(_('Hedef bulunamadı'));
+    else this.ui.showToast(_('Target not found'));
   }
 
   toggleFollow(): void {
@@ -2195,12 +2195,12 @@ class App implements UIHost {
     if (this.selected) {
       if (cam.mode === 'orbit' && cam.target === this.selected) {
         cam.setMode('free');
-        this.ui.showToast(_('Serbest uçuş'));
+        this.ui.showToast(_('Free flight'));
       } else {
         cam.anchor = null;
         cam.target = this.selected;
         cam.setMode('orbit');
-        this.ui.showToast(_('{name} takip ediliyor', { name: this.selected.name }));
+        this.ui.showToast(_('Following {name}', { name: this.selected.name }));
       }
       return;
     }
@@ -2225,10 +2225,10 @@ class App implements UIHost {
     if (!centre) return;
     if (cam.mode === 'orbit' && cam.anchor && cam.anchor.position.distanceToSquared(centre) < 1e-6 * Math.max(1, centre.lengthSq())) {
       cam.setMode('free');
-      this.ui.showToast(_('Serbest uçuş'));
+      this.ui.showToast(_('Free flight'));
     } else {
       cam.orbitPoint(centre, radius, name);
-      this.ui.showToast(_('{name} takip ediliyor', { name }));
+      this.ui.showToast(_('Following {name}', { name }));
     }
   }
 
@@ -2244,7 +2244,7 @@ class App implements UIHost {
     m.autoRate = rate > 1;
     this.trajectories.add(m);
     if (follow) this.followMission(m);
-    this.ui.showToast(`${_('{name} fırlatıldı', { name: m.name })} · ${plan.originName} → ${plan.targetName} · ${fmtDuration(plan.durationS)}${rate > 1 ? ` · ${_('zaman')} ${t.rateLabel()}` : ''}`, 3200);
+    this.ui.showToast(`${_('{name} launched', { name: m.name })} · ${plan.originName} → ${plan.targetName} · ${fmtDuration(plan.durationS)}${rate > 1 ? ` · ${_('time')} ${t.rateLabel()}` : ''}`, 3200);
     return m;
   }
 
@@ -2275,7 +2275,7 @@ class App implements UIHost {
       if (this.selected === b) this.select(null);
       if (this.camera.target === b) { this.camera.target = null; this.camera.setMode('free'); this.camera.setReference(null); }
     }
-    this.ui.showToast(_('{name} görevi kaldırıldı', { name: m.name }));
+    this.ui.showToast(_('Mission {name} removed', { name: m.name }));
   }
 
   showToast(msg: string, ms?: number): void { this.ui.showToast(msg, ms); }
@@ -2313,7 +2313,7 @@ class App implements UIHost {
       const delta = u.switchTo(systemId, this.time.jd, this.time.t);
       this.camera.shiftFrame(delta, u.star);
       this.selectStar(null); this.selectGalaxy(null); this.selectLandmark(null);
-      this.ui.showToast(_('Referans çerçevesi: {name} sistemi', { name: u.star.name }), 2600);
+      this.ui.showToast(_('Reference frame: {name} system', { name: u.star.name }), 2600);
     } catch (e) {
       console.error(e);
     }
@@ -2324,7 +2324,7 @@ class App implements UIHost {
       this.time.setRate(1);
       m.autoRate = false;
     }
-    this.ui.showToast(`${m.name}: ${_('{name} hedefine varıldı', { name: m.plan.targetName })}`, 3200);
+    this.ui.showToast(`${m.name}: ${_('Arrived at {name}', { name: m.plan.targetName })}`, 3200);
   }
 
   /* ---------------- events (Events tab, ?event=, embed) ---------------- */
@@ -2402,13 +2402,13 @@ class App implements UIHost {
     }
     const e = p.event ? eventById(p.event) : undefined;
     if (e) {
-      if (!e.bodies.every((id) => this.hasBody(id))) { this.ui.showToast(_('Bu olay bu sürümde gösterilemiyor')); return; }
+      if (!e.bodies.every((id) => this.hasBody(id))) { this.ui.showToast(_('This event cannot be shown in this version')); return; }
       this.playEvent(e, 'url');
       if (p.time) this.time.setDate(p.time);
       if (p.rate !== null) { if (p.rate === 0) { if (!this.time.paused) this.time.togglePause(); } else this.time.setRate(p.rate); }
       return;
     }
-    if (p.event) this.ui.showToast(_('Olay bulunamadı'), 3000);
+    if (p.event) this.ui.showToast(_('Event not found'), 3000);
     if (p.time) this.time.setDate(p.time);
     if (p.target) {
       const b = this.universe.get(p.target);
@@ -2420,7 +2420,7 @@ class App implements UIHost {
           this.camera.placeAt(b, _dir.set(p.cam.dir[0], p.cam.dir[1], p.cam.dir[2]).multiplyScalar(p.cam.radii * b.radius));
           this.camera.autoOrbit = 0;
         } else this.camera.goTo(b, this.universe.hostStar(b).position);
-      } else this.ui.showToast(_('Hedef bulunamadı'));
+      } else this.ui.showToast(_('Target not found'));
     }
     if (p.open) void this.openRef(p.open);
     if (p.rate !== null) { if (p.rate === 0) { if (!this.time.paused) this.time.togglePause(); } else this.time.setRate(p.rate); }
@@ -2454,7 +2454,7 @@ class App implements UIHost {
       const i = u.catalog.search(id, 1)[0];
       if (i !== undefined) { this.goToStar(`c${i}`); return; }
     }
-    this.ui.showToast(_('Hedef bulunamadı'));
+    this.ui.showToast(_('Target not found'));
   }
 
   applySettings(byUser = false): void {
@@ -2531,7 +2531,7 @@ class App implements UIHost {
 
   toggleEUV(): void {
     this.euv = !this.euv;
-    this.ui.showToast(this.euv ? _('Aşırı morötesi görünüm (SDO 304 Å): yıldızın kromosferi') : _('Görünür ışık'));
+    this.ui.showToast(this.euv ? _('Extreme ultraviolet view (SDO 304 Å): the star\'s chromosphere') : _('Visible light'));
   }
 
   screenshot(): void {
@@ -2655,10 +2655,10 @@ class App implements UIHost {
     if (this.clouds.size && this.cloudUnderPointer(x, y, pxPerRad)) {
       const any = this.universe.procStars.tiers.some((t) => t.count > 0);
       this.ui.showToast(!any
-        ? _('Çözümlenmemiş yıldız alanı · tekil yıldızlar için galaksinin içine uçun')
+        ? _('Unresolved star field · fly into the galaxy for individual stars')
         : this.settings.proceduralNames
-          ? _('Çözümlenmemiş yıldız alanı · tıklanabilir yıldızlar isimleriyle (YE …) işaretli')
-          : _('Çözümlenmemiş yıldız alanı · yakındaki tekil yıldızlar tıklanabilir (imleç değişir)'), 3200);
+          ? _('Unresolved star field · clickable stars carry a name (YE …)')
+          : _('Unresolved star field · nearby individual stars are clickable (the cursor changes)'), 3200);
       return;
     }
     // inside a resolved far cluster a click on nothing in particular is a click on the cluster
@@ -2783,9 +2783,9 @@ class App implements UIHost {
       case 'KeyJ': this.time.reverseWarp(); break;
       case 'KeyK': this.time.togglePause(); break;
       case 'KeyL': this.time.forwardWarp(); break;
-      case 'Backslash': this.time.setNow(); this.ui.showToast(_('Gerçek zaman')); break;
-      case 'KeyO': s.orbits = !s.orbits; this.applySettings(); this.ui.showToast(`${_('Yörüngeler')}: ${s.orbits ? _('açık') : _('kapalı')}`); break;
-      case 'KeyN': s.cleanView = !s.cleanView; this.applySettings(); this.ui.showToast(s.cleanView ? _('Temiz görünüm: işaretler ve isimler gizli') : _('İşaretler ve isimler görünür')); break;
+      case 'Backslash': this.time.setNow(); this.ui.showToast(_('Real time')); break;
+      case 'KeyO': s.orbits = !s.orbits; this.applySettings(); this.ui.showToast(`${_('Orbits')}: ${s.orbits ? _('on') : _('off')}`); break;
+      case 'KeyN': s.cleanView = !s.cleanView; this.applySettings(); this.ui.showToast(s.cleanView ? _('Clean view: markers and names hidden') : _('Markers and names shown')); break;
       case 'Semicolon': s.eclipticGrid = !s.eclipticGrid; this.applySettings(); break;
       case 'Quote': s.equatorialGrid = !s.equatorialGrid; this.applySettings(); break;
       case 'KeyB': s.bloom = !s.bloom; this.applySettings(); break;
@@ -2834,7 +2834,7 @@ class App implements UIHost {
     this.select(null);
     this.selectStar(null);
     this.selectGalaxy(null);
-    this.ui.showToast(_('Referans çerçevesi: {name} sistemi', { name: u.star.name }));
+    this.ui.showToast(_('Reference frame: {name} system', { name: u.star.name }));
   }
 
   /**
@@ -2977,9 +2977,9 @@ class App implements UIHost {
         epoch: J2000_JD, period, frame: sol ? 'ecliptic' : 'parentEquator',
       },
       appearance: { kind: 'terrestrial', seed: hashStr(id) & 0xffff, landLow: tint(0.7), landMid: tint(1), landHigh: tint(1.5), craters: 1.0, roughness: 2.4, variation: 0.5 },
-      description: `${_('{belt} içinde keşfettiğiniz küçük bir cisim.', { belt: _(belt?.name ?? 'Kuşak') })} ${_('Çapı yaklaşık {d} km; yıldızını {a} AU yarı-büyük eksenli, {e} dış merkezlilikli bir yörüngede {p} yılda dolanır.', { d: fixed(radius * 2, radius < 5 ? 1 : 0), a: fixed(aAU, 2), e: fixed(p.e, 3), p: fixed(period / 365.25, 1) })} ${outer ? _('Buz ve tholinlerden oluşan koyu, kızıl bir yüzey.') : _('Kraterli, düzensiz biçimli bir kaya.')}`,
-      discovered: `${date.getUTCFullYear()}, ${_('siz')}`,
-      facts: { 'Sınıf': outer ? _('Trans-Neptün cismi') : belt?.trojan ? _('Truva asteroiti') : _('Asteroit'), 'Keşif': `${date.getUTCFullYear()}, ${_('siz')}`, 'Kaynak': _('Prosedürel (keşif)') },
+      description: `${_('A small body you discovered in the {belt}.', { belt: _(belt?.name ?? 'Belt') })} ${_('About {d} km across; it circles its star every {p} years on an orbit with semi-major axis {a} AU and eccentricity {e}.', { d: fixed(radius * 2, radius < 5 ? 1 : 0), a: fixed(aAU, 2), e: fixed(p.e, 3), p: fixed(period / 365.25, 1) })} ${outer ? _('A dark, reddish surface of ice and tholins.') : _('A cratered, irregularly shaped rock.')}`,
+      discovered: `${date.getUTCFullYear()}, ${_('you')}`,
+      facts: { 'Class': outer ? _('Trans-Neptunian object') : belt?.trojan ? _('Trojan asteroid') : _('Asteroid'), 'Discovery': `${date.getUTCFullYear()}, ${_('you')}`, 'Source': _('Procedural (discovery)') },
     };
   }
 
@@ -2991,13 +2991,13 @@ class App implements UIHost {
     const existing = sys.get(id);
     if (existing) return existing;
     if (list.length >= 40) {
-      this.ui.showToast(_('Bu sistemde en fazla 40 asteroit keşfedebilirsiniz'), 3000);
+      this.ui.showToast(_('You can discover at most 40 asteroids in this system'), 3000);
       return null;
     }
     list.push([p.belt, p.index]);
     try { localStorage.setItem('yeits.asteroids', JSON.stringify(this.asteroids)); } catch { /* ignore */ }
     const b = this.spawnAsteroid(sys, p);
-    this.noteDiscovery(id, b.data.name, false, b.data.facts?.['Sınıf'] ?? 'Asteroit');
+    this.noteDiscovery(id, b.data.name, false, b.data.facts?.['Class'] ?? 'Asteroid');
     return b;
   }
 
@@ -3144,18 +3144,18 @@ class App implements UIHost {
     if (sys.catalogIndex === 0 || this.universe.extraSystem(sys.starId)) return;
     const comps = sys.bodies.filter((b) => b !== sys.star && b.data.orbit && (b.data.type === 'star' || b.data.type === 'pulsar' || b.data.type === 'blackhole'));
     if (!comps.length) return;
-    const procedural = comps.every((b) => (b.data.facts?.['Kaynak'] ?? '').startsWith('Prosedürel'));
+    const procedural = comps.every((b) => (b.data.facts?.['Source'] ?? '').startsWith('Procedural'));
     if (!procedural) return;
     for (const b of comps) {
-      const cls = b.data.facts?.['Sınıf'];
-      const kind = b.data.type === 'blackhole' ? 'Kara delik yoldaşı' : b.data.type === 'pulsar' ? 'Nötron yıldızı yoldaşı' : cls === 'Wolf-Rayet yıldızı' ? 'Wolf-Rayet yıldızı' : null;
+      const cls = b.data.facts?.['Class'];
+      const kind = b.data.type === 'blackhole' ? 'Black-hole companion' : b.data.type === 'pulsar' ? 'Neutron-star companion' : cls === 'Wolf-Rayet stars' ? 'Wolf-Rayet stars' : null;
       if (kind) this.noteDiscovery(`${sys.starId}:${b.id}`, b.name, false, kind, true);
     }
-    if (comps.length >= 3) this.noteDiscovery(`${sys.starId}:multi`, sys.star.name.replace(/ A$/, ''), false, comps.length === 3 ? 'Dörtlü sistem' : 'Çoklu sistem', false);
+    if (comps.length >= 3) this.noteDiscovery(`${sys.starId}:multi`, sys.star.name.replace(/ A$/, ''), false, comps.length === 3 ? 'Quadruple system' : 'Multiple system', false);
   }
 
   /** Remember a discovery and announce it */
-  private noteDiscovery(id: string, name: string, quiet: boolean, kind = 'Nesne', rare = false): void {
+  private noteDiscovery(id: string, name: string, quiet: boolean, kind = 'Object', rare = false): void {
     const set = this.discoveries;
     if (set.has(id)) return;
     set.add(id);
@@ -3168,9 +3168,9 @@ class App implements UIHost {
     } catch { /* ignore */ }
     if (quiet) return;
     this.lastDiscoveryToast = performance.now();
-    let msg = rare ? _('Nadir keşif: {name} · {n}. keşfiniz', { name, n: set.size }) : _('Yeni keşif: {name} · {n}. keşfiniz', { name, n: set.size });
+    let msg = rare ? _('Rare discovery: {name} · your discovery no. {n}', { name, n: set.size }) : _('New discovery: {name} · your discovery #{n}', { name, n: set.size });
     const next = this.nextTarget;
-    if (next && next.name !== name) msg += ` · ${_('sıradaki: {name} ({dist})', { name: next.name, dist: fmtScaleDistance(next.distKm) })}`;
+    if (next && next.name !== name) msg += ` · ${_('next: {name} ({dist})', { name: next.name, dist: fmtScaleDistance(next.distKm) })}`;
     this.ui.showToast(msg, rare ? 7000 : 5500);
   }
 
@@ -3251,7 +3251,7 @@ class App implements UIHost {
       this.applyRenderScale();
       if (!this.autoToastShown) {
         this.autoToastShown = true;
-        this.ui.showToast(_('Akıcılık için render çözünürlüğü düşürüldü · Ayarlar'), 3200);
+        this.ui.showToast(_('Render resolution lowered for smoothness · Settings'), 3200);
       }
     } else if (this.autoScale < 1) {
       // climb back once the next step up (pixel cost ∝ scale²) would still run comfortably
@@ -3288,7 +3288,7 @@ class App implements UIHost {
     if (fps >= 22) return;
     Object.assign(this.settings, GRAPHICS_PRESETS.low);
     this.applySettings();
-    this.ui.showToast(_('Cihaz zorlandığı için düşük grafik ayarına geçildi · Ayarlar'), 4000);
+    this.ui.showToast(_('Your device was struggling, so graphics were set to Low · Settings'), 4000);
   }
 
   private applyRenderScale(): void {
@@ -3350,7 +3350,7 @@ class App implements UIHost {
         this.camera.pushBack(this.camPosTmp.copy(this.camPc).multiplyScalar(-((r - UNIVERSE_RADIUS_PC * 0.999) / r) * PARSEC_KM));
         camPos.copy(this.camera.position);
         this.universe.toParsecs(camPos, this.camPc);
-        this.ui.showToast(_('Gözlemlenebilir evrenin sınırı'), 2000);
+        this.ui.showToast(_('Edge of the observable universe'), 2000);
       }
     }
 
@@ -3426,11 +3426,11 @@ class App implements UIHost {
     ls.setCloudFlags(members.size ? [...clouds, ...members] : clouds);
     // bottom-left credit: streamed planetary imagery first, otherwise a resolved landmark photograph
     if (this.bodies.imageryCredit) this.ui.setImageryCredit(this.bodies.imageryCredit);
-    else if (this.bodies.skinCredit) this.ui.setImageryCredit(_('Yüzey haritası: {source}', { source: this.bodies.skinCredit }), true);
+    else if (this.bodies.skinCredit) this.ui.setImageryCredit(_('Surface map: {source}', { source: this.bodies.skinCredit }), true);
     else {
       this.camForward.set(0, 0, -1).applyQuaternion(this.camera.quaternion);
       const photo = this.landmarkSprites.photoCredit(this.camForward) ?? (this.nebulaBackdrop.visible ? NEBULA_BACKDROP_CREDIT : null);
-      this.ui.setImageryCredit(photo ? _('Fotoğraf: {source}', { source: photo }) : null, true);
+      this.ui.setImageryCredit(photo ? _('Photograph: {source}', { source: photo }) : null, true);
     }
     // LOD hand-over between the detailed local volume and the aggregated far-universe tiers
     const dSunPc = this.camPc.length();
@@ -3725,7 +3725,7 @@ class App implements UIHost {
     if (dPc < SUN_MARKER_PC) return null;
     const m = this.sunScreen;
     this.universe.starRelative('c0', camPos, m.dir).normalize();
-    m.label = `${_('Güneş')} · ${fmtScaleDistance(dPc * PARSEC_KM)}`;
+    m.label = `${_('Sun')} · ${fmtScaleDistance(dPc * PARSEC_KM)}`;
     m.selected = this.selectedStar === 'c0' || this.selected?.id === 'sun';
     return m;
   }
@@ -3770,9 +3770,9 @@ class App implements UIHost {
       a.download = `yeits-${stamp}.png`;
       a.href = url;
       a.click();
-      this.ui.showToast(_('Ekran görüntüsü kaydedildi'));
+      this.ui.showToast(_('Screenshot saved'));
     } catch {
-      this.ui.showToast(_('Ekran görüntüsü alınamadı'));
+      this.ui.showToast(_('Could not take a screenshot'));
     }
   }
 }
@@ -3788,8 +3788,8 @@ async function boot(): Promise<void> {
   try {
     await initI18n();
     applyDom();
-    document.title = _('Deep Field — Gözlemlenebilir evreni tarayıcıda gez');
-    if (loaderText) loaderText.textContent = _('Yıldız kataloğu yükleniyor…');
+    document.title = _('Deep Field — Explore the observable universe in your browser');
+    if (loaderText) loaderText.textContent = _('Loading the star catalogue…');
     const base = import.meta.env.BASE_URL;
     const [catalog, exoplanets, deepSky, surveyGalaxies, brownDwarfs, binaries] = await Promise.all([
       StarCatalog.load(base),
@@ -3802,7 +3802,7 @@ async function boot(): Promise<void> {
     ]);
     progress.stopTracking();
     progress.step(88);
-    if (loaderText) loaderText.textContent = _('Evren hazırlanıyor…');
+    if (loaderText) loaderText.textContent = _('Preparing the universe…');
     // building the App is one long task: let the new line reach the screen first
     await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
     const launch = parseLaunch();
@@ -3830,7 +3830,7 @@ async function boot(): Promise<void> {
     // instead of stuttering the flights.
     const intro = !stream && partyCode === null && !launch.embed && !launch.event && !launch.target && !launch.open && Welcome.due;
     if (intro) {
-      if (loaderText) loaderText.textContent = _('Sahneler hazırlanıyor…');
+      if (loaderText) loaderText.textContent = _('Preparing the scenes…');
       await app.welcome.prepare();
     } else {
       // the first view's programs compile behind the loader instead of freezing its first frame
@@ -3857,7 +3857,7 @@ async function boot(): Promise<void> {
   } catch (err) {
     console.error(err);
     progress.stopTracking();
-    if (loaderText) loaderText.textContent = `${_('Yükleme hatası')}: ${(err as Error).message}`;
+    if (loaderText) loaderText.textContent = `${_('Loading error')}: ${(err as Error).message}`;
   }
 }
 

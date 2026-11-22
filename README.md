@@ -24,6 +24,10 @@ Based on upstream commit
   and the donation prompt and usage beacon belong to the original site. All are disabled.
 - **No sound.** The background music, the radio, the tour and lesson narration players and the
   Voyager card (which played the Golden Record) are removed; tours and lessons run on subtitles.
+- **English source language.** The original was written in Turkish, with English, German, Spanish
+  and French as translations keyed on the Turkish text. The display strings in the code, markup and
+  generated data are now English, the other dictionaries are keyed on English, and Turkish is no
+  longer offered. Upstream strings that were never translated are now in English too.
 - **Rebranded** to Deep Field with a new logo; the About panel and welcome pages credit the original.
 - **Static hosting.** Assets load from Vite's `base` (`/deepfield/`), so the site runs from a
   GitHub Pages project path, deployed by `.github/workflows/pages.yml`. The encyclopedia (static

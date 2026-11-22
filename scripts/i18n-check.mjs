@@ -6,7 +6,7 @@
  *   node scripts/i18n-check.mjs --dump     → print all source keys (JSON array) to stdout
  *   node scripts/i18n-check.mjs --missing en → print keys missing from en.json (JSON object, key: "")
  *
- * Source strings are Turkish. Keys are collected from:
+ * Source strings are English. Keys are collected from:
  *   - `_('…')` calls in src/**\/*.ts
  *   - `rows.push(['label', 'value'])` info-grid rows (labels and literal values)
  *   - display fields in data files (name/summary/description/desc/tagline/label/title/note/group/credit/
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SRC = join(ROOT, 'src');
-const LOCALES = ['en', 'de', 'es', 'fr'];
+const LOCALES = ['de', 'es', 'fr'];
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -114,8 +114,8 @@ function scan(code, i, out, inExpr) {
   return n;
 }
 
-// two consecutive letters, or a Turkish-style percentage (`%78 N₂`) that needs locale reformatting
-const hasWords = (s) => /\p{L}{2}/u.test(s) || /%\d/.test(s);
+// two consecutive letters, or a percentage that needs locale reformatting
+const hasWords = (s) => /\p{L}{2}/u.test(s) || /\d%/.test(s);
 /** identifiers, paths, css selectors, urls, hex colours … are never keys */
 function looksLikeText(s) {
   if (!hasWords(s)) return false;
@@ -190,7 +190,7 @@ const decode = (s) => s.replace(/&nbsp;/g, '\u00a0').replace(/&amp;/g, '&').repl
 let m;
 const reText = /<(\w+)([^>]*)\sdata-i18n(?:="")?(?=[\s>])[^>]*>([^<]*)<\/\1>/g;
 while ((m = reText.exec(html))) add(norm(decode(m[3])), 'index.html', true);
-// implicit key: `data-i18n-x title="…"`; explicit key (English static content): `data-i18n-x="<Turkish key>" …`
+// implicit key: `data-i18n-x title="…"`; explicit key: `data-i18n-x="<key>" …`
 const reAttr = /data-i18n-(title|placeholder|content)(?:="")?\s+(?:title|placeholder|content)="([^"]*)"/g;
 while ((m = reAttr.exec(html))) add(decode(m[2]), 'index.html', true);
 const reAttrKey = /data-i18n-(?:title|placeholder|content)="([^"]+)"/g;
@@ -199,7 +199,7 @@ while ((m = reAttrKey.exec(html))) add(decode(m[1]), 'index.html', true);
 
 /* ------------------------------------------------------------------ report */
 
-const allKeys = Array.from(keys.keys()).sort((a, b) => a.localeCompare(b, 'tr'));
+const allKeys = Array.from(keys.keys()).sort((a, b) => a.localeCompare(b, 'en'));
 const args = process.argv.slice(2);
 
 if (args[0] === '--dump') {

@@ -3,10 +3,10 @@ import { w } from './html';
 
 /** distance in light-years, scaled */
 export function ly(v: number): string {
-  if (v >= 1e9) return w('{n} milyar ışık yılı', { n: fixed(v / 1e9, 2) });
-  if (v >= 1e6) return w('{n} milyon ışık yılı', { n: fixed(v / 1e6, v < 1e7 ? 2 : 1) });
-  if (v >= 1e4) return w('{n} ışık yılı', { n: fmtNum(Math.round(v / 100) * 100) });
-  return w('{n} ışık yılı', { n: v < 10 ? fixed(v, 2) : v < 1000 ? fixed(v, 1) : fmtNum(Math.round(v)) });
+  if (v >= 1e9) return w('{n} billion light-years', { n: fixed(v / 1e9, 2) });
+  if (v >= 1e6) return w('{n} million light-years', { n: fixed(v / 1e6, v < 1e7 ? 2 : 1) });
+  if (v >= 1e4) return w('{n} light-years', { n: fmtNum(Math.round(v / 100) * 100) });
+  return w('{n} light-years', { n: v < 10 ? fixed(v, 2) : v < 1000 ? fixed(v, 1) : fmtNum(Math.round(v)) });
 }
 
 export function pc(v: number): string {
@@ -54,17 +54,17 @@ export function dateLong(iso: string, withTime = false): string {
 /** a latitude, e.g. "40° K" / "40° N" */
 export function lat(v: number): string {
   const r = Math.round(v);
-  if (r === 0) return w('ekvator');
-  return r > 0 ? w('{n}° K', { n: r }) : w('{n}° G', { n: -r });
+  if (r === 0) return w('the equator');
+  return r > 0 ? w('{n}° N', { n: r }) : w('{n}° S', { n: -r });
 }
 
 /** a duration in years, scaled */
 export function years(y: number): string {
-  if (y >= 1e9) return w('{n} milyar yıl', { n: fixed(y / 1e9, 1) });
-  if (y >= 1e6) return w('{n} milyon yıl', { n: fixed(y / 1e6, y < 1e7 ? 1 : 0) });
-  if (y >= 1e4) return w('{n} bin yıl', { n: fmtNum(Math.round(y / 1e3)) });
-  if (y >= 2) return w('{n} yıl', { n: fmtNum(Math.round(y)) });
-  return w('{n} gün', { n: fmtNum(Math.round(y * 365.25)) });
+  if (y >= 1e9) return w('{n} billion years', { n: fixed(y / 1e9, 1) });
+  if (y >= 1e6) return w('{n} million years', { n: fixed(y / 1e6, y < 1e7 ? 1 : 0) });
+  if (y >= 1e4) return w('{n} thousand years', { n: fmtNum(Math.round(y / 1e3)) });
+  if (y >= 2) return w('{n} years', { n: fmtNum(Math.round(y)) });
+  return w('{n} days', { n: fmtNum(Math.round(y * 365.25)) });
 }
 
 export function plain(html: string, max = 158): string {

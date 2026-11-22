@@ -126,7 +126,7 @@ export class StarCatalog {
   private constructor(buf: ArrayBuffer, namesJson: Array<[number, string, string, string, string, string?]>, manifest: CatalogManifest) {
     const dv = new DataView(buf);
     if (String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3)) !== 'YEST' || dv.getUint32(4, true) !== 2) {
-      throw new Error('Geçersiz yıldız kataloğu');
+      throw new Error('Invalid star catalogue');
     }
     const n = dv.getUint32(8, true);
     const REC = dv.getUint32(12, true);
@@ -315,7 +315,7 @@ export class StarCatalog {
 
   /** Display name: proper → planet-host designation → Bayer → Gliese → HIP → survey designation */
   nameOf(i: number): string {
-    if (i === 0) return _('Güneş');
+    if (i === 0) return _('Sun');
     if (i >= this.core) return this.names.get(i)?.proper || this.designation(i);
     const n = this.names.get(i);
     if (n?.proper) return n.proper;

@@ -111,7 +111,7 @@ export class Missions {
       }
       return ok;
     };
-    const facts: Record<string, string> = { [_('Görev')]: `${plan.originName} → ${plan.targetName}`, ...ship.facts };
+    const facts: Record<string, string> = { [_('Mission')]: `${plan.originName} → ${plan.targetName}`, ...ship.facts };
     const data: BodyData = {
       id: m.id, name: m.name, type: 'spacecraft', parent: sys.star.id,
       radius: ship.radiusKm, mass: ship.massKg, albedo: 0.4,

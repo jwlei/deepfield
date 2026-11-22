@@ -38,10 +38,10 @@ export function fmtRelative(iso: string, now = Date.now()): string {
   const abs = Math.abs(ms);
   const future = ms > 0;
   let s: string;
-  if (abs < 3600_000) s = _('{n} dk', { n: Math.max(1, Math.round(abs / 60_000)) });
-  else if (abs < DAY_MS) s = _('{n} saat', { n: Math.round(abs / 3600_000) });
-  else s = _('{n} gün', { n: Math.round(abs / DAY_MS) });
-  return future ? _('{t} sonra', { t: s }) : _('{t} önce', { t: s });
+  if (abs < 3600_000) s = _('{n} min', { n: Math.max(1, Math.round(abs / 60_000)) });
+  else if (abs < DAY_MS) s = _('{n} h', { n: Math.round(abs / 3600_000) });
+  else s = _('{n} days', { n: Math.round(abs / DAY_MS) });
+  return future ? _('in {t}', { t: s }) : _('{t} ago', { t: s });
 }
 
 /** Events that this build can show, newest first within each section */
@@ -76,7 +76,7 @@ export class EventPanel {
     this.embedDialog.addEventListener('click', (e) => { if (e.target === this.embedDialog) this.closeEmbed(); });
     $('embed-copy').addEventListener('click', () => {
       void copyText(this.embedCodeEl.value).then((ok) => {
-        this.host.showToast(ok ? _('Embed kodu kopyalandı') : _('Kopyalanamadı; kodu elle seçip kopyalayın'));
+        this.host.showToast(ok ? _('Embed code copied') : _('Could not copy; select and copy the code manually'));
         if (ok && this.embedFor) beacon('embed_copy', this.embedFor.id);
       });
     });
@@ -115,12 +115,12 @@ export class EventPanel {
     if (!upcoming.length && !recent.length) {
       const p = document.createElement('p');
       p.className = 'events-empty';
-      p.textContent = _('Yakın dönemde gösterilecek olay yok.');
+      p.textContent = _('No events to show at the moment.');
       this.list.appendChild(p);
       return;
     }
-    if (upcoming.length) this.section(_('Yaklaşan'), upcoming);
-    if (recent.length) this.section(_('Yakın geçmiş'), recent, true);
+    if (upcoming.length) this.section(_('Upcoming'), upcoming);
+    if (recent.length) this.section(_('Recent'), recent, true);
   }
 
   private section(title: string, events: SkyEvent[], past = false): void {
@@ -145,13 +145,13 @@ export class EventPanel {
       <p class="event-summary"></p>
       <dl class="event-facts"></dl>
       <div class="event-foot">
-        <span class="event-source"><a target="_blank" rel="noopener noreferrer"></a>${status ? ` · <span class="event-status">${status}</span>` : ''}${e.epoch ? ` · <span class="event-epoch" title="${_('Yörünge verisinin kaynağı ve epoğu')}">${e.epoch}</span>` : ''}</span>
+        <span class="event-source"><a target="_blank" rel="noopener noreferrer"></a>${status ? ` · <span class="event-status">${status}</span>` : ''}${e.epoch ? ` · <span class="event-epoch" title="${_('Source and epoch of the trajectory data')}">${e.epoch}</span>` : ''}</span>
         <span class="event-rel">${fmtRelative(e.time)}</span>
       </div>
       <div class="event-actions seg">
-        <button class="ev-watch" data-act="watch">${past ? _('Yeniden izle') : _('İzle')}</button>
-        <button data-act="share" title="${_('Bağlantıyı kopyala')}">${_('Paylaş')}</button>
-        <button data-act="embed" title="${_('Sitenize gömmek için iframe kodu')}">${_('Göm')}</button>
+        <button class="ev-watch" data-act="watch">${past ? _('Watch again') : _('Watch')}</button>
+        <button data-act="share" title="${_('Copy link')}">${_('Share')}</button>
+        <button data-act="embed" title="${_('iframe code to embed on your site')}">${_('Embed')}</button>
       </div>`;
     el.querySelector<HTMLElement>('.event-title')!.textContent = _(e.title);
     el.querySelector<HTMLElement>('.event-summary')!.textContent = _(e.summary);
@@ -173,7 +173,7 @@ export class EventPanel {
       if (b.dataset.act === 'watch') { this.host.playEvent(e); this.toggle(false); }
       else if (b.dataset.act === 'share') {
         void copyText(eventUrl(e)).then((ok) => {
-          this.host.showToast(ok ? _('Bağlantı kopyalandı') : eventUrl(e), ok ? 1800 : 5000);
+          this.host.showToast(ok ? _('Link copied') : eventUrl(e), ok ? 1800 : 5000);
           if (ok) beacon('share', e.id);
         });
       } else if (b.dataset.act === 'embed') this.openEmbed(e);
@@ -202,7 +202,7 @@ export class EventPanel {
     try { dismissed = sessionStorage.getItem('yeits.badge') === '0'; } catch { /* ignore */ }
     const e = nextEvent((id) => this.host.hasBody(id));
     if (!e || dismissed) { this.badge.hidden = true; return; }
-    $('next-event-text').textContent = `${_('Sıradaki')}: ${_(e.title)} · ${fmtRelative(e.time)}`;
+    $('next-event-text').textContent = `${_('Next')}: ${_(e.title)} · ${fmtRelative(e.time)}`;
     this.badge.hidden = false;
   }
 }

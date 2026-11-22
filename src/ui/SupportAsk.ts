@@ -49,16 +49,16 @@ export interface SupportHost {
   readonly busy: boolean;
 }
 
-/** the reasons for the money, in order: icon (svg path data), title, text (Turkish source strings) */
+/** the reasons for the money, in order: icon (svg path data), title, text (source strings) */
 const COSTS: Array<[string, string, string]> = [
   ['M4 5h16v5H4zM4 14h16v5H4zM7 7.5h.01M7 16.5h.01',
-    'Sunucu ve bant genişliği', 'Her ziyarette yüzlerce megabayt doku, 3B model, harita ve ses indiriliyor.'],
+    'Servers and bandwidth', 'Every visit downloads hundreds of megabytes of textures, 3D models, maps and audio.'],
   ['M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7',
-    'Seslendirme', 'Turlar ve dersler beş dilde, aylık ücretli bir seslendirme servisiyle anlatılıyor.'],
+    'Narration', 'Tours and lessons are narrated in five languages by a paid monthly voice service.'],
   ['M9.5 9.5l5 5M3.5 9.5l3-3 4 4-3 3zM13.5 17.5l3-3 4 4-3 3zM15 3.5a5.5 5.5 0 0 1 5.5 5.5M15 6.5a2.5 2.5 0 0 1 2.5 2.5',
-    'Görüntü ve veri', 'Uydu görüntüleri, gezegen haritaları ve gök katalogları sürekli sunuluyor.'],
+    'Imagery and data', 'Satellite imagery, planetary maps and sky catalogues are served all the time.'],
   ['M8 6l-6 6 6 6M16 6l6 6-6 6M14 4l-4 16',
-    'Geliştirme', 'Yeni gezegenler, yeni dersler ve hata düzeltmeleri için ayrılan zaman.'],
+    'Development', 'The time that goes into new worlds, new lessons and bug fixes.'],
 ];
 
 export class SupportAsk {
@@ -130,35 +130,35 @@ export class SupportAsk {
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-modal', 'false');
     root.setAttribute('aria-labelledby', 'sask-title');
-    const kicker = reason === 'manual' ? _('Projeyi destekle')
-      : reason === 'tour' ? _('Turları sevdin gibi görünüyor')
-      : reason === 'chapter' ? _('Bir bölümü daha bitirdin')
-        : _('Yine hoş geldin');
+    const kicker = reason === 'manual' ? _('Support the project')
+      : reason === 'tour' ? _('Looks like you enjoy the tours')
+      : reason === 'chapter' ? _('You finished another chapter')
+        : _('Welcome back');
     root.innerHTML = `
-      <button class="sask-close icon-btn small" type="button" aria-label="${esc(_('Kapat'))}">✕</button>
+      <button class="sask-close icon-btn small" type="button" aria-label="${esc(_('Close'))}">✕</button>
       ${hero()}
       <div class="sask-body">
         <div class="sask-kicker">${esc(kicker)}</div>
-        <h2 id="sask-title" class="sask-title">${esc(_('Bu evreni herkese açık tutalım'))}</h2>
-        <p class="sask-lead"><span class="sask-reach"></span>${esc(_('Aileler çocuklarıyla gezegenleri geziyor, öğretmenler derste tahtaya yansıtıp Güneş Sistemi\'ni anlatıyor, meraklılar galaksiler arasında kayboluyor.'))}</p>
-        <p class="sask-why">${esc(_('Hepsi ücretsiz, reklamsız ve açık kaynak; öyle de kalacak. Ama her ziyaretin bir maliyeti var:'))}</p>
+        <h2 id="sask-title" class="sask-title">${esc(_('Let\'s keep this universe open to everyone'))}</h2>
+        <p class="sask-lead"><span class="sask-reach"></span>${esc(_('Families explore the planets with their kids, teachers put it up on the classroom board to teach the Solar System, and the curious get lost among the galaxies.'))}</p>
+        <p class="sask-why">${esc(_('All of it is free, ad-free and open source, and it will stay that way. But every visit has a cost:'))}</p>
         <ul class="sask-costs">
           ${COSTS.map(([d, t, x], i) => `<li style="--i:${i}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg><div><b>${esc(_(t))}</b><span>${esc(_(x))}</span></div></li>`).join('')}
         </ul>
-        <p class="sask-ask">${esc(_('Küçük bir katkı bile bu masrafları paylaşmamıza ve yeni şeyler eklemeye devam etmemize yardım eder.'))}</p>
+        <p class="sask-ask">${esc(_('Even a small contribution helps us share these costs and keep adding new things.'))}</p>
         <div class="sask-actions">
           <a class="sask-give sask-primary" href="${SPONSORS}" target="_blank" rel="noopener noreferrer">
             <svg class="sask-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg>
-            <span>${esc(_('GitHub Sponsors ile destekle'))}</span>
+            <span>${esc(_('Support on GitHub Sponsors'))}</span>
           </a>
           <a class="sask-give" href="${COFFEE}" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 14.5ZM16 9.5h1.5a2.5 2.5 0 0 1 0 5H16M3.5 21.5h14"/></svg>
-            <span>${esc(_('Bir kahve ısmarla'))}</span>
+            <span>${esc(_('Buy us a coffee'))}</span>
           </a>
         </div>
         <div class="sask-foot">
-          <button class="sask-later" type="button">${esc(_('Şimdi değil'))}</button>
-          <span>${esc(_('Bağış zorunlu değil; site her zaman ücretsiz kalacak.'))}</span>
+          <button class="sask-later" type="button">${esc(_('Not now'))}</button>
+          <span>${esc(_('Giving is optional; the site will always stay free.'))}</span>
         </div>
       </div>`;
     root.querySelector('.sask-close')!.addEventListener('click', () => this.close());
@@ -168,7 +168,7 @@ export class SupportAsk {
       this.save();
       root.classList.add('thanked');
       const t = root.querySelector('.sask-ask');
-      if (t) t.textContent = _('Teşekkürler! Bu evreni açık tutan sizsiniz.');
+      if (t) t.textContent = _('Thank you! You\'re the ones keeping this universe open.');
       window.setTimeout(() => this.close(), 2600);
     }));
     document.body.appendChild(root);
@@ -188,8 +188,8 @@ export class SupportAsk {
       const millions = n >= 1e6;
       const target = millions ? Math.floor(n / 1e5) / 10 : n;
       const render = (v: number): string => millions
-        ? _('Deep Field bugüne kadar {n} milyondan fazla kez ziyaret edildi. ', { n: fmtNum(v, { maximumFractionDigits: 1 }) })
-        : _('Deep Field bugüne kadar {n} kez ziyaret edildi. ', { n: fmtNum(Math.round(v)) });
+        ? _('Deep Field has been visited more than {n} million times so far. ', { n: fmtNum(v, { maximumFractionDigits: 1 }) })
+        : _('Deep Field has been visited {n} times so far. ', { n: fmtNum(Math.round(v)) });
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (still) { el.textContent = render(target); return; }
       const t0 = performance.now(), dur = 1400;

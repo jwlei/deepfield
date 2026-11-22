@@ -5,7 +5,7 @@
  *
  * A step = one destination + one paragraph. The player starts the flight and the narration
  * together; the next step begins when both the text and the flight have finished. Cues fire
- * at sentence starts (0-based index into the Turkish text) and drive the show: cloud strips,
+ * at sentence starts (0-based index into the source text) and drive the show: cloud strips,
  * overviews, surface pins, true-scale size comparisons, photo / trivia cards, light pulses…
  */
 

@@ -87,7 +87,7 @@ export function landmarkTarget(d: LandmarkDef, name: string, hostDistPc?: number
   const kind = d.kind === 'cluster' && d.color[2] < 0.8 * d.color[0] ? 'globular' : KIND[d.kind];
   const dist = d.distancePc ?? hostDistPc;
   if (!kind || !dist) return null;
-  const mag = parseMag(d.facts['Görünür kadir']) ?? d.absMag + 5 * Math.log10(dist / 10);
+  const mag = parseMag(d.facts['Apparent magnitude']) ?? d.absMag + 5 * Math.log10(dist / 10);
   const size = ((2 * d.radiusPc) / dist) * SEC;
   const img = LANDMARK_IMAGES[d.id];
   const usePhoto = img && kind !== 'open' && kind !== 'globular';

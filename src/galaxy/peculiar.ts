@@ -62,7 +62,7 @@ export interface PecTailSpec {
 }
 
 export interface PeculiarSpec {
-  /** what the galaxy is, shown instead of the Hubble type (Turkish source string) */
+  /** what the galaxy is, shown instead of the Hubble type (source string) */
   label: string;
   /** the host galaxy's radius as a share of the whole system's */
   body?: number;

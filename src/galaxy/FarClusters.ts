@@ -156,5 +156,5 @@ export function nearestFarPoint(tiers: FarTier[], camPc: Vector3, tierVisible: (
 }
 
 export function farKindLabel(tier: FarTier): string {
-  return tier.spec.mode === 'web' ? _('Prosedürel galaksi kümesi') : _('Prosedürel süperküme düğümü');
+  return tier.spec.mode === 'web' ? _('Procedural galaxy cluster') : _('Procedural supercluster knot');
 }

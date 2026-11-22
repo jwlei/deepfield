@@ -26,38 +26,38 @@ export interface ColouredDwarf {
 export const COLOURED_DWARFS: ColouredDwarf[] = [
   {
     gaia: '1666074615061406336', wd: 'WD J1330+6435', hex: '#DDFFB8', teff: 4240, spectral: 'DZ',
-    label: 'Yeşil',
-    note: 'Bilinen ilk yeşil yıldız (Hollands ve ark. 2026). Yuttuğu kayalık gezegen enkazından gelen sodyum, kalsiyum ve lityum atmosferini kirletiyor. Aşırı yoğun helyumun içinde sodyumun dar turuncu çizgisi genişleyip sarıyı, turuncuyu ve kırmızının bir kısmını soğuruyor; geriye 500 nm civarında tepe yapan açık yeşil bir ışık kalıyor. Güneş benzeri yıldızlarda bu mümkün değil.',
+    label: 'Green',
+    note: 'The first known green star (Hollands et al. 2026). Sodium, calcium and lithium from the rocky planetary debris it swallowed pollute its atmosphere. In the ultra-dense helium, sodium\'s narrow orange line broadens until it absorbs the yellows, the oranges and part of the reds, leaving a pale green light that peaks near 500 nm. No Sun-like star could do this.',
   },
   {
     gaia: '609898313949732608', wd: 'WD J0851+1543', hex: '#F1FFF8', spectral: 'DZ',
-    label: 'Soluk yeşil',
-    note: 'Soluk yeşil-camgöbeği bir beyaz cüce: mavide güçlü Ca II soğurması ve kırmızıda dik düşen ışık, rengini yeşile kaydırıyor. Tayfı yüksek kaliteli olduğu için yeşilliği güvenle söylenebiliyor (Hollands ve ark. 2026).',
+    label: 'Pale green',
+    note: 'A pale green-cyan white dwarf: strong Ca II absorption in the blue and a steeply falling red end shift its colour towards green. Its high-quality spectrum means the green can be claimed reliably (Hollands et al. 2026).',
   },
   {
     gaia: '2341622358827194880', wd: 'WD J2356−2054', hex: '#70B4FF', teff: 4000, spectral: 'DZ',
-    label: 'Canlı mavi',
-    note: 'Yalnızca 4000 K sıcaklıkta ama canlı mavi: atmosferindeki sodyum o kadar bol ki aşırı genişlemiş soğurması görünür ışığın ortasını tamamen siliyor, geriye 450–500 nm arası kalıyor. Yeşil yıldız WD J1330+6435\'in daha uç bir akrabası (Blouin ve ark. 2019; Hollands ve ark. 2026).',
+    label: 'Vivid blue',
+    note: 'Only 4000 K, yet vivid blue: its atmosphere holds so much sodium that the hugely broadened absorption wipes out the middle of the visible, leaving the 450–500 nm range. A more extreme relative of the green star WD J1330+6435 (Blouin et al. 2019; Hollands et al. 2026).',
   },
   {
     gaia: '927618687178189056', wd: 'WD J0744+4649', hex: '#F6FFA3', spectral: 'DZ',
-    label: 'Sarı',
-    note: 'Turuncu olması gerekirken sarı: kalsiyum 460 nm altındaki ışığın çoğunu soğuruyor. Atmosferindeki metaller yuttuğu bir gezegen parçasının kabuk benzeri kayaçtan oluştuğunu gösteriyor (Hollands ve ark. 2026).',
+    label: 'Yellow',
+    note: 'Yellow where it should be orange: calcium absorbs most of the light below 460 nm. The metals in its atmosphere show that the planetary fragment it swallowed was made of crust-like rock (Hollands et al. 2026).',
   },
   {
     gaia: '740483560857296768', wd: 'WD J1011+2845', alias: 'LHS 2229', hex: '#FF8775', teff: 4335, spectral: 'DQpec',
-    label: 'Somon pembesi',
-    note: 'Algılanan rengiyle bilinen en kırmızı yıldız olabilir: koyu somon pembesi. Derinden yüzeye taşınan karbon, çarpık Swan bantlarıyla 400–600 nm arasını bastırıyor. Yalnızca 48 ışık yılı uzakta (Hollands ve ark. 2026).',
+    label: 'Salmon pink',
+    note: 'Possibly the reddest star known by perceived colour: a deep salmon pink. Carbon dredged up from deep inside suppresses 400–600 nm with distorted Swan bands. Only 48 light-years away (Hollands et al. 2026).',
   },
   {
     gaia: '3662951038644235776', wd: 'WD J1333+0016', hex: '#FF9DB3', spectral: 'DQpec',
-    label: 'Pembe',
-    note: 'Karbonlu atmosferindeki çarpık Swan bantları yüzünden pembe görünen bir beyaz cüce; LHS 2229\'a benziyor ama mavide biraz daha fazla ışık yayıyor (Hollands ve ark. 2026).',
+    label: 'Pink',
+    note: 'A white dwarf that looks pink because of the distorted Swan bands in its carbon atmosphere; similar to LHS 2229, but emitting a little more light in the blue (Hollands et al. 2026).',
   },
   {
     gaia: '1505825635741455872', wd: 'WD J1403+4533', hex: '#C5F5FF', spectral: 'DC',
-    label: 'Camgöbeği',
-    note: 'Kızılötesinde sönük, soğuk bir beyaz cüce: aşırı yoğun atmosferinde çarpışan moleküllerin soğurması kırmızıyı bastırıyor ve yıldız camgöbeği görünüyor (Hollands ve ark. 2026).',
+    label: 'Cyan',
+    note: 'A cool, infrared-faint white dwarf: absorption by colliding molecules in its ultra-dense atmosphere suppresses the red, and the star looks cyan (Hollands et al. 2026).',
   },
 ];
 

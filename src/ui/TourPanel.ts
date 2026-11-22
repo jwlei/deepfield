@@ -60,7 +60,7 @@ export class TourPanel {
       el.className = 'tour-item';
       el.dataset.tour = tour.id;
       const index = String(i + 1).padStart(2, '0');
-      el.innerHTML = `<span class="tour-index">${index}</span><span class="tour-text"><span class="tour-name">${_(tour.title)}</span><span class="tour-summary">${_(tour.summary)}</span></span><span class="tour-meta">${_('{n} durak', { n: tour.steps.length })}</span>`;
+      el.innerHTML = `<span class="tour-index">${index}</span><span class="tour-text"><span class="tour-name">${_(tour.title)}</span><span class="tour-summary">${_(tour.summary)}</span></span><span class="tour-meta">${_('{n} stops', { n: tour.steps.length })}</span>`;
       el.addEventListener('click', () => {
         this.player.start(tour.id);
         this.toggle(false);
@@ -160,7 +160,7 @@ export class TourPanel {
     $('tour-card-title').textContent = c.title ? _(c.title) : '';
     $('tour-card-big').textContent = c.big ? _(c.big) : '';
     $('tour-card-text').textContent = c.text ? _(c.text) : '';
-    $('tour-card-source').textContent = c.source ? _('Görsel: {source}', { source: c.source }) : '';
+    $('tour-card-source').textContent = c.source ? _('Image: {source}', { source: c.source }) : '';
     // restart the entrance transition when the content changes while shown
     this.card.classList.remove('show');
     void this.card.offsetWidth;

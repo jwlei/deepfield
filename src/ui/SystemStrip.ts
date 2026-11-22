@@ -32,7 +32,7 @@ export class SystemStrip {
 
   constructor(private readonly host: UIHost) {
     this.el = document.getElementById('system-strip')!;
-    this.el.setAttribute('aria-label', _('Sistemdeki gökcisimleri'));
+    this.el.setAttribute('aria-label', _('Bodies in this system'));
     this.el.after(this.tip);
     this.el.addEventListener('scroll', () => { this.tip.hidden = true; });
   }

@@ -70,7 +70,7 @@ export const LUM_CLASS_LABEL: Record<number, string> = {
 };
 
 export const LUM_CLASS_DESC: Record<number, string> = {
-  1: 'Süperdev', 2: 'Parlak dev', 3: 'Dev', 4: 'Alt dev', 5: 'Anakol (cüce)',
+  1: 'Supergiant', 2: 'Bright giant', 3: 'Giant', 4: 'Subgiant', 5: 'Main sequence (dwarf)',
 };
 
 /** Temperature (K) → linear RGB (approximate blackbody, normalised so max channel = 1) */

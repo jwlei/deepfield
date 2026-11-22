@@ -49,72 +49,72 @@ export async function loadDeepSky(baseUrl: string): Promise<DeepSkyData> {
 
 /** Info-panel rows (keys are translated at display) */
 const DS_FACTS = {
-  dist: 'Uzaklık',
-  period: 'Periyot',
-  pdot: 'Periyot türevi',
-  age: 'Karakteristik yaş',
-  field: 'Manyetik alan',
-  edot: 'Dönme-enerjisi kaybı',
-  dm: 'Dağılım ölçüsü',
-  companion: 'Yoldaş',
-  mass: 'Kütle',
-  orbit: 'Yörünge periyodu',
-  ecc: 'Dış merkezlik',
-  host: 'Bulunduğu yer',
-  disc: 'Keşif',
-  source: 'Kaynak',
-  clAge: 'Yaş',
-  members: 'Üye yıldız (MWSC)',
-  redden: 'Kızarma E(B−V)',
-  feh: 'Metallik [Fe/H]',
-  rh: 'Yarı-ışık yarıçapı',
-  conc: 'Merkezî yoğunlaşma (c)',
-  vr: 'Dikine hız',
-  diam: 'Çap',
-  cstar: 'Merkez yıldızı',
-  vexp: 'Genişleme hızı',
-  pn: 'PN G adı',
-  type: 'Tür',
-  flux: 'Radyo akısı (1 GHz)',
-  wise: 'WISE adı',
-  status: 'Katalog durumu',
+  dist: 'Distance',
+  period: 'Period',
+  pdot: 'Period derivative',
+  age: 'Characteristic age',
+  field: 'Magnetic field',
+  edot: 'Spin-down luminosity',
+  dm: 'Dispersion measure',
+  companion: 'Companion',
+  mass: 'Mass',
+  orbit: 'Orbital period',
+  ecc: 'Eccentricity',
+  host: 'Location',
+  disc: 'Discovery',
+  source: 'Source',
+  clAge: 'Age',
+  members: 'Member stars (MWSC)',
+  redden: 'Reddening E(B−V)',
+  feh: 'Metallicity [Fe/H]',
+  rh: 'Half-light radius',
+  conc: 'Central concentration (c)',
+  vr: 'Radial velocity',
+  diam: 'Diameter',
+  cstar: 'Central star',
+  vexp: 'Expansion speed',
+  pn: 'PN G name',
+  type: 'Type',
+  flux: 'Radio flux (1 GHz)',
+  wise: 'WISE name',
+  status: 'Catalogue status',
 } as const;
 
 const COMPANION_LABEL: Record<string, string> = {
-  MS: 'anakol yıldızı',
-  NS: 'nötron yıldızı',
-  CO: 'CO beyaz cücesi',
-  He: 'helyum beyaz cücesi',
-  ONeMg: 'ONeMg beyaz cücesi',
-  UL: 'çok düşük kütleli yoldaş',
-  BH: 'kara delik',
+  MS: 'main-sequence star',
+  NS: 'neutron star',
+  CO: 'CO white dwarf',
+  He: 'helium white dwarf',
+  ONeMg: 'ONeMg white dwarf',
+  UL: 'very-low-mass companion',
+  BH: 'black hole',
 };
 
 const SNR_TYPE: Record<string, string> = {
-  S: 'Kabuk tipi',
-  C: 'Bileşik (kabuk + pulsar rüzgârı bulutsusu)',
-  F: 'Dolu merkezli (pulsar rüzgârı bulutsusu)',
+  S: 'Shell type',
+  C: 'Composite (shell + pulsar wind nebula)',
+  F: 'Filled-centre (pulsar wind nebula)',
 };
 
 const HII_STATUS: Record<string, string> = {
-  K: 'Bilinen H II bölgesi',
-  G: 'Bilinen bir H II bölge grubunun üyesi',
-  C: 'Aday',
-  Q: 'Radyo-sessiz aday',
+  K: 'Known H II region',
+  G: 'Member of a known group of H II regions',
+  C: 'Candidate',
+  Q: 'Radio-quiet candidate',
 };
 
 const EPOCH = decimalYearJd(2000.0);
 
 function pcFact(pc: number, estimate = false): string {
   const s = `${fmtNum(Math.round(pc))} pc (${fmtLightYears(pc * PARSEC_KM)})`;
-  return estimate ? `${s} · ${_('tahmini')}` : s;
+  return estimate ? `${s} · ${_('estimated')}` : s;
 }
 
 function years(y: number): string {
-  if (y >= 1e9) return _('{n} milyar yıl', { n: fixed(y / 1e9, 1) });
-  if (y >= 1e6) return _('{n} milyon yıl', { n: fixed(y / 1e6, y < 1e7 ? 1 : 0) });
-  if (y >= 1e4) return _('{n} bin yıl', { n: fmtNum(Math.round(y / 1e3)) });
-  return _('{n} yıl', { n: fmtNum(Math.round(y)) });
+  if (y >= 1e9) return _('{n} billion years', { n: fixed(y / 1e9, 1) });
+  if (y >= 1e6) return _('{n} million years', { n: fixed(y / 1e6, y < 1e7 ? 1 : 0) });
+  if (y >= 1e4) return _('{n} thousand years', { n: fmtNum(Math.round(y / 1e3)) });
+  return _('{n} years', { n: fmtNum(Math.round(y)) });
 }
 
 function periodText(P: number): string {
@@ -146,25 +146,25 @@ function companionBody(pulsarId: string, name: string, code: string, m: number, 
       orbit,
       appearance: { kind: 'pulsar', seed: hashStr(id) % 991, magneticTilt: 0, beamHalfAngle: 0, beamLength: 0, beamColor: RADIO, quiet: true },
       temperature: 5e5,
-      description: `${_('İkinci bir nötron yıldızı: atımları bize ulaşmıyor; varlığı ve kütlesi pulsarın atım zamanlamasından biliniyor.')} ${note}`,
+      description: `${_('A second neutron star: its pulses do not reach us; its existence and mass are known from the pulsar’s timing.')} ${note}`,
       facts,
     };
   }
   let radius: number, T: number, desc: string;
   if (code === 'MS') {
     radius = Math.pow(m, 0.8); T = 5772 * Math.pow(m, 0.505);
-    desc = _('Pulsarla birlikte dolanan sıradan bir anakol yıldızı.');
+    desc = _('An ordinary main-sequence star orbiting together with the pulsar.');
   } else if (code === 'UL') {
     // "black widow": a stripped, irradiated remnant a few tens of Jupiter masses
     radius = 0.12; T = 3000;
-    desc = _('Pulsarın rüzgârı ve ışınımıyla buharlaştırılan, birkaç on Jüpiter kütlesine inmiş bir yoldaş ("kara dul" sistemi).');
+    desc = _('A companion evaporated by the pulsar’s wind and radiation down to a few tens of Jupiter masses (a “black widow” system).');
   } else {
     // white dwarf: Eggleton's zero-temperature mass–radius relation
     const x = Math.min(m, 1.38) / 1.44;
     radius = 0.0127 * Math.pow(x * 1.44, -1 / 3) * Math.sqrt(1 - Math.pow(x, 4 / 3));
     if (code === 'He') radius = Math.max(radius, 0.02);
     T = 6000;
-    desc = _('Pulsarı milisaniye hızına çıkaran madde aktarımından geriye kalan beyaz cüce.');
+    desc = _('The white dwarf left over from the mass transfer that spun the pulsar up to millisecond periods.');
   }
   return starBody(id, name, m, radius, T, `${desc} ${note}`, facts, { parent: pulsarId, orbit });
 }
@@ -179,16 +179,16 @@ function pulsarDef(r: PulsarRow): LandmarkDef {
   const msp = P < 0.03;
   const [hostKind, hostName] = host ? host.split(':') : ['', ''];
 
-  const label = magnetar ? _('Magnetar') : msp ? _('Milisaniye pulsarı') : quiet ? _('Radyo-sessiz pulsar') : age !== null && age < 1e5 ? _('Genç pulsar') : _('Radyo pulsarı');
-  const where = hostKind === 'GC' ? _('{name} küresel kümesinde', { name: hostName }) : hostKind === 'SNR' || hostKind === 'PWN' ? _('{name} kalıntısında', { name: hostName }) : '';
-  const summary = where ? `${label} · ${where}` : bin ? `${label} · ${_('çift sistem')}` : label;
+  const label = magnetar ? _('Magnetar') : msp ? _('Millisecond pulsar') : quiet ? _('Radio-quiet pulsar') : age !== null && age < 1e5 ? _('Young pulsar') : _('Radio pulsar');
+  const where = hostKind === 'GC' ? _('in the globular cluster {name}', { name: hostName }) : hostKind === 'SNR' || hostKind === 'PWN' ? _('in the remnant {name}', { name: hostName }) : '';
+  const summary = where ? `${label} · ${where}` : bin ? `${label} · ${_('binary system')}` : label;
 
   const parts: string[] = [];
-  if (magnetar) parts.push(_('Manyetik alanı {b} gauss olan bir magnetar: yavaş döner, ama manyetik enerjisi X-ışını ve gama patlamalarıyla boşalır.', { b: B !== null ? fmtSci(B, '', 2) : '10¹⁴' }));
-  else if (msp) parts.push(_('Saniyede {hz} kez dönen bir milisaniye pulsarı: bir yoldaştan aktarılan maddeyle yeniden hızlandırılmış ("geri dönüştürülmüş") yaşlı bir nötron yıldızı.', { hz: fmtNum(Math.round(1 / P)) }));
-  else parts.push(_('{p} saniyede bir dönen bir nötron yıldızı; manyetik kutuplarından çıkan ışınlar her turda Dünya\'yı süpürür.', { p: fixed(P, P < 1 ? 3 : 2) }));
-  if (quiet && !magnetar) parts.push(_('Radyo ışınları Dünya\'yı süpürmüyor; atımları yalnızca X-ışını ya da gama bandında görülür.'));
-  if (galaxy) parts.push(_('Samanyolu\'nda değil, {name} içinde.', { name: _(galaxy === 'Büyük Macellan' ? 'Büyük Macellan Bulutu' : 'Küçük Macellan Bulutu') }));
+  if (magnetar) parts.push(_('A magnetar with a {b} gauss magnetic field: it spins slowly, but its magnetic energy escapes in X-ray and gamma-ray bursts.', { b: B !== null ? fmtSci(B, '', 2) : '10¹⁴' }));
+  else if (msp) parts.push(_('A millisecond pulsar spinning {hz} times per second: an old neutron star spun up again (“recycled”) by matter transferred from a companion.', { hz: fmtNum(Math.round(1 / P)) }));
+  else parts.push(_('A neutron star spinning once every {p} seconds; the beams from its magnetic poles sweep across Earth on every turn.', { p: fixed(P, P < 1 ? 3 : 2) }));
+  if (quiet && !magnetar) parts.push(_('Its radio beams do not sweep across Earth; its pulses are seen only in X-rays or gamma rays.'));
+  if (galaxy) parts.push(_('Not in the Milky Way but in the {name}.', { name: _(galaxy === 'Large Magellanic' ? 'Large Magellanic Cloud' : 'Small Magellanic Cloud') }));
 
   const facts: Record<string, string> = {};
   facts[DS_FACTS.period] = periodText(P);
@@ -206,22 +206,22 @@ function pulsarDef(r: PulsarRow): LandmarkDef {
     const code = bin[4] || guessCompanion(mMed, e);
     const guessed = !bin[4];
     const m = mMed ?? (code === 'UL' ? 0.03 : code === 'NS' ? 1.3 : 0.25);
-    const cLabel = `${_(COMPANION_LABEL[code])}${guessed ? ` (${_('tahmini')})` : ''}`;
+    const cLabel = `${_(COMPANION_LABEL[code])}${guessed ? ` (${_('estimated')})` : ''}`;
     facts[DS_FACTS.companion] = `${cLabel}, ~${fixed(m, m < 0.1 ? 3 : 2)} M☉`;
-    facts[DS_FACTS.orbit] = Pb < 1 ? _('{n} saat', { n: fixed(Pb * 24, 2) }) : _('{n} gün', { n: fixed(Pb, Pb < 100 ? 3 : 0) });
+    facts[DS_FACTS.orbit] = Pb < 1 ? _('{n} h', { n: fixed(Pb * 24, 2) }) : _('{n} days', { n: fixed(Pb, Pb < 100 ? 3 : 0) });
     if (e > 0) facts[DS_FACTS.ecc] = fixed(e, e < 0.001 ? 6 : 4);
-    parts.push(_('Bir {companion} ile {orbit} süren bir yörüngede dolanır.', { companion: _(COMPANION_LABEL[code]), orbit: facts[DS_FACTS.orbit] }));
+    parts.push(_('It shares a {orbit} orbit with a {companion}.', { companion: _(COMPANION_LABEL[code]), orbit: facts[DS_FACTS.orbit] }));
     if (code !== 'BH') {
       const note = guessed
-        ? _('Kütlesi, 60° yörünge eğimi varsayımıyla ölçülen kütle fonksiyonundan; türü bu kütleden tahmin edildi.')
-        : _('Kütlesi, 60° yörünge eğimi varsayımıyla ölçülen kütle fonksiyonundan.');
+        ? _('Its mass follows from the measured mass function assuming a 60° inclination; its type is guessed from that mass.')
+        : _('Its mass follows from the measured mass function assuming a 60° inclination.');
       const cFacts = { [DS_FACTS.mass]: `~${fixed(m, m < 0.1 ? 3 : 2)} M☉`, [DS_FACTS.orbit]: facts[DS_FACTS.orbit], [DS_FACTS.type]: cLabel };
-      companions = (pid) => [companionBody(pid, _('{name} yoldaşı', { name }), code, m, Pb, e, new Rng(hashStr(pid) ^ 0x2b), cFacts, note)];
+      companions = (pid) => [companionBody(pid, _('{name} companion', { name }), code, m, Pb, e, new Rng(hashStr(pid) ^ 0x2b), cFacts, note)];
     }
   }
   if (year) facts[DS_FACTS.disc] = survey ? `${year} · ${survey.replace(/,/g, ', ')}` : String(year);
   facts[DS_FACTS.source] = 'ATNF Pulsar Catalogue';
-  parts.push(_('Periyot, yavaşlama, uzaklık ve yörünge ATNF Pulsar Kataloğu\'ndan; ışın geometrisi temsilîdir.'));
+  parts.push(_('Period, spin-down, distance and orbit come from the ATNF Pulsar Catalogue; the beam geometry is illustrative.'));
 
   // Rankin (1993): beam half-opening ≈ 5.4° · P^-1/2
   const beamHalfAngle = Math.min(Math.max(5.4 / Math.sqrt(P), 3), 25);
@@ -258,8 +258,8 @@ function openDef(r: OpenRow): LandmarkDef {
     color: young ? YOUNG_CLUSTER : logAge !== null && logAge > 9 ? OLD_CLUSTER : [0.9, 0.9, 0.9],
     // the member stars: generated below the catalogue's completeness limit, selectable
     cluster: catalogueCluster(pc, { ageMyr: ageYr !== null ? Math.max(ageYr / 1e6, 1) : 200, count: Math.max(members || 0, 80), feh: feh ?? undefined }),
-    summary: ageYr !== null ? `${_('Açık yıldız kümesi')} · ${years(ageYr)}` : _('Açık yıldız kümesi'),
-    description: `${_('Samanyolu diskinde aynı gaz bulutundan birlikte doğmuş yıldızların oluşturduğu bir açık küme; Galaksi\'nin gelgit kuvvetleri onu birkaç yüz milyon yıl içinde dağıtır.')} ${_('Konum, uzaklık, yaş ve üye sayısı MWSC kataloğundan; toplam parlaklık üye sayısından kabaca tahmin edildi.')}`,
+    summary: ageYr !== null ? `${_('Open star cluster')} · ${years(ageYr)}` : _('Open star cluster'),
+    description: `${_('An open cluster of stars born together from the same gas cloud in the Milky Way’s disc; the Galaxy’s tidal forces will disperse it within a few hundred million years.')} ${_('Position, distance, age and member count come from the MWSC catalogue; the total brightness is roughly estimated from the member count.')}`,
     facts, catalog: true,
   };
 }
@@ -270,17 +270,17 @@ function globularDef(r: GlobularRow): LandmarkDef {
   const facts: Record<string, string> = { [DS_FACTS.dist]: pcFact(pc) };
   if (feh !== null) facts[DS_FACTS.feh] = fixed(feh, 2);
   if (rh !== null) facts[DS_FACTS.rh] = `${fixed(rh, 1)} pc`;
-  if (c !== null) facts[DS_FACTS.conc] = `${fixed(c, 2)}${cc ? ` · ${_('çekirdek çökmüş')}` : ''}`;
+  if (c !== null) facts[DS_FACTS.conc] = `${fixed(c, 2)}${cc ? ` · ${_('core-collapsed')}` : ''}`;
   if (vr !== null) facts[DS_FACTS.vr] = `${fixed(vr, 1)} km/s`;
   facts[DS_FACTS.source] = 'Harris 1996 (2010)';
-  const parts = [_('Galaksi\'nin halesinde dolanan, yüz binlerce yaşlı yıldızdan oluşan küresel bir küme: Samanyolu\'nun en eski nesnelerinden, yaklaşık 12 milyar yaşında.')];
-  if (feh !== null) parts.push(_('Metal bolluğu Güneş\'inkinin yüzde {pct}\'i kadar.', { pct: fixed(100 * Math.pow(10, feh), feh < -1 ? 1 : 0) }));
-  parts.push(_('Uzaklık, parlaklık ve yapı Harris kataloğundan.'));
+  const parts = [_('A globular cluster of hundreds of thousands of old stars orbiting in the Galaxy’s halo: among the oldest objects of the Milky Way, about 12 billion years old.')];
+  if (feh !== null) parts.push(_('Its metal abundance is {pct} % of the Sun’s.', { pct: fixed(100 * Math.pow(10, feh), feh < -1 ? 1 : 0) }));
+  parts.push(_('Distance, brightness and structure come from the Harris catalogue.'));
   return {
     id: `d-gc-${id0.replace(/\s+/g, '_')}`, name, kind: 'globular', galaxy: null, ra, dec, distancePc: pc,
     radiusPc: rh !== null ? Math.max(rh * 3, 3) : 10, absMag: Mv ?? -7, color: OLD_CLUSTER,
     cluster: catalogueCluster(pc, { ageMyr: 12_000, count: globularCount(Mv ?? -7), feh: feh ?? undefined }),
-    summary: _('Küresel küme'), description: parts.join(' '), facts, catalog: true,
+    summary: _('Globular cluster'), description: parts.join(' '), facts, catalog: true,
   };
 }
 
@@ -295,12 +295,12 @@ function pnDef(r: PnRow): LandmarkDef {
   if (vexp !== null) facts[DS_FACTS.vexp] = `${fixed(vexp, 0)} km/s`;
   if (png && png !== name) facts[DS_FACTS.pn] = `PN ${png}`;
   facts[DS_FACTS.source] = 'Strasbourg–ESO PN Catalogue';
-  const parts = [_('Ölmekte olan Güneş benzeri bir yıldızın dışarı attığı gaz kabuğu: merkezdeki sıcak çekirdeğin morötesi ışığıyla parlıyor. Birkaç on bin yıl içinde dağılıp görünmez olacak.')];
-  if (stat) parts.push(_('Uzaklık istatistiksel yöntemle tahmin edildi; belirsizliği yüzde 30–50.'));
+  const parts = [_('A shell of gas thrown off by a dying Sun-like star, glowing in the ultraviolet light of the hot core at its centre. Within a few tens of thousands of years it will disperse and fade from view.')];
+  if (stat) parts.push(_('The distance is a statistical estimate, uncertain by 30–50 %.'));
   return {
     id: `d-pn-${png || name.replace(/\s+/g, '_')}`, name, kind: 'planetary', galaxy: null, ra, dec, distancePc: pc,
     radiusPc: Math.max(rPc ?? 0.15, 0.03), absMag: 0, color: PLANETARY,
-    summary: _('Gezegenimsi bulutsu'), description: parts.join(' '), facts, catalog: true,
+    summary: _('Planetary nebula'), description: parts.join(' '), facts, catalog: true,
   };
 }
 
@@ -314,12 +314,12 @@ function snrDef(r: SnrRow): LandmarkDef {
   if (t) facts[DS_FACTS.type] = `${_(t)}${type.endsWith('?') ? ' ?' : ''}`;
   if (flux !== null) facts[DS_FACTS.flux] = `${fmtNum(flux / 1000, { maximumSignificantDigits: 3 })} Jy`;
   facts[DS_FACTS.source] = "Green's SNR Catalogue";
-  const parts = [_('Bir süpernova patlamasının saniyede binlerce kilometreyle genişleyen şok dalgası: yıldızlararası gazı süpürüp ısıtıyor ve radyo dalgalarında parlıyor.')];
-  if (estimate) parts.push(_('Uzaklık, radyo yüzey parlaklığı–çap (Σ–D) bağıntısından tahmin edildi; iki kat yanılabilir.'));
+  const parts = [_('The shock wave of a supernova expanding at thousands of kilometres per second: it sweeps up and heats the interstellar gas and shines in radio waves.')];
+  if (estimate) parts.push(_('The distance is estimated from the radio surface-brightness–diameter (Σ–D) relation and may be off by a factor of two.'));
   return {
     id: `d-snr-${gname}`, name, kind: 'remnant', galaxy: null, ra, dec, distancePc: pc, radiusPc: Math.max(rPc, 0.3),
     absMag: Math.min(Math.max(-3 - 2.5 * Math.log10(rPc / 5), -7), -1), color: SNR,
-    summary: _('Süpernova kalıntısı'), description: parts.join(' '), facts, catalog: true,
+    summary: _('Supernova remnant'), description: parts.join(' '), facts, catalog: true,
   };
 }
 
@@ -330,14 +330,14 @@ function hiiDef(r: HiiRow): LandmarkDef {
   if (nice) facts[DS_FACTS.wise] = wise;
   if (HII_STATUS[cls]) facts[DS_FACTS.status] = _(HII_STATUS[cls]);
   facts[DS_FACTS.source] = 'WISE H II Catalog v3.0';
-  const parts = [_('İyonlaşmış hidrojen bulutu (H II bölgesi): içindeki genç, sıcak O ve B yıldızlarının morötesi ışığıyla parlayan bir yıldız doğumevi.')];
+  const parts = [_('A cloud of ionised hydrogen (H II region): a stellar nursery glowing in the ultraviolet light of the young, hot O and B stars inside it.')];
   parts.push(method === 'Parallax'
-    ? _('Uzaklık, bölgedeki maserlerin paralaksından ölçüldü.')
-    : _('Uzaklık, gazın dikine hızından Galaksi\'nin dönme eğrisiyle (kinematik yöntem) bulundu.'));
+    ? _('The distance is measured from the parallax of masers in the region.')
+    : _('The distance follows from the gas’s radial velocity and the Galaxy’s rotation curve (kinematic method).'));
   return {
     id: `d-hii-${wise}`, name: nice || `WISE ${wise}`, kind: 'nebula', galaxy: null, ra, dec, distancePc: pc, radiusPc: Math.max(rPc, 0.2),
     absMag: Math.min(Math.max(-4.1 - 5 * Math.log10(rPc / 6), -11), 0), color: EMISSION,
-    summary: _('H II bölgesi'), description: parts.join(' '), facts, catalog: true,
+    summary: _('H II region'), description: parts.join(' '), facts, catalog: true,
     // the exciting cluster inside: generated members below the star catalogue's completeness limit
     cluster: nebulaCluster(Math.max(rPc, 0.2), pc),
   };

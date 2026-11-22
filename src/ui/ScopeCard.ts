@@ -88,7 +88,7 @@ export class ScopeCard {
   }
 
   private label(): void {
-    this.btn.textContent = this.open ? _('Teleskop görünümünü kapat') : _('Teleskopla bak');
+    this.btn.textContent = this.open ? _('Close the telescope view') : _('Look through a telescope');
     this.btn.classList.toggle('active', this.open);
   }
 

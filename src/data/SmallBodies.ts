@@ -38,11 +38,11 @@ const GROUP_LOOK: Record<string, { color: [number, number, number]; opacity: num
 const BRIGHT_MAX = 2;
 
 const CLASS_LABEL: Record<string, string> = {
-  IEO: 'Atira asteroiti (Dünya yörüngesinin içinde)', ATE: 'Aten asteroiti (Dünya yörüngesini keser)', APO: 'Apollo asteroiti (Dünya yörüngesini keser)',
-  AMO: 'Amor asteroiti (Dünya yörüngesine yaklaşır)', MCA: 'Mars yörüngesini kesen asteroit', IMB: 'İç ana kuşak asteroiti', MBA: 'Ana kuşak asteroiti',
-  OMB: 'Dış ana kuşak asteroiti', TJN: 'Jüpiter Truva asteroiti', CEN: 'Kentaur', TNO: 'Trans-Neptün cismi', PAA: 'Parabolik asteroit', HYA: 'Hiperbolik asteroit',
-  AST: 'Asteroit', JFc: 'Jüpiter ailesi kuyruklu yıldızı', JFC: 'Jüpiter ailesi kuyruklu yıldızı', HTC: 'Halley tipi kuyruklu yıldız', ETc: 'Encke tipi kuyruklu yıldız',
-  CTc: 'Kiron tipi kuyruklu yıldız', COM: 'Kuyruklu yıldız', PAR: 'Kuyruklu yıldız', HYP: 'Kuyruklu yıldız',
+  IEO: 'Atira asteroid (inside Earth’s orbit)', ATE: 'Aten asteroid (crosses Earth’s orbit)', APO: 'Apollo asteroid (crosses Earth’s orbit)',
+  AMO: 'Amor asteroid (approaches Earth’s orbit)', MCA: 'Mars-crossing asteroid', IMB: 'Inner main-belt asteroid', MBA: 'Main-belt asteroid',
+  OMB: 'Outer main-belt asteroid', TJN: 'Jupiter trojan', CEN: 'Centaur', TNO: 'Trans-Neptunian object', PAA: 'Parabolic asteroid', HYA: 'Hyperbolic asteroid',
+  AST: 'Asteroid', JFc: 'Jupiter-family comet', JFC: 'Jupiter-family comet', HTC: 'Halley-type comet', ETc: 'Encke-type comet',
+  CTc: 'Chiron-type comet', COM: 'Comet', PAR: 'Comet', HYP: 'Comet',
 };
 
 /**
@@ -202,7 +202,7 @@ export class SmallBodyCatalog {
     return tiers.flat().slice(0, limit);
   }
 
-  className(k: number): string { return CLASS_LABEL[this.classes[this.cls[k]]] ?? 'Asteroit'; }
+  className(k: number): string { return CLASS_LABEL[this.classes[this.cls[k]]] ?? 'Asteroid'; }
 
   /** A full body on the real orbit, sized from the measured diameter (or from H and a typical albedo) */
   bodyData(k: number): BodyData {
@@ -229,19 +229,19 @@ export class SmallBodyCatalog {
       : [0.2, 0.19, 0.18];
     const tint = (m: number) => rng.tint([base[0] * m, base[1] * m, base[2] * m]) as [number, number, number];
     const neo = !!(this.flags[k] & 1), pha = !!(this.flags[k] & 2);
-    const facts: Record<string, string> = { 'Sınıf': _(this.className(k)) };
-    if (info.spectral) facts['Spektral tür'] = info.spectral;
-    if (H !== null) facts[comet ? 'Toplam mutlak parlaklık (M1)' : 'Mutlak parlaklık (H)'] = fixed(H, 1);
-    facts['Çap'] = `${fixed(diameter, diameter < 10 ? 2 : 0)} km${info.diameter === null ? ` (${_('H ve tipik albedodan tahmin')})` : ''}`;
+    const facts: Record<string, string> = { 'Class': _(this.className(k)) };
+    if (info.spectral) facts['Spectral type'] = info.spectral;
+    if (H !== null) facts[comet ? 'Total absolute magnitude (M1)' : 'Absolute magnitude (H)'] = fixed(H, 1);
+    facts['Diameter'] = `${fixed(diameter, diameter < 10 ? 2 : 0)} km${info.diameter === null ? ` (${_('estimated from H and a typical albedo')})` : ''}`;
     if (info.albedo !== null) facts['Albedo'] = fixed(info.albedo, 3);
-    if (info.rotation !== null) facts['Dönme periyodu'] = `${fixed(info.rotation, info.rotation < 10 ? 2 : 1)} ${_('saat')}`;
-    if (pha) facts['Tehlike'] = _('Potansiyel olarak tehlikeli asteroit (PHA)');
-    else if (neo) facts['Tehlike'] = _("Dünya'ya yakın cisim (NEO)");
-    facts['Kaynak'] = 'NASA/JPL Small-Body Database';
+    if (info.rotation !== null) facts['Rotation period'] = `${fixed(info.rotation, info.rotation < 10 ? 2 : 1)} ${_('hours')}`;
+    if (pha) facts['Tehlike'] = _('Potentially hazardous asteroid (PHA)');
+    else if (neo) facts['Tehlike'] = _("Near-Earth object (NEO)");
+    facts['Source'] = 'NASA/JPL Small-Body Database';
     const q = a * (1 - this.e[k]), Q = a * (1 + this.e[k]);
-    const description = `${_(this.className(k))}. ${_('Güneş\'i {q}–{Q} AU arasında, {p} yılda bir dolanır; yörünge eğimi {i}°.', {
+    const description = `${_(this.className(k))}. ${_('It orbits the Sun between {q} and {Q} AU once every {p} years; inclination {i}°.', {
       q: fixed(q, 2), Q: fixed(Q, Q < 10 ? 2 : 1), p: fixed(periodDays / 365.25, periodDays < 3650 ? 2 : 0), i: fixed(this.inc[k] / DEG, 1),
-    })} ${_('Yörünge JPL\'in oskülatör elemanlarından iki cisim çözümüyle yürütülür; gezegen yakın geçişleri yaklaşıktır. Yüzey görünümü temsilîdir.')}`;
+    })} ${_('The orbit is propagated as a two-body solution from JPL’s osculating elements, so close planetary encounters are approximate. The surface appearance is illustrative.')}`;
     return {
       id: this.bodyId(k), name: this.label(k), type: comet ? 'comet' : 'asteroid', parent: 'sun',
       radius, mass, albedo,

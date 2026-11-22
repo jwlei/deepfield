@@ -786,7 +786,7 @@ export class ScopeView {
     if (size > 0) rows.push([T.rSize, fmtAngle(size, L)]);
     if (this.geo && this.target.kind === 'solar' && this.target.primary.id !== 'sun') {
       const lit = fmtNum(50 * (1 + Math.cos(this.geo.phase * Math.PI / 180)), 0, L);
-      rows.push([T.rLit, L === 'tr' ? `%${lit}` : `${lit} %`]);
+      rows.push([T.rLit, `${lit} %`]);
     }
     this.readout.replaceChildren(...rows.slice(0, this.opts.compact ? 6 : 8).map(([k, v]) => {
       const d = document.createElement('div');

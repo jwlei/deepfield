@@ -15,13 +15,13 @@ const SOURCE = 'NASA Exoplanet Archive (PSCompPars)';
 
 /** Info-panel rows of the real planets and their stars (keys are translated at display) */
 const EXO_FACTS = {
-  mass: 'Kütle (ölçülen)',
-  radius: 'Yarıçap (ölçülen)',
-  incl: 'Bakış eğimi (i)',
-  insol: 'Işınım (Dünya = 1)',
-  planets: 'Ötegezegenler',
-  met: 'Metallik [Fe/H]',
-  stars: 'Yıldız sayısı',
+  mass: 'Mass (measured)',
+  radius: 'Radius (measured)',
+  incl: 'Inclination to the sky (i)',
+  insol: 'Insolation (Earth = 1)',
+  planets: 'Exoplanets',
+  met: 'Metallicity [Fe/H]',
+  stars: 'Number of stars',
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -107,13 +107,13 @@ function meanAnomalyJ2000(p: ExoPlanet, P: number, e: number, w: number, rng: Rn
 type RealClass = PlanetClass | 'subneptune' | 'neptune' | 'sudarsky1' | 'sudarsky2' | 'sudarsky3' | 'sudarsky4' | 'sudarsky5';
 
 const REAL_LABEL: Partial<Record<RealClass, string>> = {
-  subneptune: 'Mini-Neptün (kalın H/He zarfı)',
-  neptune: 'Neptün benzeri',
-  sudarsky1: 'Gaz devi (Sudarsky I: amonyak bulutları)',
-  sudarsky2: 'Gaz devi (Sudarsky II: su bulutları)',
-  sudarsky3: 'Gaz devi (Sudarsky III: bulutsuz)',
-  sudarsky4: 'Sıcak Jüpiter (Sudarsky IV: alkali metal atmosfer)',
-  sudarsky5: 'Çok sıcak Jüpiter (Sudarsky V: silikat bulutları)',
+  subneptune: 'Mini-Neptune (thick H/He envelope)',
+  neptune: 'Neptune-like',
+  sudarsky1: 'Gas giant (Sudarsky I: ammonia clouds)',
+  sudarsky2: 'Gas giant (Sudarsky II: water clouds)',
+  sudarsky3: 'Gas giant (Sudarsky III: cloudless)',
+  sudarsky4: 'Hot Jupiter (Sudarsky IV: alkali-metal atmosphere)',
+  sudarsky5: 'Ultra-hot Jupiter (Sudarsky V: silicate clouds)',
 };
 
 /** Sudarsky et al. (2000) classes: cloud chemistry set by temperature (SystemGenerator.SUDARSKY_BANDS) */
@@ -142,37 +142,37 @@ interface Observed {
 }
 
 const OBSERVED: Record<string, Observed> = {
-  '55 Cnc e': { cls: 'lava', skin: 'map:55cnce', note: 'JWST ölçümleri yüzeyin bir magma okyanusu olduğunu ve muhtemelen ikincil (CO/CO₂) bir atmosfer taşıdığını gösteriyor (Hu ve ark. 2024).' },
-  'LHS 3844 b': { cls: 'barren', airless: true, albedo: 0.1, skin: 'map:lhs3844b', note: 'Spitzer gece–gündüz sıcaklık farkı kalın bir atmosferi dışlıyor: çıplak, koyu bazaltik kaya (Kreidberg ve ark. 2019).' },
-  'TRAPPIST-1 b': { cls: 'barren', airless: true, albedo: 0.1, note: 'JWST 15 µm ölçümü: gündüz yüzü kara cisim gibi ışıyor, kalın atmosfer yok (Greene ve ark. 2023).' },
-  'TRAPPIST-1 c': { cls: 'barren', airless: true, albedo: 0.15, note: 'JWST: kalın CO₂ atmosferi yok; Venüs benzeri olma ihtimali düşük (Zieba ve ark. 2023).' },
-  'GJ 1132 b': { cls: 'barren', airless: true, albedo: 0.1, note: 'JWST tayfında atmosfer izi bulunamadı; büyük olasılıkla çıplak kaya.' },
-  'K2-18 b': { cls: 'subneptune', skin: 'map:k218b', haze: [0.5, 0.7, 1.0], bands: [[0.45, 0.62, 0.8], [0.5, 0.68, 0.84], [0.42, 0.58, 0.76], [0.55, 0.7, 0.86]], note: 'Hubble ve JWST atmosferde metan ve CO₂ buldu; su okyanuslu "hycean" bir dünya mı, gaz zarflı bir mini-Neptün mü olduğu tartışmalı (Madhusudhan ve ark. 2023).' },
-  'GJ 1214 b': { cls: 'subneptune', albedo: 0.5, bands: [[0.8, 0.8, 0.76], [0.74, 0.74, 0.7], [0.85, 0.84, 0.8]], note: 'Tayfı düz: yüksek irtifada kalın pus/bulut katmanı; JWST yansıtıcı, metalce zengin bir atmosfer görüyor (Kempton ve ark. 2023).' },
-  'Kepler-7 b': { albedo: 0.35, bands: [[0.9, 0.88, 0.82], [0.82, 0.8, 0.74], [0.95, 0.94, 0.9], [0.76, 0.72, 0.66]], note: 'Kepler evre eğrisi: yüksek albedo, batı yarıküresinde parlak bulutlar (Demory ve ark. 2013).' },
-  'HD 189733 b': { albedo: 0.4, skin: 'map:hd189733b', haze: [0.35, 0.55, 1.0], bands: [[0.16, 0.32, 0.72], [0.12, 0.26, 0.62], [0.2, 0.38, 0.8], [0.14, 0.28, 0.66]], note: 'Hubble yansıma tayfı: derin lacivert renk, silikat pusundan saçılma (Evans ve ark. 2013).' },
-  'WASP-12 b': { albedo: 0.05, bands: [[0.08, 0.07, 0.07], [0.06, 0.05, 0.05], [0.1, 0.08, 0.08]], note: 'Neredeyse ışık yansıtmıyor (albedo < 0,064): asfalt kadar koyu. Gelgitle yumurta biçimine çekilmiş, yörüngesi küçülüyor.' },
-  'TrES-2 b': { albedo: 0.01, bands: [[0.05, 0.03, 0.03], [0.04, 0.025, 0.025], [0.07, 0.035, 0.03]], note: "Bilinen en karanlık ötegezegenlerden: ışığın %1'inden azını yansıtır (Kipping ve Spiegel 2011)." },
-  'HD 209458 b': { skin: 'map:hd209458b', haze: [0.45, 0.6, 1.0], bands: [[0.55, 0.63, 0.75], [0.45, 0.53, 0.66], [0.75, 0.74, 0.68], [0.5, 0.58, 0.72]], note: 'Geçişi gözlenen ilk ötegezegen (2000) ve atmosferi tespit edilen ilki: sodyum ve uzaya kaçan bir hidrojen kuyruğu.' },
-  'WASP-121 b': { note: 'Stratosferinde demir ve magnezyum buharı; gündüz yüzünde su molekülleri parçalanıyor, gece yüzünde metal bulutları (JWST).' },
-  'WASP-76 b': { note: 'Gündüz yüzünde buharlaşan demir, daha serin gece yüzünde yoğunlaşıp "demir yağmuru" olarak düşüyor (Ehrenreich ve ark. 2020).' },
-  'KELT-9 b': { skin: 'map:kelt9b', haze: [1.0, 0.6, 0.35], bands: [[0.95, 0.72, 0.45], [0.9, 0.62, 0.38], [1.0, 0.8, 0.55]], note: 'Bilinen en sıcak gaz devi: gündüz yüzü ~4600 K, birçok yıldızdan sıcak; moleküller atomlarına ayrışıyor.' },
-  'LTT 9779 b': { albedo: 0.8, bands: [[0.88, 0.88, 0.9], [0.82, 0.83, 0.86], [0.93, 0.93, 0.95]], note: 'Ölçülen en yüksek albedolardan (~0,8): silikat ve titanyum bulutlarından oluşan "metal ayna" (Hoyer ve ark. 2023).' },
-  'GJ 504 b': { bands: [[0.6, 0.3, 0.5], [0.52, 0.24, 0.44], [0.68, 0.36, 0.56]], note: 'Doğrudan görüntülendi; genç, sıcak metan atmosferi insan gözüne koyu macenta görünür.' },
-  'bet Pic b': { skin: 'map:betpicb', haze: [0.85, 0.7, 0.55], bands: [[0.63, 0.49, 0.34], [0.46, 0.33, 0.23], [0.77, 0.64, 0.47]], note: 'Doğrudan görüntülenen genç bir dev: oluşum ısısıyla hâlâ ~1700 K, kızıl parlıyor.' },
-  'bet Pic c': { bands: [[0.7, 0.34, 0.22], [0.6, 0.28, 0.18], [0.78, 0.42, 0.28]], note: 'Doğrudan görüntülenen genç bir dev: oluşum ısısıyla hâlâ ~1200 K.' },
-  '51 Peg b': { skin: 'map:51pegb', haze: [0.9, 0.75, 0.6], bands: [[0.85, 0.7, 0.5], [0.7, 0.48, 0.3], [0.93, 0.84, 0.66], [0.6, 0.4, 0.25]], note: 'Güneş benzeri bir yıldızın çevresinde bulunan ilk ötegezegen (Mayor ve Queloz 1995; 2019 Nobel Fizik Ödülü).' },
-  'HD 80606 b': { skin: 'map:hd80606b', haze: [0.35, 0.5, 1.0], bands: [[0.5, 0.06, 0.04], [0.25, 0.02, 0.02], [0.8, 0.15, 0.08]], note: 'Bilinen en basık yörüngelerden biri (e ≈ 0,93): yıldızına en yakın geçişte sıcaklığı saatler içinde yüzlerce derece artar ve fırtınalar gezegeni sarar (Laughlin ve ark. 2009).' },
+  '55 Cnc e': { cls: 'lava', skin: 'map:55cnce', note: 'JWST measurements point to a magma-ocean surface, probably with a secondary (CO/CO₂) atmosphere (Hu et al. 2024).' },
+  'LHS 3844 b': { cls: 'barren', airless: true, albedo: 0.1, skin: 'map:lhs3844b', note: 'Spitzer’s day–night temperature contrast rules out a thick atmosphere: bare, dark basaltic rock (Kreidberg et al. 2019).' },
+  'TRAPPIST-1 b': { cls: 'barren', airless: true, albedo: 0.1, note: 'JWST at 15 µm: the dayside glows like a blackbody, with no thick atmosphere (Greene et al. 2023).' },
+  'TRAPPIST-1 c': { cls: 'barren', airless: true, albedo: 0.15, note: 'JWST: no thick CO₂ atmosphere; a Venus-like world is unlikely (Zieba et al. 2023).' },
+  'GJ 1132 b': { cls: 'barren', airless: true, albedo: 0.1, note: 'No sign of an atmosphere in its JWST spectrum; most likely bare rock.' },
+  'K2-18 b': { cls: 'subneptune', skin: 'map:k218b', haze: [0.5, 0.7, 1.0], bands: [[0.45, 0.62, 0.8], [0.5, 0.68, 0.84], [0.42, 0.58, 0.76], [0.55, 0.7, 0.86]], note: 'Hubble and JWST found methane and CO₂ in its atmosphere; whether it is a "hycean" world with a water ocean or a gas-wrapped mini-Neptune is debated (Madhusudhan et al. 2023).' },
+  'GJ 1214 b': { cls: 'subneptune', albedo: 0.5, bands: [[0.8, 0.8, 0.76], [0.74, 0.74, 0.7], [0.85, 0.84, 0.8]], note: 'Its spectrum is flat: a thick high-altitude haze or cloud layer; JWST sees a reflective, metal-rich atmosphere (Kempton et al. 2023).' },
+  'Kepler-7 b': { albedo: 0.35, bands: [[0.9, 0.88, 0.82], [0.82, 0.8, 0.74], [0.95, 0.94, 0.9], [0.76, 0.72, 0.66]], note: 'Kepler phase curve: high albedo, with bright clouds on the western hemisphere (Demory et al. 2013).' },
+  'HD 189733 b': { albedo: 0.4, skin: 'map:hd189733b', haze: [0.35, 0.55, 1.0], bands: [[0.16, 0.32, 0.72], [0.12, 0.26, 0.62], [0.2, 0.38, 0.8], [0.14, 0.28, 0.66]], note: 'Hubble reflection spectrum: a deep azure blue, scattered by silicate haze (Evans et al. 2013).' },
+  'WASP-12 b': { albedo: 0.05, bands: [[0.08, 0.07, 0.07], [0.06, 0.05, 0.05], [0.1, 0.08, 0.08]], note: 'It reflects almost no light (albedo < 0.064): as dark as asphalt. Tides have stretched it into an egg shape, and its orbit is shrinking.' },
+  'TrES-2 b': { albedo: 0.01, bands: [[0.05, 0.03, 0.03], [0.04, 0.025, 0.025], [0.07, 0.035, 0.03]], note: "One of the darkest known exoplanets: it reflects less than 1% of the light (Kipping & Spiegel 2011)." },
+  'HD 209458 b': { skin: 'map:hd209458b', haze: [0.45, 0.6, 1.0], bands: [[0.55, 0.63, 0.75], [0.45, 0.53, 0.66], [0.75, 0.74, 0.68], [0.5, 0.58, 0.72]], note: 'The first exoplanet seen in transit (2000) and the first with a detected atmosphere: sodium, and a hydrogen tail escaping into space.' },
+  'WASP-121 b': { note: 'Iron and magnesium vapour in its stratosphere; water molecules break apart on the dayside, metal clouds form on the nightside (JWST).' },
+  'WASP-76 b': { note: 'Iron vaporised on the dayside condenses on the cooler nightside and falls as "iron rain" (Ehrenreich et al. 2020).' },
+  'KELT-9 b': { skin: 'map:kelt9b', haze: [1.0, 0.6, 0.35], bands: [[0.95, 0.72, 0.45], [0.9, 0.62, 0.38], [1.0, 0.8, 0.55]], note: 'The hottest known gas giant: its dayside is ~4600 K, hotter than many stars, and molecules break into atoms.' },
+  'LTT 9779 b': { albedo: 0.8, bands: [[0.88, 0.88, 0.9], [0.82, 0.83, 0.86], [0.93, 0.93, 0.95]], note: 'One of the highest albedos measured (~0.8): a "metal mirror" of silicate and titanium clouds (Hoyer et al. 2023).' },
+  'GJ 504 b': { bands: [[0.6, 0.3, 0.5], [0.52, 0.24, 0.44], [0.68, 0.36, 0.56]], note: 'Directly imaged; its young, warm methane atmosphere would look dark magenta to the human eye.' },
+  'bet Pic b': { skin: 'map:betpicb', haze: [0.85, 0.7, 0.55], bands: [[0.63, 0.49, 0.34], [0.46, 0.33, 0.23], [0.77, 0.64, 0.47]], note: 'A directly imaged young giant: still ~1700 K from the heat of its formation, glowing red.' },
+  'bet Pic c': { bands: [[0.7, 0.34, 0.22], [0.6, 0.28, 0.18], [0.78, 0.42, 0.28]], note: 'A directly imaged young giant: still ~1200 K from the heat of its formation.' },
+  '51 Peg b': { skin: 'map:51pegb', haze: [0.9, 0.75, 0.6], bands: [[0.85, 0.7, 0.5], [0.7, 0.48, 0.3], [0.93, 0.84, 0.66], [0.6, 0.4, 0.25]], note: 'The first exoplanet found around a Sun-like star (Mayor & Queloz 1995; Nobel Prize in Physics 2019).' },
+  'HD 80606 b': { skin: 'map:hd80606b', haze: [0.35, 0.5, 1.0], bands: [[0.5, 0.06, 0.04], [0.25, 0.02, 0.02], [0.8, 0.15, 0.08]], note: 'One of the most eccentric orbits known (e ≈ 0.93): at closest approach to its star the temperature climbs hundreds of degrees within hours and storms sweep around the planet (Laughlin et al. 2009).' },
   // rocky worlds nobody has seen: the class is the one their best-known portrait shows
-  'Proxima Cen b': { cls: 'desert', skin: 'map:proximab', note: "Güneş'e en yakın yıldızın gezegeni. Yalnızca kütlesinin alt sınırı ölçüldü; yüzeyinin nasıl olduğu bilinmiyor." },
-  'TRAPPIST-1 e': { cls: 'eyeball', skin: 'map:trappist1e', cloud: 0.25, note: "Yedi gezegenli sistemin yaşanabilir bölgesinde; yoğunluğu Dünya'nınkine yakın. Atmosferi olup olmadığı henüz bilinmiyor, JWST gözlemleri sürüyor." },
-  'Kepler-186 f': { cls: 'temperate', skin: 'map:kepler186f', cloud: 0.2, note: 'Başka bir yıldızın yaşanabilir bölgesinde bulunan ilk Dünya boyutlu gezegen (Quintana ve ark. 2014). Kütlesi ve atmosferi bilinmiyor.' },
-  'Kepler-452 b': { cls: 'temperate', skin: 'map:kepler452b', cloud: 0.15, note: 'Güneş benzeri bir yıldızın yaşanabilir bölgesinde, 385 günlük bir yörüngede. Kayaç mı yoksa kalın bir gaz zarfıyla mı kaplı olduğu bilinmiyor; burada kayaç bir dünya olarak gösteriliyor.' },
+  'Proxima Cen b': { cls: 'desert', skin: 'map:proximab', note: "The planet of the star nearest the Sun. Only a lower limit on its mass has been measured; what its surface is like is unknown." },
+  'TRAPPIST-1 e': { cls: 'eyeball', skin: 'map:trappist1e', cloud: 0.25, note: "In the habitable zone of the seven-planet system; its density is close to Earth's. Whether it has an atmosphere is not yet known; JWST observations continue." },
+  'Kepler-186 f': { cls: 'temperate', skin: 'map:kepler186f', cloud: 0.2, note: 'The first Earth-sized planet found in the habitable zone of another star (Quintana et al. 2014). Its mass and atmosphere are unknown.' },
+  'Kepler-452 b': { cls: 'temperate', skin: 'map:kepler452b', cloud: 0.15, note: 'In the habitable zone of a Sun-like star, on a 385-day orbit. Whether it is rocky or wrapped in a thick gas envelope is unknown; it is shown here as a rocky world.' },
 };
 for (const l of ['b', 'c', 'd', 'e']) {
   OBSERVED[`HR 8799 ${l}`] = {
     bands: [[0.66, 0.36, 0.24], [0.56, 0.28, 0.2], [0.74, 0.44, 0.3]],
-    note: 'Doğrudan görüntülenen dört dev gezegenden biri; genç (~30 milyon yıl), oluşum ısısıyla kızıl parlıyor.',
+    note: 'One of four directly imaged giant planets; young (~30 million years), glowing red with the heat of its formation.',
   };
 }
 Object.assign(OBSERVED['HR 8799 e'], { skin: 'map:hr8799e', haze: [1.0, 0.62, 0.6], bands: [[0.9, 0.6, 0.3], [0.8, 0.45, 0.2], [0.97, 0.78, 0.48]] });
@@ -296,25 +296,25 @@ export function realSystem(star: StarInfo, host: ExoHost, toSun: Vector3): Gener
 
     const label = REAL_LABEL[cls] ?? CLASS_LABEL[cls as PlanetClass];
     const parts: string[] = [`${_(label)}; ${describeTemp(Teq)}.`];
-    if (p.controv) parts.push(_('Varlığı tartışmalı.'));
-    if (p.tran) parts.push(_("Yıldızının önünden geçiyor: Dünya'dan bakınca her {p} bir kez yıldızı hafifçe karartır.", { p: fmtPeriod(P) }));
-    if (msini) parts.push(_('Kütlesi dikine hız yöntemiyle ölçüldü; bu yalnızca alt sınırı (M sin i) verir. Gösterilen kütle varsayılan eğimle hesaplandı.'));
-    else if (!massMeasured) parts.push(_('Kütlesi ölçülmedi; yarıçapından kütle–yarıçap ilişkisiyle tahmin edildi.'));
-    if (p.R === undefined) parts.push(_('Yarıçapı ölçülmedi; kütlesinden tahmin edildi, görünümü sınıfına göre temsilîdir.'));
-    else if (obs?.skin) parts.push(_('Görünümü, gezegenin en bilinen sanatçı çizimine göre modellendi; temsilîdir.'));
-    else parts.push(_('Yüzey ve bulut görünümü ölçülen yarıçap, kütle ve sıcaklığa göre seçildi; ayrıntıları temsilîdir.'));
-    if (iAssumed) parts.push(_('Yörüngenin gökyüzüne göre eğimi bilinmiyor; rastgele bir eğim varsayıldı.'));
-    if (p.cb) parts.push(_('Gerçekte iki yıldızın birlikte çevresinde dolanır; burada yalnızca ana yıldız gösteriliyor.'));
+    if (p.controv) parts.push(_('Its existence is disputed.'));
+    if (p.tran) parts.push(_("It transits its star: seen from Earth it dims the star slightly once every {p}.", { p: fmtPeriod(P) }));
+    if (msini) parts.push(_('Its mass comes from radial velocities, which only give a lower limit (M sin i); the mass shown assumes an inclination.'));
+    else if (!massMeasured) parts.push(_('Its mass has not been measured; it is estimated from the radius with the mass–radius relation.'));
+    if (p.R === undefined) parts.push(_('Its radius has not been measured; it is estimated from the mass, and its look is representative of its class.'));
+    else if (obs?.skin) parts.push(_('Its look is modelled on the planet\'s best-known artist\'s impression; it is representative.'));
+    else parts.push(_('The look of its surface and clouds follows the measured radius, mass and temperature; the details are representative.'));
+    if (iAssumed) parts.push(_('The inclination of the orbit to the sky is unknown; a random one is assumed.'));
+    if (p.cb) parts.push(_('In reality it orbits both stars of a binary; only the primary is shown here.'));
     if (obs) parts.push(_(obs.note));
 
-    const facts: Record<string, string> = { 'Sınıf': label };
+    const facts: Record<string, string> = { 'Class': label };
     if (p.M !== undefined) facts[EXO_FACTS.mass] = msini ? `M sin i = ${fixed(p.M, 2)} M⊕` : `${fixed(p.M, p.M < 10 ? 2 : 1)} M⊕${p.M > 50 ? ` (${fixed(p.M / 317.83, 2)} M♃)` : ''}`;
     if (p.R !== undefined) facts[EXO_FACTS.radius] = `${fixed(p.R, 2)} R⊕${p.R > 6 ? ` (${fixed(p.R / 11.209, 2)} R♃)` : ''}`;
     facts[EXO_FACTS.incl] = `${fixed(iSky, 1)}°${iAssumed ? ' ?' : ''}`;
     if (p.S !== undefined) facts[EXO_FACTS.insol] = fixed(p.S, p.S < 10 ? 2 : 0);
-    if (p.Teq !== undefined) facts['Denge sıcaklığı'] = `${Math.round(p.Teq)} K`;
-    if (p.year) facts['Keşif'] = [p.year, p.method, p.facility].filter(Boolean).join(' · ');
-    facts['Kaynak'] = SOURCE;
+    if (p.Teq !== undefined) facts['Equilibrium temperature'] = `${Math.round(p.Teq)} K`;
+    if (p.year) facts['Discovery'] = [p.year, p.method, p.facility].filter(Boolean).join(' · ');
+    facts['Source'] = SOURCE;
 
     bodies.push({
       id, name: p.name, type: 'planet', parent: starId, radius,
@@ -329,7 +329,7 @@ export function realSystem(star: StarInfo, host: ExoHost, toSun: Vector3): Gener
     });
     planetIds.push(id);
   }
-  if (host.snum && host.snum > 1) notes.push(_('Sistemde {n} yıldız var; yoldaş yıldızlar burada gösterilmiyor.', { n: host.snum }));
+  if (host.snum && host.snum > 1) notes.push(_('The system has {n} stars; the companions are not shown here.', { n: host.snum }));
 
   // the star spins in the plane of its planets (true for most measured systems)
   if (innermostNormal) primary.pole = eclToRaDec(innermostNormal);
@@ -345,11 +345,11 @@ export function realSystem(star: StarInfo, host: ExoHost, toSun: Vector3): Gener
 
 function realStarDescription(s: StarInfo, n: number): string {
   const lumDesc = LUM_CLASS_DESC[s.lumClass];
-  const cls = s.isWhiteDwarf ? _('beyaz cüce') : (lumDesc ? _(lumDesc) : _('yıldız')).toLocaleLowerCase(localeTag());
+  const cls = s.isWhiteDwarf ? _('white dwarf') : (lumDesc ? _(lumDesc) : _('star')).toLocaleLowerCase(localeTag());
   return [
-    _('{sp} sınıfı {cls}', { sp: s.catalogSpectral || s.spectral, cls }) + '.',
-    _("Güneş'e uzaklığı {ly}.", { ly: fmtLightYears(s.distancePc * PARSEC_KM) }),
-    _('Çevresinde {n} doğrulanmış ötegezegen biliniyor. Yıldızın ve gezegenlerin değerleri NASA Ötegezegen Arşivi ölçümleridir; yörüngeler Güneş’ten görüldüğü yönde kuruldu, geçişler arşivdeki zamanlarda olur.', { n }),
+    _('{sp}-type {cls}', { sp: s.catalogSpectral || s.spectral, cls }) + '.',
+    _("{ly} from the Sun.", { ly: fmtLightYears(s.distancePc * PARSEC_KM) }),
+    _('{n} confirmed exoplanets are known around it. The values of the star and its planets are NASA Exoplanet Archive measurements; the orbits are oriented as seen from the Sun, and transits happen at the archive’s times.', { n }),
   ].join(' ');
 }
 
@@ -357,8 +357,8 @@ function realStarFacts(s: StarInfo, h: ExoHost): Record<string, string> {
   const f = starFacts(s);
   f[EXO_FACTS.planets] = String(h.planets.length);
   if (h.met !== undefined) f[EXO_FACTS.met] = fixed(h.met, 2);
-  if (h.age !== undefined) f['Yaş'] = _('{n} milyar yıl', { n: fixed(h.age, 1) });
+  if (h.age !== undefined) f['Age'] = _('{n} billion years', { n: fixed(h.age, 1) });
   if (h.snum && h.snum > 1) f[EXO_FACTS.stars] = String(h.snum);
-  f['Kaynak'] = SOURCE;
+  f['Source'] = SOURCE;
   return f;
 }

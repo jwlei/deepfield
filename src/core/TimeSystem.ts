@@ -7,36 +7,36 @@ const RATE_STEPS = [
   DAY_S * 365.25 * 1000,
 ];
 
-type RateUnit = 'dk' | 'sa' | 'gün' | 'hafta' | 'ay' | 'yıl';
+type RateUnit = 'min' | 'h' | 'd' | 'wk' | 'mo' | 'yr';
 
 /** "{n} <unit>/s" (singular forms are their own keys: "1 day/s", not "1 days/s") */
 function perSecond(n: string | number, unit: RateUnit): string {
   if (n === 1 || n === '1') {
     switch (unit) {
-      case 'dk': return _('1 dk/s'); case 'sa': return _('1 sa/s'); case 'gün': return _('1 gün/s');
-      case 'hafta': return _('1 hafta/s'); case 'ay': return _('1 ay/s'); case 'yıl': return _('1 yıl/s');
+      case 'min': return _('1 min/s'); case 'h': return _('1 h/s'); case 'd': return _('1 day/s');
+      case 'wk': return _('1 week/s'); case 'mo': return _('1 month/s'); case 'yr': return _('1 year/s');
     }
   }
   switch (unit) {
-    case 'dk': return _('{n} dk/s', { n }); case 'sa': return _('{n} sa/s', { n }); case 'gün': return _('{n} gün/s', { n });
-    case 'hafta': return _('{n} hafta/s', { n }); case 'ay': return _('{n} ay/s', { n }); case 'yıl': return _('{n} yıl/s', { n });
+    case 'min': return _('{n} min/s', { n }); case 'h': return _('{n} h/s', { n }); case 'd': return _('{n} days/s', { n });
+    case 'wk': return _('{n} weeks/s', { n }); case 'mo': return _('{n} months/s', { n }); case 'yr': return _('{n} years/s', { n });
   }
 }
 
 /** The selectable presets (s/s) of the time menu: a Universe Sandbox-like ladder from real time to a millennium per second */
 export const RATE_PRESETS: ReadonlyArray<{ rate: number; label: () => string }> = [
-  { rate: 1, label: () => _('Gerçek zaman') },
-  { rate: 60, label: () => perSecond(1, 'dk') },
-  { rate: 600, label: () => perSecond(10, 'dk') },
-  { rate: 3600, label: () => perSecond(1, 'sa') },
-  { rate: 3600 * 6, label: () => perSecond(6, 'sa') },
-  { rate: DAY_S, label: () => perSecond(1, 'gün') },
-  { rate: DAY_S * 7, label: () => perSecond(1, 'hafta') },
-  { rate: DAY_S * 30, label: () => perSecond(1, 'ay') },
-  { rate: DAY_S * 365.25, label: () => perSecond(1, 'yıl') },
-  { rate: DAY_S * 365.25 * 10, label: () => perSecond(10, 'yıl') },
-  { rate: DAY_S * 365.25 * 100, label: () => perSecond(100, 'yıl') },
-  { rate: DAY_S * 365.25 * 1000, label: () => perSecond(1000, 'yıl') },
+  { rate: 1, label: () => _('Real time') },
+  { rate: 60, label: () => perSecond(1, 'min') },
+  { rate: 600, label: () => perSecond(10, 'min') },
+  { rate: 3600, label: () => perSecond(1, 'h') },
+  { rate: 3600 * 6, label: () => perSecond(6, 'h') },
+  { rate: DAY_S, label: () => perSecond(1, 'd') },
+  { rate: DAY_S * 7, label: () => perSecond(1, 'wk') },
+  { rate: DAY_S * 30, label: () => perSecond(1, 'mo') },
+  { rate: DAY_S * 365.25, label: () => perSecond(1, 'yr') },
+  { rate: DAY_S * 365.25 * 10, label: () => perSecond(10, 'yr') },
+  { rate: DAY_S * 365.25 * 100, label: () => perSecond(100, 'yr') },
+  { rate: DAY_S * 365.25 * 1000, label: () => perSecond(1000, 'yr') },
 ];
 
 /**
@@ -180,18 +180,18 @@ export class TimeSystem {
   }
 
   rateLabel(): string {
-    if (this.paused) return _('Duraklatıldı');
+    if (this.paused) return _('Paused');
     const r = this.rate;
     const sign = this.direction < 0 ? '−' : '';
     const f = (x: number) => (Number.isInteger(x) ? `${x}` : x.toPrecision(3));
     if (r < 60) return `${sign}${f(r)}× (${f(r)} s/s)`;
-    if (r < 3600) return sign + perSecond(f(r / 60), 'dk');
-    if (r < DAY_S) return sign + perSecond(f(r / 3600), 'sa');
-    if (r < DAY_S * 7) return sign + perSecond(f(r / DAY_S), 'gün');
-    if (r === DAY_S * 7) return sign + perSecond(1, 'hafta');
-    if (r === DAY_S * 30) return sign + perSecond(1, 'ay');
-    if (r < DAY_S * 365.25) return sign + perSecond(f(r / DAY_S), 'gün');
-    return sign + perSecond(f(r / (DAY_S * 365.25)), 'yıl');
+    if (r < 3600) return sign + perSecond(f(r / 60), 'min');
+    if (r < DAY_S) return sign + perSecond(f(r / 3600), 'h');
+    if (r < DAY_S * 7) return sign + perSecond(f(r / DAY_S), 'd');
+    if (r === DAY_S * 7) return sign + perSecond(1, 'wk');
+    if (r === DAY_S * 30) return sign + perSecond(1, 'mo');
+    if (r < DAY_S * 365.25) return sign + perSecond(f(r / DAY_S), 'd');
+    return sign + perSecond(f(r / (DAY_S * 365.25)), 'yr');
   }
 
   static dateToJD(d: Date): number {

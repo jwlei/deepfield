@@ -49,7 +49,7 @@ function slugger(): (s: string, alt: string) => string {
 /** catalogue pulsars, open clusters and H II regions that people actually look up */
 function notable(d: LandmarkDef): boolean {
   if (!d.catalog) return true;
-  if (d.kind === 'pulsar') return /^PSR B/.test(d.name) || 'Bulunduğu yer' in d.facts || 'Yoldaş' in d.facts || d.absMag === 5;
+  if (d.kind === 'pulsar') return /^PSR B/.test(d.name) || 'Location' in d.facts || 'Companion' in d.facts || d.absMag === 5;
   if (d.kind === 'cluster') return !/^MWSC/.test(d.name);
   if (d.kind === 'nebula') return !/^WISE/.test(d.name);
   return true;

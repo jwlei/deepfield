@@ -3,7 +3,7 @@ import type { TourDef, TourStep } from './tours';
 /**
  * Sky & space events ("Events" tab): each one is a single-scene mini tour played by the same
  * TourPlayer as the guided tours, with the simulation clock set to the event. Narration is
- * written in Turkish and translated like every other display string.
+ * written in English and translated like every other display string.
  *
  * Dates and figures were checked on 2026-10-22. Spacecraft geometry comes from NASA/JPL Horizons
  * (see public/ephem and scripts/fetch-horizons.mjs); mission dates are the agencies' published
@@ -73,22 +73,22 @@ export function eventTour(e: SkyEvent): TourDef {
 
 /** Human label of an event kind (source language) */
 export const KIND_LABELS: Record<EventKind, string> = {
-  'orbit-insertion': 'Yörüngeye giriş',
-  flyby: 'Yakın geçiş',
-  conjunction: 'Kavuşum',
-  opposition: 'Karşı konum',
-  elongation: 'Uzanım',
-  'meteor-shower': 'Meteor yağmuru',
-  moon: 'Ay',
-  milestone: 'Kilometre taşı',
-  eclipse: 'Tutulma',
-  solstice: 'Gündönümü',
+  'orbit-insertion': 'Orbit insertion',
+  flyby: 'Flyby',
+  conjunction: 'Conjunction',
+  opposition: 'Opposition',
+  elongation: 'Elongation',
+  'meteor-shower': 'Meteor shower',
+  moon: 'Moon',
+  milestone: 'Milestone',
+  eclipse: 'Eclipse',
+  solstice: 'Solstice',
 };
 
 export const STATUS_LABELS: Record<EventStatus, string> = {
-  scheduled: 'planlandı',
+  scheduled: 'scheduled',
   confirmed: 'kesin',
-  happened: 'gerçekleşti',
+  happened: 'happened',
 };
 
 /** Runtime patch shape of public/events/overrides.json */

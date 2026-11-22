@@ -5,7 +5,7 @@ import { Peculiar, type PeculiarSpec } from './peculiar';
 export type GalaxyType = 'E' | 'S0' | 'S' | 'SB' | 'Irr';
 
 export const GALAXY_TYPE_LABEL: Record<GalaxyType, string> = {
-  E: 'Eliptik', S0: 'Lentiküler', S: 'Sarmal', SB: 'Çubuklu sarmal', Irr: 'Düzensiz',
+  E: 'Elliptical', S0: 'Lenticular', S: 'Spiral', SB: 'Barred spiral', Irr: 'Irregular',
 };
 
 export interface GalaxyParams {

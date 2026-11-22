@@ -267,7 +267,7 @@ export class FarTier implements GalaxySource {
   /* ------------------------------------------------------------------ */
 
   name(i: number): string {
-    const kind = this.spec.label === 'Galaksi kümeleri' ? _('Galaksi kümesi') : _('Süperküme kompleksi');
+    const kind = this.spec.label === 'Galaksi kümeleri' ? _('Galaxy cluster') : _('Supercluster complex');
     return `${kind} YE-${(this.seed[i] % 0xffffff).toString(16).toUpperCase().padStart(6, '0')}`;
   }
 

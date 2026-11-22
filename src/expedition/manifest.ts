@@ -392,7 +392,7 @@ export const NODES: ExpeditionNode[] = [
     sources: [WIKI('Andromeda_Galaxy'), WIKI('Supermassive_black_hole')],
   }),
   N('L04', 'localgroup', 'Triangulum (M33)', 'OBJECT', ['L01'], 'Spiral galaxies', {
-    available: true, galaxy: 'Üçgen',
+    available: true, galaxy: 'Triangulum',
     summary: 'The Local Group\'s third-largest galaxy: a loose, star-forming spiral about 2.7 million light-years away, at the very edge of naked-eye vision.',
     facts: ['Catalogued as Messier 33 in the constellation Triangulum', 'Home to NGC 604, a giant glowing nursery ~1,500 light-years wide', 'Has no detectable supermassive black hole at its centre'],
     sources: [WIKI('Triangulum_Galaxy'), NASA('mission/hubble/science/explore-the-night-sky/hubble-messier-catalog/messier-33/')],
@@ -404,7 +404,7 @@ export const NODES: ExpeditionNode[] = [
     sources: [WIKI('M33_X-7'), 'https://chandra.harvard.edu/photo/2007/m33x7/'],
   }),
   N('L06', 'localgroup', 'Large Magellanic Cloud', 'OBJECT', ['L01'], 'Satellite galaxies', {
-    available: true, galaxy: 'Büyük Macellan',
+    available: true, galaxy: 'Large Magellanic',
     summary: 'The Milky Way\'s biggest satellite galaxy, 160,000 light-years away: a glowing cloud in the southern sky packed with nebulae and young stars.',
     facts: ['Visible to the naked eye from the southern hemisphere', 'Named after Ferdinand Magellan\'s 1519–1522 voyage', 'Trailed by the Magellanic Stream, a long ribbon of gas'],
     sources: [WIKI('Large_Magellanic_Cloud'), NASA('universe/galaxies/large-magellanic-cloud/')],

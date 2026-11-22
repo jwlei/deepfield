@@ -78,7 +78,7 @@ function pulsars() {
     const bname = r.alt_name.startsWith('PSR B') ? r.alt_name.replace(/^PSR\s+/, '') : '';
     const assoc = r.assoc_object.split(',').map((s) => s.trim()).filter(Boolean);
     const exgal = assoc.find((a) => a.startsWith('EXGAL:'))?.slice(6).replace(/\[.*$/, '') ?? '';
-    const galaxy = exgal === 'LMC' ? 'Büyük Macellan' : exgal === 'SMC' ? 'Küçük Macellan' : '';
+    const galaxy = exgal === 'LMC' ? 'Large Magellanic' : exgal === 'SMC' ? 'Small Magellanic' : '';
     if (exgal && !galaxy) { skipped++; continue; } // other galaxies: not resolved here
     // host / associated object, readable form: "GC:47Tuc" → [GC, 47Tuc]
     const host = assoc.map((a) => /^(GC|SNR|PWN):([^[]+)/.exec(a)).find(Boolean);

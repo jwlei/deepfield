@@ -13,10 +13,10 @@ function $<T extends HTMLElement>(id: string): T {
 
 function fmtRate(r: number): string {
   if (r < 60) return `${Math.round(r)}×`;
-  if (r < 3600) return `${(r / 60).toFixed(r < 600 ? 1 : 0).replace(/\.0$/, '')} ${_('dk/s')}`;
-  if (r < 86400) return `${(r / 3600).toFixed(r < 36000 ? 1 : 0).replace(/\.0$/, '')} ${_('sa/s')}`;
-  if (r < 86400 * 365) return `${(r / 86400).toFixed(r < 864000 ? 1 : 0).replace(/\.0$/, '')} ${_('gün/s')}`;
-  return `${(r / (86400 * 365.25)).toFixed(1)} ${_('yıl/s')}`;
+  if (r < 3600) return `${(r / 60).toFixed(r < 600 ? 1 : 0).replace(/\.0$/, '')} ${_('min/s')}`;
+  if (r < 86400) return `${(r / 3600).toFixed(r < 36000 ? 1 : 0).replace(/\.0$/, '')} ${_('h/s')}`;
+  if (r < 86400 * 365) return `${(r / 86400).toFixed(r < 864000 ? 1 : 0).replace(/\.0$/, '')} ${_('days/s')}`;
+  return `${(r / (86400 * 365.25)).toFixed(1)} ${_('yr/s')}`;
 }
 
 export interface EmbedHost {
@@ -59,7 +59,7 @@ export class EmbedUI {
     $('embed-head-title').textContent = e ? _(e.title) : 'Deep Field';
     $('embed-head-date').textContent = e ? fmtEventDate(e) : '';
     this.open.href = openFromEmbedUrl(e);
-    this.open.title = _('Tam uygulamada aç (yeni sekme)');
+    this.open.title = _('Open in the full app (new tab)');
     $<HTMLButtonElement>('embed-replay').hidden = !e;
   }
 
@@ -71,7 +71,7 @@ export class EmbedUI {
       this.lastPaused = paused;
       this.play.textContent = paused ? '▶\uFE0E' : '❚❚';
     }
-    const r = t.paused ? _('duraklatıldı') : `${t.effectiveRate < 0 ? '−' : ''}${fmtRate(t.rate)}`;
+    const r = t.paused ? _('paused') : `${t.effectiveRate < 0 ? '−' : ''}${fmtRate(t.rate)}`;
     if (r !== this.lastRate) { this.lastRate = r; this.rate.textContent = r; }
   }
 }
