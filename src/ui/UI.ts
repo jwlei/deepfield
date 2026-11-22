@@ -452,6 +452,8 @@ export class UI {
       else b.removeAttribute('aria-current');
     });
     this.uiEl.classList.toggle('sheet-open', cur !== 'explore');
+    // menus you read (not Time, where the scene is what you watch) blur and dim the scene behind them
+    document.body.classList.toggle('scene-dim', this.phoneMq.matches && (cur === 'search' || cur === 'missions' || cur === 'more'));
   }
 
   /** the search field lives in the top bar on wide screens and in the search sheet on phones */

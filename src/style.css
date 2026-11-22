@@ -835,6 +835,12 @@ a { color: var(--accent); }
 .info-names { display: flex; min-width: 0; }
 #search-results li[hidden] { display: none; }
 
+/* Phones, with a menu open (search, missions, more, settings): the scene itself is blurred and
+   dimmed behind it. This does not rely on backdrop-filter, which some browsers (Firefox for
+   Android) do not apply over the WebGL canvas, so the labels drawn on it would show through. */
+canvas#scene, canvas#overlay { transition: filter 0.25s ease; }
+body.scene-dim canvas#scene, body.scene-dim canvas#overlay { filter: blur(14px) brightness(0.5); }
+
 /* Auto-hide (Settings › Display): the controls fade while the scene is dragged or left alone */
 #ui > #topbar, #ui > #bottombar, #ui > #tabbar, #ui > #system-strip, #ui > #surface-bar { transition: opacity 0.35s ease; }
 #ui.chrome-off > :not(#toast):not(.modal):not(#welcome) { opacity: 0; }
@@ -842,7 +848,7 @@ a { color: var(--accent); }
 #ui.chrome-off > :not(#toast):not(.modal):not(#welcome) * { pointer-events: none !important; }
 
 @media (max-width: 700px) {
-  #ui { --tabbar-h: calc(60px + env(safe-area-inset-bottom)); --glass: rgba(13, 17, 23, 0.74); --hair: rgba(240, 246, 252, 0.08); }
+  #ui { --tabbar-h: calc(60px + env(safe-area-inset-bottom)); --panel-bg: rgba(13, 17, 23, 0.92); --glass: var(--panel-bg); --hair: rgba(240, 246, 252, 0.08); }
 
   /* top: the name, and where you are */
   #topbar { padding: calc(10px + env(safe-area-inset-top)) 16px 8px; flex-wrap: nowrap; pointer-events: none; }
@@ -857,7 +863,7 @@ a { color: var(--accent); }
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; height: var(--tabbar-h);
     padding: 6px max(6px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-left));
-    background: rgba(13, 17, 23, 0.66); border-top: 1px solid var(--hair);
+    background: var(--panel-bg); border-top: 1px solid var(--hair); transition: border-color 0.25s ease;
     backdrop-filter: blur(32px) saturate(1.1); -webkit-backdrop-filter: blur(32px) saturate(1.1);
   }
   .tabbar button {
@@ -865,6 +871,8 @@ a { color: var(--accent); }
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     color: var(--text-2); font-size: 11px;
   }
+  /* with a sheet open the bar and the sheet are one surface: no line between them */
+  #ui.sheet-open .tabbar { border-top-color: transparent; }
   .tabbar button:hover { background: none; color: var(--text); }
   .tabbar button[aria-current] { color: var(--accent); font-weight: 700; }
   .tabbar svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -876,7 +884,7 @@ a { color: var(--accent); }
     overflow-y: auto; overscroll-behavior: contain;
     padding: 18px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
     border: 0; border-top: 1px solid var(--hair); border-radius: 22px 22px 0 0;
-    background: rgba(13, 17, 23, 0.86); backdrop-filter: blur(48px) saturate(1.1); -webkit-backdrop-filter: blur(48px) saturate(1.1);
+    background: var(--panel-bg); backdrop-filter: blur(48px) saturate(1.1); -webkit-backdrop-filter: blur(48px) saturate(1.1);
     animation: sheet-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
   .sheet { display: flex; flex-direction: column; gap: 16px; }
@@ -891,7 +899,7 @@ a { color: var(--accent); }
   /* Search: the whole screen; filters, then recent searches and places as cards */
   .sheet-full {
     top: 0; bottom: max(var(--tabbar-h), var(--kb, 0px)); max-height: none; overflow: hidden; border-radius: 0; border-top: 0;
-    padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; gap: 12px; background: rgba(13, 17, 23, 0.94);
+    padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: 12px; gap: 12px; background: var(--panel-bg);
   }
   .search-head { display: flex; align-items: center; gap: 12px; flex: none; }
   .search-slot { flex: 1; min-width: 0; }
@@ -936,7 +944,7 @@ a { color: var(--accent); }
     position: absolute; left: max(10px, env(safe-area-inset-left)); bottom: calc(var(--tabbar-h) + 8px); z-index: 7;
     width: min(300px, calc(100vw - 20px)); padding: 6px; border: 1px solid var(--hair); border-radius: 18px;
     display: flex; flex-direction: column;
-    background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(40px) saturate(1.1); -webkit-backdrop-filter: blur(40px) saturate(1.1);
+    background: var(--panel-bg); backdrop-filter: blur(40px) saturate(1.1); -webkit-backdrop-filter: blur(40px) saturate(1.1);
     animation: sheet-up 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
   .explore-menu[hidden] { display: none; }
@@ -1037,7 +1045,7 @@ a { color: var(--accent); }
   .m-result { margin-top: 0; }
   .m-wiz-nav {
     display: flex; gap: 10px; position: sticky; bottom: -16px; z-index: 1;
-    margin: 18px -16px -16px; padding: 12px 16px 16px; background: rgba(13, 17, 23, 0.94); border-top: 1px solid var(--hair);
+    margin: 18px -16px -16px; padding: 12px 16px 16px; background: #0d1117; border-top: 1px solid var(--hair);
   }
   .m-wiz-nav button { flex: 1; min-height: 52px; border-radius: 14px; font-size: 16px; }
   .m-wiz-nav #m-next { flex: 2; }
@@ -1050,7 +1058,7 @@ a { color: var(--accent); }
   }
   #info.dock-card {
     max-height: 50dvh; border-radius: 18px; border-color: var(--hair);
-    background: rgba(13, 17, 23, 0.9); backdrop-filter: blur(48px) saturate(1.1); -webkit-backdrop-filter: blur(48px) saturate(1.1);
+    background: var(--panel-bg); backdrop-filter: blur(48px) saturate(1.1); -webkit-backdrop-filter: blur(48px) saturate(1.1);
   }
   .info-pill {
     justify-self: stretch; height: 64px; padding: 0 4px 0 0; gap: 0; border-radius: 20px; border-color: var(--hair);
@@ -1117,7 +1125,7 @@ a { color: var(--accent); }
   #toast {
     top: calc(62px + env(safe-area-inset-top)); z-index: 9; width: max-content; max-width: calc(100vw - 32px);
     padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.4;
-    background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(40px) saturate(1.1); -webkit-backdrop-filter: blur(40px) saturate(1.1);
+    background: var(--panel-bg); backdrop-filter: blur(40px) saturate(1.1); -webkit-backdrop-filter: blur(40px) saturate(1.1);
   }
   .modal { z-index: 7; }
 }
