@@ -76,7 +76,6 @@ export class MissionPanel {
   toggle(force?: boolean): void {
     const show = force ?? this.panel.hidden === true;
     this.panel.hidden = !show;
-    $('btn-mission').classList.toggle('active', show);
     if (show) this.refresh();
   }
 

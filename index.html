@@ -32,76 +32,44 @@
   <body>
     <canvas id="scene"></canvas>
     <canvas id="overlay"></canvas>
-    <!-- letterbox bars while an event scene plays (between the scene and the UI) -->
-    <div id="cine" aria-hidden="true"></div>
-
     <div id="ui">
       <!-- Top bar -->
       <header id="topbar">
         <div class="brand">
-          <img id="brand-logo" class="brand-mark" src="/logo.svg" alt="Deep Field" role="button" tabindex="0" title="About" />
+          <div id="menu" class="dropdown">
+            <button id="btn-menu" class="icon-btn menu-btn" data-i18n-title title="Menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 4h14M1 8h14M1 12h14" /><path d="M10 2.5v3M5 6.5v3M11 10.5v3" /></svg></button>
+            <div id="menu-list" class="dropdown-menu menu-list" role="menu" hidden>
+              <button type="button" class="dropdown-item" role="menuitem" data-menu="settings" data-i18n>Settings</button>
+              <button type="button" class="dropdown-item" role="menuitem" data-menu="mission" data-i18n>Mission planner</button>
+              <button type="button" class="dropdown-item" role="menuitem" data-menu="about" data-i18n>About</button>
+            </div>
+          </div>
           <span class="brand-name">DEEP FIELD</span>
-          <button class="brand-version" data-changelog data-i18n-title title="What's new">v 0.9.4</button>
           <span id="brand-sub" class="brand-sub" data-i18n>Solar System</span>
         </div>
-        <div id="search" class="panel-inline">
-          <input id="search-input" type="search" data-i18n-placeholder placeholder="Search… (Titan, Sirius, Andromeda)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" />
-          <ul id="search-results" hidden></ul>
-        </div>
-        <div class="topbar-right">
+        <div class="search-wrap">
+          <div id="search" class="panel-inline">
+            <input id="search-input" type="search" data-i18n-placeholder placeholder="Try: Saturn · Andromeda · Pleiades" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" />
+            <ul id="search-results" hidden></ul>
+          </div>
           <div id="places" class="dropdown">
-            <button id="btn-places" class="text-btn" data-i18n-title title="Autopilot to the selected destination" aria-haspopup="listbox" aria-expanded="false"><span class="long" data-i18n>Places worth seeing</span><span class="short" data-i18n>Places</span><svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
+            <button id="btn-places" class="icon-btn places-btn" data-i18n-title title="Places worth seeing" aria-label="Places" aria-haspopup="listbox" aria-expanded="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s-4.5-4.6-4.5-8a4.5 4.5 0 0 1 9 0c0 3.4-4.5 8-4.5 8z" /><circle cx="8" cy="6.4" r="1.6" /></svg></button>
             <div id="places-menu" class="dropdown-menu" role="listbox" hidden></div>
           </div>
-          <button id="btn-tours" class="text-btn" data-i18n data-i18n-title title="Narrated guided tours: the camera flies, the narrator explains">Tours</button>
-          <button id="btn-academy" class="text-btn" data-i18n data-i18n-title title="Academy: interactive astrophysics lessons, chapter by chapter">Academy</button>
-          <button id="btn-mission" class="text-btn" data-i18n data-i18n-title title="Mission planner: compute a route with a real or fictional ship, launch it and follow it live (U)">Mission</button>
-          <button id="btn-events" class="text-btn" data-i18n data-i18n-title title="Events: watch upcoming sky and space events in the simulation, share them, embed them on your site">Events</button>
+        </div>
+        <div class="topbar-right">
           <button id="btn-roam" class="text-btn" data-i18n data-i18n-title title="Free roam: look with the mouse, fly with WASD (V)">Free roam</button>
-          <button id="btn-wiki" class="icon-btn" data-i18n-title title="Encyclopedia (opens in a new tab)" aria-label="Encyclopedia"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4C6.6 3 4.3 2.7 1.5 3.2v9.6C4.3 12.3 6.6 12.6 8 13.6c1.4-1 3.7-1.3 6.5-.8V3.2C11.7 2.7 9.4 3 8 4zM8 4v9.6" /></svg></button>
           <button id="btn-help" class="icon-btn" data-i18n-title title="Help (F1)">?</button>
-          <button id="btn-give" class="icon-btn btn-give" data-i18n-title title="Support the project" aria-label="Donate"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2.4 10.2 2.4 6.1A3 3 0 0 1 8 4.6a3 3 0 0 1 5.6 1.5c0 4.1-5.6 7.5-5.6 7.5z" /></svg></button>
-          <button id="btn-settings" class="icon-btn" data-i18n-title title="Settings" aria-label="Settings"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 4h14M1 8h14M1 12h14" /><path d="M10 2.5v3M5 6.5v3M11 10.5v3" /></svg></button>
         </div>
       </header>
 
-      <!-- Left: info panel -->
-      <aside id="info" class="panel" hidden>
-        <div class="info-head">
-          <div>
-            <div id="info-type" class="info-type"></div>
-            <h2 id="info-name"></h2>
-            <div id="info-parent" class="info-parent"></div>
-          </div>
-          <div class="info-head-btns">
-            <button id="info-expand" class="icon-btn small" data-i18n-title title="Show/hide details">⌄</button>
-            <button id="info-close" class="icon-btn small" data-i18n-title title="Close (Esc)">✕</button>
-          </div>
-        </div>
-        <div class="info-actions seg">
-          <button id="act-goto" data-i18n data-i18n-title title="Fly to object (G)">Go</button>
-          <button id="act-center" data-i18n data-i18n-title title="Look at object (C)">Center</button>
-          <button id="act-follow" data-i18n data-i18n-title title="Orbit/follow mode (F)">Follow</button>
-          <button id="act-land" data-i18n data-i18n-title title="Land on the surface (I)" hidden>Land</button>
-          <button id="act-share" data-i18n data-i18n-title title="Copy a link to this view (target, time and camera)">Link</button>
-        </div>
-        <section id="info-scope" class="info-scope" hidden>
-          <button id="info-scope-btn" class="info-scope-btn" type="button"></button>
-          <div id="info-scope-view"></div>
-        </section>
-        <button id="info-euv" class="info-scope-btn info-euv" type="button" data-i18n-title title="Show the star in extreme ultraviolet, as in the SDO satellite's 304 Å channel (X)" hidden></button>
-        <button id="info-core" class="info-scope-btn info-euv" type="button" hidden></button>
-        <dl id="info-body" class="info-grid"></dl>
-        <p id="info-desc" class="info-desc"></p>
-        <a id="info-wiki" class="info-wiki" target="_blank" rel="noopener" data-i18n hidden>Read in the encyclopedia →</a>
-      </aside>
 
       <!-- Right edge: the stars and planets of the current system as small icons -->
       <nav id="system-strip" class="system-strip" hidden></nav>
 
       <!-- Right: settings -->
       <aside id="settings" class="panel" hidden>
-        <div class="panel-title" data-i18n>Settings</div>
+        <div class="panel-title"><span data-i18n>Settings</span> <button id="settings-close" class="icon-btn small" data-i18n-title title="Close">✕</button></div>
         <div id="settings-body"></div>
       </aside>
 
@@ -146,82 +114,6 @@
         <div id="m-active" class="m-active"></div>
       </aside>
 
-      <!-- Right: guided tours -->
-      <aside id="tours" class="panel" hidden>
-        <div class="panel-title"><span data-i18n>Guided Tours</span> <button id="tours-close" class="icon-btn small" data-i18n-title title="Close">✕</button></div>
-        <p class="tours-intro" data-i18n>Pick a topic: the camera flies to each object while the narrator explains it. You can drag to look around; the tour carries on.</p>
-        <div id="tours-list" class="tours-list"></div>
-      </aside>
-
-      <!-- Right: events (upcoming / recent sky & space events) -->
-      <aside id="events" class="panel" hidden>
-        <div class="panel-title"><span data-i18n>Events</span> <button id="events-close" class="icon-btn small" data-i18n-title title="Close">✕</button></div>
-        <p class="tours-intro" data-i18n>Upcoming sky and space events as short scenes in the simulation. Spacecraft trajectories come from NASA/JPL Horizons; this is a simulation, not live telemetry. Dates may change with agency plans.</p>
-        <div id="events-list" class="events-list"></div>
-      </aside>
-
-      <!-- Main screen: next event chip (while the panel is closed) -->
-      <button id="next-event" class="next-event" hidden>
-        <span id="next-event-text"></span>
-        <span id="next-event-close" class="next-event-close" role="button" data-i18n-title title="Hide" aria-label="Hide">✕</span>
-      </button>
-
-      <!-- Embed code dialog -->
-      <div id="embed-dialog" class="modal" hidden>
-        <div class="modal-card embed-card">
-          <div class="panel-title"><span data-i18n>Embed on your site</span> <button id="embed-close" class="icon-btn small" data-i18n-title title="Close">✕</button></div>
-          <div id="embed-title" class="embed-title"></div>
-          <p class="embed-help" data-i18n>Paste the code below into your page. The embedded view is 16:9, does not block page scrolling (click once before zooming) and starts with narration muted.</p>
-          <textarea id="embed-code" rows="4" readonly spellcheck="false"></textarea>
-          <div class="embed-actions">
-            <button id="embed-copy" class="text-btn primary" data-i18n>Copy code</button>
-          </div>
-          <div class="embed-preview-wrap"><iframe id="embed-preview" title="Preview" allow="fullscreen" allowfullscreen></iframe></div>
-          <p class="embed-note" data-i18n>Embedded content links back to Deep Field; NASA/ESA data and imagery are subject to their own attribution rules.</p>
-        </div>
-      </div>
-
-      <!-- Right: academy (lessons) -->
-      <aside id="academy" class="panel" hidden lang="en"></aside>
-
-      <!-- Cinematic tour stage: vignette, chapter title, facts strip, subtitle, HUD -->
-      <div id="tour-bar" class="tour-bar" hidden>
-        <div class="tour-vignette"></div>
-        <div id="tour-chapter" class="tour-chapter" aria-live="polite">
-          <div id="tour-chapter-kicker" class="tour-chapter-kicker"></div>
-          <div id="tour-chapter-title" class="tour-chapter-title"></div>
-          <div class="tour-chapter-rule"></div>
-          <div id="tour-chapter-sub" class="tour-chapter-sub"></div>
-        </div>
-        <dl id="tour-facts" class="tour-facts"></dl>
-        <div id="tour-subtitle" class="tour-subtitle"></div>
-        <div class="tour-hud">
-          <div class="tour-head">
-            <span id="tour-title" class="tour-title"></span>
-            <span id="tour-step" class="tour-step"></span>
-            <span id="tour-dots" class="tour-dots"></span>
-          </div>
-          <div class="tour-controls">
-            <button id="tour-prev" data-i18n-title title="Previous stop">◀&#xFE0E;</button>
-            <button id="tour-pause" data-i18n-title title="Pause / resume">❚❚</button>
-            <button id="tour-next" data-i18n-title title="Next stop">▶&#xFE0E;</button>
-            <button id="tour-stop" class="tour-stop" data-i18n data-i18n-title title="End the tour (Esc)">End</button>
-          </div>
-        </div>
-        <div class="tour-progress"><div id="tour-progress-fill"></div></div>
-      </div>
-
-      <!-- Top-right: tour inset (photograph / trivia card) -->
-      <figure id="tour-card" class="tour-card" aria-live="polite">
-        <img id="tour-card-img" alt="" hidden />
-        <figcaption>
-          <div id="tour-card-title" class="tour-card-title"></div>
-          <div id="tour-card-big" class="tour-card-big"></div>
-          <div id="tour-card-text" class="tour-card-text"></div>
-          <div id="tour-card-source" class="tour-card-source"></div>
-        </figcaption>
-      </figure>
-
       <!-- Bottom: time & nav -->
       <div id="surface-bar" hidden>
         <span id="surface-where" class="surface-where">—</span>
@@ -232,54 +124,75 @@
         <button id="sf-takeoff" data-i18n data-i18n-title title="Back up to orbit (I)">Take off</button>
       </div>
       <footer id="bottombar">
-        <div class="time-block">
-          <div id="time-date" class="time-date">—</div>
-          <div class="time-controls">
-            <span class="seg">
-              <button id="t-rev" data-i18n-title title="Faster backwards (J)">◀&#xFE0E;◀&#xFE0E;</button>
-              <button id="t-slow" data-i18n-title title="Slower">−</button>
-              <button id="t-pause" data-i18n-title title="Pause (K)">❚❚</button>
-              <button id="t-fast" data-i18n-title title="Faster">+</button>
-              <button id="t-fwd" data-i18n-title title="Faster forwards (L)">▶&#xFE0E;▶&#xFE0E;</button>
-            </span>
-            <button id="t-now" data-i18n data-i18n-title title="Back to real time (\\)">Now</button>
-            <div id="time-presets" class="dropdown">
-              <button id="time-rate" class="time-rate" data-i18n-title title="Choose the time rate" aria-haspopup="listbox" aria-expanded="false">1×<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
-              <div id="time-menu" class="dropdown-menu up" role="listbox" hidden></div>
+        <!-- the selected object's details: grows up from the pill -->
+        <aside id="info" class="panel dock-card" hidden>
+          <div class="info-head">
+            <div>
+              <div id="info-type" class="info-type"></div>
+              <div id="info-parent" class="info-parent"></div>
+            </div>
+            <button id="info-collapse" class="icon-btn small chev" data-i18n-title title="Hide details" aria-label="Hide details"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
+          </div>
+            <div class="info-actions seg">
+              <button id="act-goto" data-i18n data-i18n-title title="Fly to object (G)">Go</button>
+              <button id="act-center" data-i18n data-i18n-title title="Look at object (C)">Center</button>
+              <button id="act-follow" data-i18n data-i18n-title title="Orbit/follow mode (F)">Follow</button>
+              <button id="act-land" data-i18n data-i18n-title title="Land on the surface (I)" hidden>Land</button>
+              <button id="act-share" data-i18n data-i18n-title title="Copy a link to this view (target, time and camera)">Link</button>
+            </div>
+            <section id="info-scope" class="info-scope" hidden>
+              <button id="info-scope-btn" class="info-scope-btn" type="button"></button>
+              <div id="info-scope-view"></div>
+            </section>
+            <button id="info-euv" class="info-scope-btn info-euv" type="button" data-i18n-title title="Show the star in extreme ultraviolet, as in the SDO satellite's 304 Å channel (X)" hidden></button>
+            <button id="info-core" class="info-scope-btn info-euv" type="button" hidden></button>
+            <dl id="info-body" class="info-grid"></dl>
+            <p id="info-desc" class="info-desc"></p>
+        </aside>
+        <!-- time controls: in the bar on wide screens, a pop-out above "Time control" on phones -->
+        <div id="time-pop" class="time-pop">
+          <button id="time-pop-close" class="icon-btn small chev time-pop-close" data-i18n-title title="Close" aria-label="Close"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
+          <div class="time-block">
+            <div id="time-date" class="time-date">—</div>
+            <div class="time-controls">
+              <span class="seg">
+                <button id="t-rev" data-i18n-title title="Faster backwards (J)">◀&#xFE0E;◀&#xFE0E;</button>
+                <button id="t-slow" data-i18n-title title="Slower">−</button>
+                <button id="t-pause" data-i18n-title title="Pause (K)">❚❚</button>
+                <button id="t-fast" data-i18n-title title="Faster">+</button>
+                <button id="t-fwd" data-i18n-title title="Faster forwards (L)">▶&#xFE0E;▶&#xFE0E;</button>
+              </span>
+              <button id="t-now" data-i18n data-i18n-title title="Back to real time (\\)">Now</button>
+              <div id="time-presets" class="dropdown">
+                <button id="time-rate" class="time-rate" data-i18n-title title="Choose the time rate" aria-haspopup="listbox" aria-expanded="false">1×<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" /></svg></button>
+                <div id="time-menu" class="dropdown-menu up" role="listbox" hidden></div>
+              </div>
             </div>
           </div>
+          <div class="nav-block">
+            <div class="nav-row"><span class="k" data-i18n>Mode</span><span id="nav-mode" data-i18n>Free</span></div>
+            <div class="nav-row"><span class="k" data-i18n>Reference</span><span id="nav-ref">—</span></div>
+            <div class="nav-row"><span class="k" data-i18n>Speed</span><span id="nav-speed">—</span></div>
+            <div class="nav-row"><span class="k" data-i18n>Altitude</span><span id="nav-alt">—</span></div>
+            <div class="nav-row" title="Your discoveries · next: the nearest undiscovered object" data-i18n-title><span class="k" data-i18n>Discovery</span><span id="nav-disc">0</span></div>
+            <div class="nav-row" id="nav-place-row" hidden><span class="k" data-i18n>Position</span><span id="nav-place">—</span></div>
+            <div class="nav-row" id="nav-clock-row" hidden><span class="k" data-i18n>Local solar time</span><span id="nav-clock">—</span></div>
+            <div class="nav-row"><span class="k">FPS</span><span id="nav-fps">—</span></div>
+          </div>
         </div>
-        <div class="nav-block">
-          <div class="nav-row"><span class="k" data-i18n>Mode</span><span id="nav-mode" data-i18n>Free</span></div>
-          <div class="nav-row"><span class="k" data-i18n>Reference</span><span id="nav-ref">—</span></div>
-          <div class="nav-row"><span class="k" data-i18n>Speed</span><span id="nav-speed">—</span></div>
-          <div class="nav-row"><span class="k" data-i18n>Altitude</span><span id="nav-alt">—</span></div>
-          <div class="nav-row" title="Your discoveries · next: the nearest undiscovered object" data-i18n-title><span class="k" data-i18n>Discovery</span><span id="nav-disc">0</span></div>
-          <div class="nav-row" id="nav-place-row" hidden><span class="k" data-i18n>Position</span><span id="nav-place">—</span></div>
-          <div class="nav-row" id="nav-clock-row" hidden><span class="k" data-i18n>Local solar time</span><span id="nav-clock">—</span></div>
-          <div class="nav-row"><span class="k">FPS</span><span id="nav-fps">—</span></div>
+        <!-- one line: the selected object's name, and the time-control button on phones -->
+        <div id="info-pill" class="info-pill" hidden>
+          <button id="info-toggle" class="info-toggle" aria-expanded="false" data-i18n-title title="Show details">
+            <span id="info-name" class="info-name"></span>
+            <svg class="chev-up" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 6.5 5 3.5 8 6.5" /></svg>
+          </button>
+          <button id="info-close" class="icon-btn small" data-i18n-title title="Close (Esc)" aria-label="Close">✕</button>
         </div>
+        <button id="btn-time" class="btn-time" aria-expanded="false" aria-controls="time-pop"><span data-i18n>Time control</span><svg class="chev-up" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 6.5 5 3.5 8 6.5" /></svg></button>
       </footer>
       <div id="imagery-credit" hidden></div>
       <div id="corner-links">
-        <button id="btn-about" class="corner-link" data-i18n data-i18n-title title="About, author and feedback">About</button>
         <a id="copyright" href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">Source (AGPL-3.0) · based on Your Eyes In Space by BigBrains</a>
-      </div>
-
-      <!-- Embed (iframe) chrome: shown only with ?embed=1 -->
-      <div id="embed-ui" hidden>
-        <div id="embed-head">
-          <span id="embed-head-title"></span>
-          <span id="embed-head-date"></span>
-        </div>
-        <div id="embed-controls">
-          <button id="embed-play" data-i18n-title title="Pause / resume">❚❚</button>
-          <button id="embed-slower" data-i18n-title title="Slower">−</button>
-          <span id="embed-rate" class="time-rate">1×</span>
-          <button id="embed-faster" data-i18n-title title="Faster">+</button>
-          <button id="embed-replay" data-i18n-title title="Replay the scene">↻</button>
-        </div>
-        <a id="embed-open" target="_blank" rel="noopener"><span data-i18n>Open in Deep Field</span> ↗</a>
       </div>
 
       <!-- About card -->
@@ -289,7 +202,7 @@
           <div class="about-head">
             <img class="about-mark" src="/logo.svg" alt="Deep Field" />
             <div>
-              <div class="about-name">DEEP FIELD <button class="brand-version" data-changelog data-i18n-title title="What's new">v 0.9.4</button></div>
+              <div class="about-name">DEEP FIELD</div>
               <div class="about-tag">An open-source universe explorer: the Solar System to the edge of the observable universe, on real data, in the browser.</div>
               <div id="about-stats" class="about-stats" hidden></div>
             </div>
@@ -302,40 +215,10 @@
             <div><a href="https://www.jleiros.com" target="_blank" rel="noopener noreferrer">Joachim Leiros</a> · <a href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">source</a> · <a href="https://github.com/jwlei/deepfield/issues" target="_blank" rel="noopener noreferrer">issues</a></div>
           </div>
           <div class="about-actions">
-            <a id="about-wiki" class="text-btn" href="#" hidden>Encyclopedia</a>
             <a class="text-btn" href="https://github.com/jwlei/deepfield" target="_blank" rel="noopener noreferrer">GitHub</a>
             <button id="about-help" class="text-btn" data-i18n>Controls and sources</button>
           </div>
           <p class="about-foot">Code © 2026 BigBrains, modified by Joachim Leiros, under the GNU AGPL-3.0. "Your Eyes In Space" and its logo are trademarks of BigBrains.</p>
-        </div>
-      </div>
-
-      <!-- Release notes (behind the version badge) -->
-      <div id="changelog" class="modal" hidden>
-        <div class="modal-card changelog-card">
-          <div class="panel-title"><span data-i18n>What's new</span> <button id="changelog-close" class="icon-btn small" data-i18n-title title="Close">✕</button></div>
-          <div id="changelog-body" class="changelog-body"></div>
-          <p class="about-foot"><a href="https://github.com/berkcomba/youreyesinspace/commits/main" target="_blank" rel="noopener noreferrer" data-i18n>Full history on GitHub</a></p>
-        </div>
-      </div>
-
-      <!-- Support: pick where to give (behind every "Projeyi destekle" link) -->
-      <div id="sponsor" class="modal sponsor-modal" hidden>
-        <div class="modal-card sponsor-card" role="dialog" aria-labelledby="sponsor-title">
-          <div class="panel-title"><span id="sponsor-title" data-i18n>Support the project</span> <button id="sponsor-close" class="icon-btn small" data-i18n-title title="Close">✕</button></div>
-          <p class="sponsor-lead" data-i18n>Your Eyes In Space is free and ad-free, and will stay that way. Even a small contribution helps with the server and satellite-imagery costs.</p>
-          <div class="sponsor-options">
-            <a class="sponsor-option" href="https://github.com/sponsors/berkcomba" target="_blank" rel="noopener noreferrer">
-              <svg class="sponsor-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
-              <span class="sponsor-name">GitHub Sponsors</span>
-              <span class="sponsor-hint" data-i18n>If you have a GitHub account</span>
-            </a>
-            <a class="sponsor-option" href="https://buymeacoffee.com/berkcomba" target="_blank" rel="noopener noreferrer">
-              <svg class="sponsor-logo sponsor-logo-cup" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 14.5Z" /><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16" /><path d="M3.5 21.5h14" /><path d="M8 5.5c0-1 .8-1.2.8-2.2M11 5.5c0-1 .8-1.2.8-2.2" /></svg>
-              <span class="sponsor-name">Buy Me a Coffee</span>
-              <span class="sponsor-hint" data-i18n>If you don't have a GitHub account</span>
-            </a>
-          </div>
         </div>
       </div>
 

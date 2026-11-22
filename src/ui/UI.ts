@@ -1,16 +1,9 @@
 import type { CelestialBody } from '../core/CelestialBody';
 import { MissionPanel, type MissionPanelHost } from './MissionPanel';
-import { TourPanel } from './TourPanel';
 import { SystemStrip } from './SystemStrip';
-import { EventPanel } from './EventPanel';
-import type { SkyEvent } from '../data/events';
 import type { SmallBodyCatalog } from '../data/SmallBodies';
 import { copyText, viewUrl } from '../app/share';
-import { wikiHome, wikiPage } from '../app/wiki';
-import { LessonPanel } from './LessonPanel';
 import { ScopeCard, scopeTargetFor } from './ScopeCard';
-import type { TourPlayer } from '../core/TourPlayer';
-import type { LessonPlayer } from '../core/LessonPlayer';
 import { phaseLabel } from '../astro/mission';
 import { binaryPartner } from '../astro/binary';
 import { _, fixed, fmtNum, LOCALES, currentLocale, localeTag, setLocale, type Locale } from '../i18n';
@@ -35,7 +28,6 @@ import {
 } from './format';
 import { PLACES } from './places';
 import { exoBodyId } from '../gen/RealSystem';
-import { CHANGELOG, CURRENT_VERSION } from '../data/changelog';
 import { Vector3 } from 'three';
 import { fmtGalactic, fmtRaDec, parseSkyQuery, sceneToGalactic, sceneToRaDec } from './coords';
 
@@ -60,8 +52,6 @@ export interface UIHost extends MissionPanelHost {
   settings: Settings;
   /** size of the frame actually rendered, in pixels (after the resolution scale and the automatic drop) */
   renderSize(): [number, number];
-  tours: TourPlayer;
-  lessons: LessonPlayer;
   starPoints: StarPoints;
   galaxySprites: GalaxySprites;
   landmarkSprites: LandmarkSprites;
@@ -117,8 +107,6 @@ export interface UIHost extends MissionPanelHost {
   goToSkyPoint(positionPc: Vector3, label: string): void;
   /** free roam: pointer-locked mouse look + WASD flight */
   toggleFreeRoam(): void;
-  /** play an event scene (Events tab) */
-  playEvent(e: SkyEvent): void;
   /** the Solar System catalogue has this body */
   hasBody(id: string): boolean;
   /** camera direction from the selected body (scene axes, unit) and distance in radii, for share links */
@@ -193,7 +181,7 @@ const SETTING_DEFS: SettingDef[] = [
   { key: 'proceduralNames', label: 'Procedural star names (YE …)', kind: 'bool' },
   { key: 'highlightProcedural', label: 'Tint procedural objects green', kind: 'bool' },
   { key: 'atmospheres', label: 'Atmospheres', kind: 'bool', group: 'Render' },
-  { key: 'clouds', label: 'Bulutlar', kind: 'bool' },
+  { key: 'clouds', label: 'Clouds', kind: 'bool' },
   { key: 'rings', label: 'Rings', kind: 'bool' },
   { key: 'ringParticles', label: 'Ring particles', kind: 'bool' },
   { key: 'shadows', label: 'Eclipse / ring shadows', kind: 'bool' },
@@ -213,6 +201,9 @@ const SETTING_DEFS: SettingDef[] = [
   { key: 'invertY', label: 'Invert Y axis', kind: 'bool' },
 ];
 
+/** setting groups shown under the "Advanced" fold */
+const ADVANCED_GROUPS = new Set(['Render', 'Camera']);
+
 /** Info-grid rows → HTML; labels and plain-text values are run through the dictionary */
 function rowsHtml(rows: Array<[string, string] | 'sep'>): string {
   return rows
@@ -229,13 +220,24 @@ function fmtRateMult(r: number): string {
 }
 
 export class UI {
+  /** the selected object's details card (grows up from the pill) */
   private readonly info = $('info');
+  /** one line in the bottom dock: the selected object's name and an expand chevron */
+  private readonly infoPill = $('info-pill');
+  private readonly infoToggle = $<HTMLButtonElement>('info-toggle');
+  private readonly bottombar = $('bottombar');
+  private readonly timeBtn = $<HTMLButtonElement>('btn-time');
+  private readonly menuBtn = $<HTMLButtonElement>('btn-menu');
+  private readonly menuList = $('menu-list');
+  /** something is selected (the pill shows) */
+  private infoShown = false;
+  /** the details card is unfolded */
+  private infoOpen = false;
   private readonly infoName = $('info-name');
   private readonly infoType = $('info-type');
   private readonly infoParent = $('info-parent');
   private readonly infoBody = $('info-body');
   private readonly infoDesc = $('info-desc');
-  private readonly infoWiki = $<HTMLAnchorElement>('info-wiki');
   private readonly scope = new ScopeCard($('info-scope'), $<HTMLButtonElement>('info-scope-btn'), $('info-scope-view'));
   private readonly settingsPanel = $('settings');
   private readonly help = $('help');
@@ -254,9 +256,6 @@ export class UI {
   private readonly placesBtn = $<HTMLButtonElement>('btn-places');
   private readonly placesMenu = $('places-menu');
   readonly missionPanel: MissionPanel;
-  readonly tourPanel: TourPanel;
-  readonly eventPanel: EventPanel;
-  readonly lessonPanel: LessonPanel;
   private readonly systemStrip: SystemStrip;
   private lastInfoUpdate = 0;
   private toastTimer = 0;
@@ -274,48 +273,72 @@ export class UI {
     this.buildSettings();
     this.buildPlaces();
     this.roamBtn.addEventListener('click', () => host.toggleFreeRoam());
-    $('btn-wiki').addEventListener('click', () => window.open(wikiHome(), '_blank', 'noopener'));
-    $('about-wiki').addEventListener('click', (e) => { e.preventDefault(); window.open(wikiHome(), '_blank', 'noopener'); });
     $('btn-help').addEventListener('click', () => this.toggleHelp());
     $('help-close').addEventListener('click', () => this.toggleHelp(false));
     this.help.addEventListener('click', (e) => { if (e.target === this.help) this.toggleHelp(false); });
-    $('btn-about').addEventListener('click', () => this.toggleAbout());
-    const logo = $('brand-logo');
-    logo.addEventListener('click', () => this.toggleAbout());
-    logo.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.toggleAbout(); } });
+    this.bindMenu();
     $('about-close').addEventListener('click', () => this.toggleAbout(false));
     $('about-help').addEventListener('click', () => { this.toggleAbout(false); this.toggleHelp(true); });
     this.about.addEventListener('click', (e) => { if (e.target === this.about) this.toggleAbout(false); });
-    // the version badge (top bar and About card) opens the release notes
-    document.querySelectorAll<HTMLElement>('[data-changelog]').forEach((el) => {
-      el.textContent = `v ${CURRENT_VERSION}`;
-      el.addEventListener('click', (e) => { e.stopPropagation(); this.toggleChangelog(true); });
-    });
-    $('changelog-close').addEventListener('click', () => this.toggleChangelog(false));
-    this.changelog.addEventListener('click', (e) => { if (e.target === this.changelog) this.toggleChangelog(false); });
-    // every "support the project" link opens the chooser (GitHub Sponsors / Buy Me a Coffee); the
-    // href stays as the no-script fallback
-    document.querySelectorAll<HTMLElement>('[data-sponsor]').forEach((el) => {
-      el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); this.toggleSponsor(true); });
-    });
-    $('sponsor-close').addEventListener('click', () => this.toggleSponsor(false));
-    this.sponsor.addEventListener('click', (e) => { if (e.target === this.sponsor) this.toggleSponsor(false); });
-    this.sponsor.querySelectorAll<HTMLAnchorElement>('.sponsor-option').forEach((a) => a.addEventListener('click', () => this.toggleSponsor(false)));
-    $('btn-settings').addEventListener('click', () => this.toggleSettings());
+    $('settings-close').addEventListener('click', () => this.toggleSettings(false));
     this.missionPanel = new MissionPanel(host);
-    $('btn-mission').addEventListener('click', () => this.toggleMission());
-    this.tourPanel = new TourPanel(host.tours, (show) => { if (show) { this.toggleSettings(false); this.missionPanel.toggle(false); this.lessonPanel.toggle(false); this.eventPanel.toggle(false); } });
-    $('btn-tours').addEventListener('click', () => this.toggleTours());
     this.systemStrip = new SystemStrip(host);
-    this.eventPanel = new EventPanel(
-      { playEvent: (e) => host.playEvent(e), showToast: (m, ms) => this.showToast(m, ms), hasBody: (id) => host.hasBody(id) },
-      (show) => { if (show) { this.toggleSettings(false); this.missionPanel.toggle(false); this.tourPanel.toggle(false); this.lessonPanel.toggle(false); } },
-    );
-    this.lessonPanel = new LessonPanel(host.lessons, (show) => { if (show) { this.toggleSettings(false); this.missionPanel.toggle(false); this.tourPanel.toggle(false); this.eventPanel.toggle(false); } });
-    // phones: the info sheet starts folded (name + actions) so the view stays visible
-    if (window.matchMedia('(max-width: 700px)').matches) this.info.classList.add('collapsed');
-    $('info-expand').addEventListener('click', () => this.info.classList.toggle('collapsed'));
+    // the bottom dock: the info pill unfolds its card upward; on phones "Time control" pops the
+    // time controls out above the line (either or both can be open; the time controls stay lowest)
+    this.infoToggle.addEventListener('click', () => this.setInfoOpen(!this.infoOpen));
+    $('info-collapse').addEventListener('click', () => this.setInfoOpen(false));
     $('info-close').addEventListener('click', () => { host.select(null); host.selectStar(null); host.selectGalaxy(null); host.selectLandmark(null); });
+    this.timeBtn.addEventListener('click', () => this.setTimeOpen(!this.bottombar.classList.contains('time-open')));
+    $('time-pop-close').addEventListener('click', () => this.setTimeOpen(false));
+  }
+
+  /* ---------------- Menu (top left) and the bottom dock ---------------- */
+  private bindMenu(): void {
+    const btn = this.menuBtn, list = this.menuList;
+    btn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleMenu(); });
+    list.querySelectorAll<HTMLButtonElement>('[data-menu]').forEach((item) => item.addEventListener('click', () => {
+      this.toggleMenu(false);
+      const what = item.dataset.menu;
+      if (what === 'settings') this.toggleSettings();
+      else if (what === 'mission') this.toggleMission();
+      else if (what === 'about') this.toggleAbout();
+    }));
+    document.addEventListener('pointerdown', (e) => {
+      if (!list.hidden && !list.contains(e.target as Node) && !btn.contains(e.target as Node)) this.toggleMenu(false);
+    });
+  }
+
+  toggleMenu(force?: boolean): void {
+    const show = force ?? this.menuList.hidden === true;
+    if (show) this.togglePlaces(false);
+    this.menuList.hidden = !show;
+    this.menuBtn.classList.toggle('active', show);
+    this.menuBtn.setAttribute('aria-expanded', String(show));
+  }
+
+  /** the right-hand panels the places menu and the search field make way for */
+  private closeSidePanels(): void {
+    this.toggleSettings(false);
+    this.toggleMission(false);
+  }
+
+  private setInfoOpen(open: boolean): void {
+    this.infoOpen = open;
+    this.infoToggle.setAttribute('aria-expanded', String(open));
+    this.infoPill.classList.toggle('open', open);
+    this.info.hidden = !(this.infoShown && open);
+  }
+
+  private setInfoShown(shown: boolean): void {
+    if (shown === this.infoShown) return;
+    this.infoShown = shown;
+    this.infoPill.hidden = !shown;
+    this.info.hidden = !(shown && this.infoOpen);
+  }
+
+  private setTimeOpen(open: boolean): void {
+    this.bottombar.classList.toggle('time-open', open);
+    this.timeBtn.setAttribute('aria-expanded', String(open));
   }
 
   /* ---------------- Time ---------------- */
@@ -490,7 +513,7 @@ export class UI {
     }
     this.placesBtn.addEventListener('click', (e) => { e.stopPropagation(); this.togglePlaces(); });
     document.addEventListener('pointerdown', (e) => {
-      if (!menu.hidden && !menu.contains(e.target as Node) && e.target !== this.placesBtn) this.togglePlaces(false);
+      if (!menu.hidden && !menu.contains(e.target as Node) && !this.placesBtn.contains(e.target as Node)) this.togglePlaces(false);
     });
   }
 
@@ -525,7 +548,7 @@ export class UI {
 
   togglePlaces(force?: boolean): void {
     const show = force ?? this.placesMenu.hidden === true;
-    if (show) this.fillDiscoveries();
+    if (show) { this.fillDiscoveries(); this.closeSidePanels(); this.toggleMenu(false); }
     this.placesMenu.hidden = !show;
     this.placesBtn.classList.toggle('active', show);
     this.placesBtn.setAttribute('aria-expanded', String(show));
@@ -535,6 +558,8 @@ export class UI {
   private bindSearch(): void {
     const input = this.searchInput;
     const list = this.searchResults;
+    // the search field makes way the same as the places menu
+    input.addEventListener('focus', () => this.closeSidePanels());
     const render = () => {
       const q = input.value.trim().toLowerCase();
       list.innerHTML = '';
@@ -806,12 +831,23 @@ export class UI {
     langSel.addEventListener('change', () => setLocale(langSel.value as Locale));
     langRow.append(langLabel, langSel);
     body.appendChild(langRow);
+    // everyday switches first; the render and camera details fold under "Advanced"
+    let parent: HTMLElement = body;
     for (const def of SETTING_DEFS) {
+      if (def.group && ADVANCED_GROUPS.has(def.group) && parent === body) {
+        const adv = document.createElement('details');
+        adv.className = 'setting-advanced';
+        const sum = document.createElement('summary');
+        sum.textContent = _('Advanced');
+        adv.appendChild(sum);
+        body.appendChild(adv);
+        parent = adv;
+      }
       if (def.group) {
         const g = document.createElement('div');
         g.className = 'setting-group';
         g.textContent = _(def.group);
-        body.appendChild(g);
+        parent.appendChild(g);
       }
       const row = document.createElement('div');
       row.className = 'setting-row';
@@ -860,7 +896,7 @@ export class UI {
         row.appendChild(val);
         this.rangeReadouts.set(def.key, () => { val.textContent = show(s[def.key] as number); });
       }
-      body.appendChild(row);
+      parent.appendChild(row);
     }
   }
 
@@ -896,32 +932,16 @@ export class UI {
     if (text !== null) this.creditEl.textContent = translated ? text : _(text);
   }
 
-  toggleEvents(force?: boolean): void {
-    const show = force ?? this.eventPanel.panel.hidden === true;
-    this.eventPanel.toggle(show);
-  }
-
   toggleMission(force?: boolean): void {
     const show = force ?? this.missionPanel.panel.hidden === true;
-    if (show) { this.toggleSettings(false); this.tourPanel.toggle(false); this.lessonPanel.toggle(false); this.eventPanel.toggle(false); }
+    if (show) this.toggleSettings(false);
     this.missionPanel.toggle(show);
-  }
-
-  toggleTours(force?: boolean): void {
-    const show = force ?? this.tourPanel.panel.hidden === true;
-    this.tourPanel.toggle(show);
-  }
-
-  toggleAcademy(force?: boolean): void {
-    const show = force ?? this.lessonPanel.panel.hidden === true;
-    this.lessonPanel.toggle(show);
   }
 
   toggleSettings(force?: boolean): void {
     const show = force ?? this.settingsPanel.hidden === true;
-    if (show) { this.missionPanel.toggle(false); this.tourPanel.toggle(false); this.lessonPanel.toggle(false); this.eventPanel.toggle(false); }
+    if (show) this.missionPanel.toggle(false);
     this.settingsPanel.hidden = !show;
-    $('btn-settings').classList.toggle('active', show);
   }
 
   toggleHelp(force?: boolean): void {
@@ -933,56 +953,7 @@ export class UI {
   toggleAbout(force?: boolean): void {
     const show = force ?? this.about.hidden === true;
     this.about.hidden = !show;
-    if (show) { this.help.hidden = true; this.changelog.hidden = true; void this.loadAboutStats(); }
-  }
-
-  private readonly sponsor = $('sponsor');
-
-  /** Where to give: GitHub Sponsors or Buy Me a Coffee, side by side */
-  toggleSponsor(force?: boolean): void {
-    const show = force ?? this.sponsor.hidden === true;
-    this.sponsor.hidden = !show;
-  }
-
-  private readonly changelog = $('changelog');
-  private changelogBuilt = false;
-
-  /** Release notes behind the version badge (built on first open, in the UI language) */
-  toggleChangelog(force?: boolean): void {
-    const show = force ?? this.changelog.hidden === true;
-    this.changelog.hidden = !show;
-    if (!show) return;
-    this.about.hidden = true;
-    this.help.hidden = true;
-    if (this.changelogBuilt) return;
-    this.changelogBuilt = true;
-    const body = $('changelog-body');
-    const fmtDate = (iso: string): string => new Date(iso + 'T00:00:00Z').toLocaleDateString(localeTag(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-    for (const r of CHANGELOG) {
-      const sec = document.createElement('section');
-      const head = document.createElement('div');
-      head.className = 'release-head';
-      const v = document.createElement('span');
-      v.className = 'release-version' + (r.version === CURRENT_VERSION ? ' current' : '');
-      v.textContent = `v ${r.version}`;
-      if (r.version === CURRENT_VERSION) v.dataset.current = _('current');
-      const d = document.createElement('span');
-      d.className = 'release-date';
-      d.textContent = fmtDate(r.date);
-      const t = document.createElement('div');
-      t.className = 'release-title';
-      t.textContent = _(r.title);
-      head.append(v, d, t);
-      const ul = document.createElement('ul');
-      ul.className = 'release-items';
-      for (const it of r.items) {
-        const li = document.createElement('li');
-        li.textContent = _(it.text);
-        ul.appendChild(li);
-      }
-      sec.append(head, ul);
-      body.appendChild(sec);
-    }
+    if (show) { this.help.hidden = true; void this.loadAboutStats(); }
   }
 
   private aboutStatsLoaded = false;
@@ -1101,68 +1072,44 @@ export class UI {
     const galaxyOnly = !selected && this.host.selectedStar === null && this.host.selectedGalaxy !== null;
     if (this.coreBtn.hidden !== !galaxyOnly) this.coreBtn.hidden = !galaxyOnly;
     if (selected) {
-      this.info.hidden = false;
+      this.setInfoShown(true);
       if (now - this.lastInfoUpdate > 120) {
         this.lastInfoUpdate = now;
         this.renderInfo(selected, camDistanceToSelected);
       }
     } else if (this.host.selectedStar !== null) {
-      this.info.hidden = false;
+      this.setInfoShown(true);
       if (now - this.lastInfoUpdate > 250) {
         this.lastInfoUpdate = now;
         this.renderStarInfo(this.host.selectedStar);
       }
     } else if (this.host.selectedGalaxy !== null) {
-      this.info.hidden = false;
+      this.setInfoShown(true);
       if (now - this.lastInfoUpdate > 250) {
         this.lastInfoUpdate = now;
         this.renderGalaxyInfo(this.host.selectedGalaxy);
       }
     } else if (this.host.selectedLandmark !== null) {
-      this.info.hidden = false;
+      this.setInfoShown(true);
       if (now - this.lastInfoUpdate > 250) {
         this.lastInfoUpdate = now;
         this.renderLandmarkInfo(this.host.selectedLandmark);
       }
     } else if (this.host.selectedFar !== null) {
-      this.info.hidden = false;
+      this.setInfoShown(true);
       if (now - this.lastInfoUpdate > 250) {
         this.lastInfoUpdate = now;
         this.renderFarInfo(this.host.selectedFar);
       }
     } else {
-      this.info.hidden = true;
-    }
-    if (!this.info.hidden) {
-      const page = wikiPage(this.wikiKey(selected));
-      if (page) { if (this.infoWiki.getAttribute('href') !== page) this.infoWiki.href = page; }
-      if (this.infoWiki.hidden !== !page) this.infoWiki.hidden = !page;
+      this.setInfoShown(false);
     }
     const h = this.host;
-    const scopeKey = this.info.hidden ? null
+    const scopeKey = !this.infoShown ? null
       : `${h.universe.current.catalogIndex}|${selected?.id ?? ''}|${h.selectedStar ?? ''}|${h.selectedGalaxy ?? ''}|${h.selectedLandmark ?? ''}`;
     this.scope.sync(scopeKey, () => scopeTargetFor({
       universe: h.universe, selected, star: h.selectedStar, galaxy: h.selectedGalaxy, landmark: h.selectedLandmark,
     }), h.time.jd, now);
-  }
-
-  /** the `?open=` key of the selection, which the encyclopedia index maps to a page */
-  private wikiKey(selected: CelestialBody | null): string | null {
-    const u = this.host.universe;
-    if (selected) {
-      const sys = u.current;
-      if (sys.catalogIndex === 0) return `target:${selected.id}`;
-      if (selected === sys.star) return `star:c${sys.catalogIndex}`;
-      return `planet:c${sys.catalogIndex}/${selected.name}`;
-    }
-    const star = this.host.selectedStar;
-    if (star !== null) {
-      const bh = u.blackHoles.find((b) => b.systemStarId === star);
-      return bh ? `bh:${bh.entry.id}` : `star:${star}`;
-    }
-    if (this.host.selectedGalaxy !== null) return `galaxy:${u.galaxies.name(this.host.selectedGalaxy)}`;
-    if (this.host.selectedLandmark !== null) return `landmark:${u.landmarks[this.host.selectedLandmark].def.id}`;
-    return null;
   }
 
   private renderGalaxyInfo(i: number): void {

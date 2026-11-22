@@ -42,14 +42,6 @@ no third-party model or artwork is bundled. NASA material is generally not copyr
 [NASA media usage guidelines](https://www.nasa.gov/nasa-brand-center/images-and-media/) apply:
 the NASA insignia and name must not be used in a way that implies endorsement.
 
-`public/models/astronauts/{frog,bee,flamingo}.glb` (multiplayer avatars) are *Astronaut
-FinnTheFrog*, *Astronaut BarbaraTheBee* and *Astronaut FernandoTheFlamingo*, and
-`public/models/astronauts/mech-{frog,bee,flamingo,panda}.glb` the four *Mech* characters
-(Finn, Barbara, Fernando, Rae the Red Panda), from the
-[Ultimate Space Kit](https://quaternius.com/packs/ultimatespacekit.html) by Quaternius, via
-[Poly Pizza](https://poly.pizza/bundle/Ultimate-Space-Kit-YWh743lqGX); `spacesuit.glb` is
-Quaternius' [Astronaut](https://poly.pizza/m/3hC2i0CTuO). All unmodified,
-[CC0](https://creativecommons.org/publicdomain/zero/1.0/). The jetpack is drawn in code.
 ## Streamed imagery (not bundled)
 
 Loaded at runtime directly from NASA servers; see `src/data/imagery.ts`.
@@ -75,9 +67,7 @@ fall back to the procedural surfaces):
 ## Software dependencies
 
 * [three.js](https://threejs.org/) — MIT
-* [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase — MIT (Streamer Mode join codes; "QR Code" is a registered trademark of DENSO WAVE INCORPORATED)
 * [Vite](https://vite.dev/), [TypeScript](https://www.typescriptlang.org/) — MIT / Apache-2.0 (build-time only)
-* Production image: nginx (2-clause BSD), Node.js (MIT) — build-time only
 
 ## Trademarks
 

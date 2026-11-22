@@ -18,21 +18,25 @@ Based on upstream commit
 
 - **Editorial content removed.** The guided tours, Academy lessons, sky events, narration audio and
   their translations are © BigBrains, all rights reserved (see `LICENSE-CONTENT.md`), and are not
-  part of this fork. `src/data/tours.ts`, `lessons.ts` and `events.ts` keep their types and helpers
-  with empty data; the Tours, Academy and Events buttons are hidden.
-- **Server features off.** Streamer mode and multiplayer need the original's relay and room servers,
-  and the donation prompt and usage beacon belong to the original site. All are disabled.
-- **No sound.** The background music, the radio, the tour and lesson narration players and the
-  Voyager card (which played the Golden Record) are removed; tours and lessons run on subtitles.
+  part of this fork. Their players and panels are removed too, as are the embed (iframe) mode and
+  the encyclopedia (static site generator), which were built on them.
+- **Server features removed.** Streamer mode, multiplayer (with its avatars and Cloudflare worker),
+  the donation prompt, the release notes and the usage beacon need or belong to the original's
+  servers and site.
+- **No sound.** The background music, the radio, the narration and the Voyager card (which played
+  the Golden Record) are removed.
 - **English source language.** The original was written in Turkish, with English, German, Spanish
   and French as translations keyed on the Turkish text. The display strings in the code, markup and
   generated data are now English, the other dictionaries are keyed on English, and Turkish is no
   longer offered. Upstream strings that were never translated are now in English too.
 - **Rebranded** to Deep Field with a new logo; the About panel and welcome pages credit the original.
 - **Static hosting.** Assets load from Vite's `base` (`/deepfield/`), so the site runs from a
-  GitHub Pages project path, deployed by `.github/workflows/pages.yml`. The encyclopedia (static
-  site generator) is not built.
+  GitHub Pages project path, deployed by `.github/workflows/pages.yml`.
 - Rover terrain from the removed tour media is replaced by the generated ground.
+- **Reworked layout.** A menu behind the settings icon (Settings, Mission planner, About), a
+  places button beside the search field, the selected object as a one-line pill on the time-control
+  line whose details card grows up from it, and on phones the time controls as a pop-out above a
+  "Time control" button. Settings fold their render and camera details under "Advanced".
 - **Restyled** to match [jleiros.com](https://www.jleiros.com): GitHub-dark palette, blue accent,
   Lato throughout. The loading screen shows a percentage: the start-up data downloads are counted
   byte by byte against their sizes recorded at build time (`src/ui/LoadProgress.ts`).
