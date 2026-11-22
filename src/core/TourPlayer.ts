@@ -2,7 +2,7 @@ import type { Universe, StarId } from './Universe';
 import type { CameraController } from '../camera/CameraController';
 import type { TimeSystem } from './TimeSystem';
 import { TOURS, type TourCue, type TourDef, type TourStep, type TourTarget } from '../data/tours';
-import { _, currentLocale } from '../i18n';
+import { _ } from '../i18n';
 import { DAY_S } from './constants';
 import { exoBodyId } from '../gen/RealSystem';
 
@@ -105,25 +105,6 @@ export interface TourCard {
   source?: string;
 }
 
-/** Per-step timing produced by scripts/tts-tours.mjs */
-interface StepTiming {
-  /** hash of the narrated text — with the voice, the cache-buster of the clip */
-  hash?: string;
-  /** engine/voice that spoke the clip; a re-voiced clip keeps its text hash, so this is in the URL too */
-  voice?: string;
-  duration: number;
-  sentences: { start: number; end: number; text: string }[];
-}
-/** the clip URL's cache-buster: text hash plus the voice's id (the last part of "engine:model:voice") */
-function clipVersion(t: StepTiming | null | undefined): string | undefined {
-  if (!t?.hash) return undefined;
-  const v = t.voice?.split(':').pop();
-  return v ? `${t.hash}-${v.slice(0, 8)}` : t.hash;
-}
-interface TourManifest {
-  steps: Record<string, StepTiming>;
-}
-
 export type TourPhase = 'idle' | 'flying' | 'dwell';
 
 export interface TourState {
@@ -134,8 +115,6 @@ export interface TourState {
   /** 0..1 within the current step's narration */
   progress: number;
   subtitle: string;
-  /** true when no audio is available for this locale and English (text-only tour) */
-  silent: boolean;
   /** corner inset currently shown (photo / trivia), if any */
   card: TourCard | null;
   /** chapter title / kicker / supporting facts of the current step (source language) */
@@ -154,16 +133,16 @@ const FLIGHT_HOLD_S = 1.4;
 /** Length of a clock-rate ramp between `a` and `b` s/s */
 const rampSeconds = (a: number, b: number): number =>
   Math.min(4, 1 + 0.6 * Math.abs(Math.log10(Math.max(a, 1e-3) / Math.max(b, 1e-3))));
-/** …but never more than this long past its narration time, so picture and voice stay together */
+/** …but never more than this long past its narration time, so picture and text stay together */
 const FLIGHT_HOLD_MAX_S = 3.5;
 
-/** Reading speed used when no audio file exists (characters per second) */
-const SILENT_CPS = 14;
+/** Reading speed of the subtitles (characters per second) */
+const READ_CPS = 14;
 const DEFAULT_DWELL = 1.5;
 const DEFAULT_ORBIT = 0.05;
 const PIN_ORBIT = 0.008;
 
-/** Same sentence splitter as scripts/tts-tours.mjs (keeps punctuation, merges tiny fragments) */
+/** Sentence splitter (keeps punctuation, merges tiny fragments) */
 function splitSentences(text: string): string[] {
   const out: string[] = [];
   const re = /[^.!?…]+[.!?…]+(?:["»”']+)?|[^.!?…]+$/g;
@@ -182,28 +161,20 @@ function splitSentences(text: string): string[] {
 
 /**
  * Plays a guided tour: for each step it starts the flight and the narration at the same moment,
- * shows the sentence being spoken as a subtitle, lets the camera drift slowly around the target
- * once it has arrived, and only moves on when the voice has finished *and* the camera is there.
+ * pages through the narration as subtitles at reading speed, lets the camera drift slowly around
+ * the target once it has arrived, and only moves on when the text has run *and* the camera is there.
  */
 export class TourPlayer {
-  readonly state: TourState = { tour: null, stepIndex: -1, phase: 'idle', paused: false, progress: 0, subtitle: '', silent: false, card: null, title: '', kicker: '', facts: [], stepTime: 0 };
+  readonly state: TourState = { tour: null, stepIndex: -1, phase: 'idle', paused: false, progress: 0, subtitle: '', card: null, title: '', kicker: '', facts: [], stepTime: 0 };
   onChange: ((s: TourState) => void) | null = null;
 
-  private readonly audio = new Audio();
-  private manifest: TourManifest | null = null;
-  private audioLocale: string = currentLocale();
-  /** resolves once we know which locale has audio for the running tour (and its manifest) */
-  private ready: Promise<void> = Promise.resolve();
-  /** seconds since the narration (or its silent stand-in) finished; −1 while still playing */
+  /** seconds since the narration finished; −1 while still running */
   private sinceEnd = -1;
   private elapsed = 0;
-  private audioEnded = false;
-  private audioFailed = false;
   private savedRate = 1;
   private savedPaused = false;
   private savedJd = 0;
   private savedAt = 0;
-  private token = 0;
   /** the flight we started for the current step — a different one means the user navigated away */
   private flight: object | null = null;
   /** cues of the current step already fired */
@@ -247,30 +218,13 @@ export class TourPlayer {
   private dueSince = new Map<TourCue, number>();
   /** set when the player stops itself (user navigated elsewhere / tour finished) */
   onEnd: ((reason: 'finished' | 'interrupted') => void) | null = null;
-  /** the narrator starts / stops speaking (background music ducks under the voice) */
-  onSpeech: ((speaking: boolean) => void) | null = null;
   /** a tour (or event scene) begins */
   onStart: ((tour: TourDef) => void) | null = null;
 
-  constructor(private readonly host: TourHost) {
-    this.audio.preload = 'auto';
-    this.audio.addEventListener('ended', () => { this.audioEnded = true; this.onSpeech?.(false); });
-    this.audio.addEventListener('error', () => { this.audioFailed = true; this.onSpeech?.(false); });
-    this.audio.addEventListener('playing', () => this.onSpeech?.(true));
-    this.audio.addEventListener('pause', () => this.onSpeech?.(false));
-    if (import.meta.env.DEV) (window as unknown as { __tourAudio: HTMLAudioElement }).__tourAudio = this.audio;
-  }
+  constructor(private readonly host: TourHost) {}
 
   get active(): boolean {
     return this.state.tour !== null;
-  }
-
-  /** narration muted (embed mode starts muted; the subtitles still run) */
-  get muted(): boolean {
-    return this.audio.muted;
-  }
-  set muted(m: boolean) {
-    this.audio.muted = m;
   }
 
   get step(): TourStep | null {
@@ -303,14 +257,11 @@ export class TourPlayer {
     this.savedJd = time.jd;
     this.savedAt = performance.now();
     this.state.tour = tour;
-    this.state.silent = false;
     this.state.paused = false;
-    this.manifest = null;
     if (tour.startIso) {
       const d = new Date(tour.startIso);
       if (!Number.isNaN(d.getTime())) this.host.setClock(d);
     }
-    this.ready = this.resolveAudio(tour);
     this.onStart?.(tour);
     this.playStep(0);
   }
@@ -326,8 +277,6 @@ export class TourPlayer {
   togglePause(): void {
     if (!this.active) return;
     this.state.paused = !this.state.paused;
-    if (this.state.paused) this.audio.pause();
-    else if (this.leadLeft <= 0 && !this.audioEnded && !this.audioFailed && this.audio.src) void this.audio.play().catch(() => { this.audioFailed = true; });
     this.emit();
   }
 
@@ -356,36 +305,25 @@ export class TourPlayer {
       return;
     }
     this.elapsed += dt;
-    if (this.leadLeft > 0) {
-      this.leadLeft -= dt;
-      if (this.leadLeft <= 0 && this.audio.src && !this.audioFailed) void this.audio.play().catch(() => { this.audioFailed = true; });
-    }
+    if (this.leadLeft > 0) this.leadLeft -= dt;
     const lead = step.lead ?? 0;
     const s = this.state;
     s.stepTime += dt;
-    const timing = this.timing(step);
-    const duration = timing?.duration ?? this.silentDuration(step);
+    const duration = this.textDuration(step);
     const flying = cam.autopilot !== null;
     this.restFor = flying ? -1 : this.restFor < 0 ? 0 : this.restFor + dt;
 
-    // narration progress & subtitle
-    const useAudio = !this.audioFailed && this.audio.src !== '';
-    const t = useAudio ? this.audio.currentTime : Math.max(0, this.elapsed - lead);
+    // narration progress & subtitle: page through the sentences at reading speed
+    const t = Math.max(0, this.elapsed - lead);
     s.progress = duration > 0 ? Math.min(1, t / duration) : 1;
-    if (timing && timing.sentences.length) {
-      const cur = timing.sentences.find((x) => t >= x.start && t < x.end) ?? (t >= duration ? timing.sentences[timing.sentences.length - 1] : timing.sentences[0]);
-      s.subtitle = cur.text;
-    } else {
-      // no audio: page through the sentences at reading speed instead of showing the whole text
-      s.subtitle = this.silentSentence(step, t, duration);
-    }
+    s.subtitle = this.sentenceAt(step, t, duration);
 
     // timed cues (surface pins, overviews, cloud toggles…)
     if (this.landWait) {
       // a landing that waited for its ground (held again if it is still not there)
       const c = this.landWait;
       this.landWait = null;
-      this.fire(step, c, timing, duration);
+      this.fire(step, c, duration);
     }
     if (step.cues) {
       for (const cue of step.cues) {
@@ -393,14 +331,13 @@ export class TourPlayer {
         // the flights that follow a held landing are composed from the ground: they wait with it
         if (this.landWait && isFlightCue(cue)) continue;
         let at = this.cueTimes.get(cue);
-        // times are only final once the manifest is in; until then re-derive each frame
         if (at === undefined) {
-          at = this.cueTime(step, cue, timing, duration);
-          if (timing) this.cueTimes.set(cue, at);
+          at = this.cueTime(step, cue, duration);
+          this.cueTimes.set(cue, at);
         }
         if (t < at) continue;
         // a new flight right on the heels of the last one reads as a nervous zoom-in-zoom-out:
-        // let the camera settle first (bounded, so the picture never lags the voice for long)
+        // let the camera settle first (bounded, so the picture never lags the text for long)
         // (an interlude without narration times its flights in seconds: they chain as written)
         if (isFlightCue(cue) && step.text) {
           const since = this.dueSince.get(cue);
@@ -413,7 +350,7 @@ export class TourPlayer {
           if (cue.action === 'shot' && this.rateTween && late < FLIGHT_HOLD_MAX_S) continue;
         }
         this.fired.add(cue);
-        this.fire(step, cue, timing, duration);
+        this.fire(step, cue, duration);
       }
     }
     if (s.card && t >= this.cardUntil) { s.card = null; this.cardUntil = Infinity; this.readout = null; }
@@ -438,7 +375,7 @@ export class TourPlayer {
     }
     this.updateRate(dt, step, t, duration);
 
-    const narrationDone = useAudio ? this.audioEnded : this.elapsed >= duration + lead;
+    const narrationDone = this.elapsed >= duration + lead;
     if (narrationDone) {
       this.sinceEnd = this.sinceEnd < 0 ? 0 : this.sinceEnd + dt;
     }
@@ -494,7 +431,6 @@ export class TourPlayer {
   private playStep(i: number): void {
     const tour = this.state.tour!;
     const step = tour.steps[i];
-    const myToken = ++this.token;
     this.state.stepIndex = i;
     this.state.phase = 'flying';
     this.state.progress = 0;
@@ -502,8 +438,6 @@ export class TourPlayer {
     this.elapsed = 0;
     this.leadLeft = step.lead ?? 0;
     this.sinceEnd = -1;
-    this.audioEnded = false;
-    this.audioFailed = false;
     this.fired.clear();
     this.cueTimes.clear();
     this.dueSince.clear();
@@ -528,29 +462,13 @@ export class TourPlayer {
     const early = step.cues?.find((c) => isFlightCue(c) && c.action !== 'return' && c.at <= 1 && c.delay === undefined);
     if (early) {
       this.fired.add(early);
-      this.fire(step, early, null, 0); // replaces the flight just planned, same frame
+      this.fire(step, early, 0); // replaces the flight just planned, same frame
     }
     this.flight = this.host.camera.autopilot;
-
-    // Start the narration right away (same user gesture for the first step) — the manifest is
-    // only needed for subtitles and can arrive later.
-    this.audio.pause();
-    void this.ready.then(() => {
-      if (myToken !== this.token) return;
-      if (this.state.silent || !step.text) { this.audioFailed = true; return; }
-      this.audio.src = this.audioUrl(this.audioLocale, tour.audio ?? tour.id, step.id, clipVersion(this.timing(step)));
-      this.audio.currentTime = 0;
-      if (this.leadLeft <= 0) void this.audio.play().catch(() => { if (myToken === this.token) this.audioFailed = true; });
-    });
     this.emit();
   }
 
   private teardown(): void {
-    this.token++;
-    this.audio.pause();
-    this.onSpeech?.(false);
-    this.audio.removeAttribute('src');
-    this.audio.load();
     const time = this.host.time;
     this.rateTween = null;
     if (this.state.tour?.keepClock) {
@@ -587,24 +505,15 @@ export class TourPlayer {
     this.onChange?.(this.state);
   }
 
-  private timing(step: TourStep): StepTiming | null {
-    return this.manifest?.steps[step.id] ?? null;
-  }
-
   /**
    * Narration time (s) at which a cue fires. The cue names a sentence of the source text; the
-   * spoken locale may split sentences differently, so the index is mapped proportionally onto
-   * the manifest's sentence list (or, without audio, onto the displayed text's sentences).
+   * displayed locale may split sentences differently, so the index is mapped proportionally onto
+   * the displayed text's sentences, whose starts are proportional to their character offsets.
    */
-  private cueTime(step: TourStep, cue: TourCue, timing: StepTiming | null, duration: number): number {
+  private cueTime(step: TourStep, cue: TourCue, duration: number): number {
     const srcCount = splitSentences(step.text).length;
     const frac = srcCount > 1 ? Math.min(cue.at, srcCount - 1) / (srcCount - 1) : 0;
     const delay = cue.delay ?? 0;
-    if (timing && timing.sentences.length) {
-      const i = Math.round(frac * (timing.sentences.length - 1));
-      return timing.sentences[i].start + delay;
-    }
-    // silent: sentence starts proportional to character offsets in the displayed text
     const shown = splitSentences(_(step.text));
     const i = Math.round(frac * Math.max(shown.length - 1, 0));
     const total = shown.reduce((n, s) => n + s.length, 0) || 1;
@@ -613,7 +522,7 @@ export class TourPlayer {
     return (before / total) * duration + delay;
   }
 
-  private fire(step: TourStep, raw: TourCue, timing: StepTiming | null, duration: number): void {
+  private fire(step: TourStep, raw: TourCue, duration: number): void {
     const h = this.host;
     const targetId = this.targetBodyId(step.target);
     const cue = this.resolveCue(raw);
@@ -625,7 +534,7 @@ export class TourPlayer {
       case 'card':
         this.readout = null;
         this.state.card = { image: cue.image, title: cue.title, big: cue.big, text: cue.text, source: cue.source };
-        this.cardUntil = cue.until === undefined ? Infinity : this.cueTime(step, { at: cue.until, action: 'uncard' }, timing, duration);
+        this.cardUntil = cue.until === undefined ? Infinity : this.cueTime(step, { at: cue.until, action: 'uncard' }, duration);
         break;
       case 'uncard':
         this.readout = null;
@@ -705,7 +614,7 @@ export class TourPlayer {
       case 'readout':
         this.readout = cue;
         this.readoutText = '';
-        this.cardUntil = cue.until === undefined ? Infinity : this.cueTime(step, { at: cue.until, action: 'uncard' }, timing, duration);
+        this.cardUntil = cue.until === undefined ? Infinity : this.cueTime(step, { at: cue.until, action: 'uncard' }, duration);
         break;
       case 'lookFrom':
         this.look = cue;
@@ -828,13 +737,14 @@ export class TourPlayer {
     this.host.setMeteors(null);
   }
 
-  private silentDuration(step: TourStep): number {
+  /** how long a step's subtitles take to read (an interlude without text lasts `seconds`) */
+  private textDuration(step: TourStep): number {
     if (!step.text) return step.seconds ?? 4;
-    return Math.max(4, _(step.text).length / SILENT_CPS);
+    return Math.max(4, _(step.text).length / READ_CPS);
   }
 
   /** Sentence of the displayed text being "read" at narration time `t` (same character-proportional clock as cueTime) */
-  private silentSentence(step: TourStep, t: number, duration: number): string {
+  private sentenceAt(step: TourStep, t: number, duration: number): string {
     const shown = splitSentences(_(step.text));
     if (shown.length <= 1) return _(step.text);
     const total = shown.reduce((n, s) => n + s.length, 0) || 1;
@@ -845,36 +755,6 @@ export class TourPlayer {
       if (pos < before) return s;
     }
     return shown[shown.length - 1];
-  }
-
-  private audioUrl(locale: string, tourId: string, stepId: string, version?: string): string {
-    return `${import.meta.env.BASE_URL}tours/${locale}/${tourId}/${stepId}.mp3${version ? `?v=${version}` : ''}`;
-  }
-
-  private manifestUrl(locale: string, tourId: string): string {
-    return `${import.meta.env.BASE_URL}tours/${locale}/${tourId}.json`;
-  }
-
-  /**
-   * Use the UI language when it has audio, otherwise fall back to English (subtitles stay in the
-   * UI language). A locale "has audio" when its manifest exists; the manifest also gives us the
-   * sentence timings for the subtitles.
-   */
-  private async resolveAudio(tour: TourDef): Promise<void> {
-    const want = currentLocale();
-    for (const loc of want === 'en' ? ['en'] : [want, 'en']) {
-      try {
-        // revalidated every time: a stale manifest would point at stale (cached) clips
-        const r = await fetch(this.manifestUrl(loc, tour.audio ?? tour.id), { cache: 'no-cache' });
-        if (!r.ok || !(r.headers.get('content-type') ?? '').includes('json')) continue;
-        const m = (await r.json()) as TourManifest;
-        if (this.state.tour !== tour) return;
-        this.manifest = m;
-        this.audioLocale = loc;
-        return;
-      } catch { /* offline / missing */ }
-    }
-    if (this.state.tour === tour) this.state.silent = true;
   }
 
   /** Body ids a step is about: its target, the step's `show` list and every body its cues refer to */

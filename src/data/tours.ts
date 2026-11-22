@@ -1,11 +1,10 @@
 /**
- * Guided tours: narrated lessons that fly the camera from object to object while a voice
- * (xAI TTS, "altair") explains what is on screen. Narration is written in the source language
- * (Turkish) and translated like every other display string; the audio for each locale lives in
- * `public/tours/<locale>/<tour>/<step>.mp3` with a manifest produced by `scripts/tts-tours.mjs`.
+ * Guided tours: narrated lessons that fly the camera from object to object while subtitles
+ * explain what is on screen. Narration is written in the source language and translated like
+ * every other display string; the player pages through it at reading speed.
  *
  * A step = one destination + one paragraph. The player starts the flight and the narration
- * together; the next step begins when both the audio and the flight have finished. Cues fire
+ * together; the next step begins when both the text and the flight have finished. Cues fire
  * at sentence starts (0-based index into the Turkish text) and drive the show: cloud strips,
  * overviews, surface pins, true-scale size comparisons, photo / trivia cards, light pulses…
  */
@@ -22,7 +21,7 @@ export type TourTarget =
 
 /**
  * Something that happens while a step is narrated. `at` is the index of the sentence (of the
- * source text, 0-based) at whose start the cue fires; the player maps it onto the spoken locale.
+ * source text, 0-based) at whose start the cue fires; the player maps it onto the displayed locale.
  * `delay` (seconds) holds it back further into that sentence.
  *
  * Body references (`ref`, `toward`, `from`, `to`, `a`, `b`) are Solar System ids; in an exoplanet
@@ -152,7 +151,7 @@ export interface TourStep {
   dwell?: number;
   /** seconds of silence before the narration starts, so the opening flight can settle first */
   lead?: number;
-  /** length of a step without narration (`text: ''`): an interlude carried by the music, its cues timed by `delay` */
+  /** length of a step without narration (`text: ''`): a wordless interlude, its cues timed by `delay` */
   seconds?: number;
   /** timed events during the narration (see TourCue) */
   cues?: TourCue[];
@@ -178,12 +177,8 @@ export interface TourDef {
   eyebrow?: string;
   /** simulation clock at the start (ISO 8601 UTC); default: leave the visitor's clock alone */
   startIso?: string;
-  /** audio folder (`public/tours/<locale>/<audio>/`); default `id` */
-  audio?: string;
   /** at the end stay on the scene's date at 1× instead of restoring the visitor's clock (events) */
   keepClock?: boolean;
-  /** background music while the tour plays: a track file name under public/music (default: picked from the library by the tour id) */
-  music?: string;
 }
 
 const body = (ref: string): TourTarget => ({ kind: 'body', ref });

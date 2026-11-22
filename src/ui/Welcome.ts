@@ -26,8 +26,6 @@ export interface WelcomeHost {
   imageryLoaded(bodyId: string): boolean;
   /** keep a body's loaded imagery from being released while the welcome is on */
   pinImagery(bodyId: string, on: boolean): void;
-  music: { available: boolean; enabled: boolean; pending: boolean; play(key: string): void; stop(): void; onChange(fn: () => void): void };
-  toggleMusic(): void;
 }
 
 /** the shots, in page order (the last page is the backdrop) */
@@ -53,7 +51,6 @@ export class Welcome {
   private readonly dots = document.getElementById('welcome-dots') as HTMLElement;
   private readonly back = document.getElementById('welcome-back') as HTMLButtonElement;
   private readonly next = document.getElementById('welcome-next') as HTMLButtonElement;
-  private readonly musicBtn = document.getElementById('welcome-music') as HTMLButtonElement;
   private page = -1;
   private driftTimer = 0;
   /** the visitor's clock rate, restored when the welcome closes */
@@ -78,17 +75,6 @@ export class Welcome {
     this.back.addEventListener('click', () => this.go(this.page - 1));
     this.next.addEventListener('click', () => this.go(this.page + 1));
     (document.getElementById('welcome-skip') as HTMLButtonElement).addEventListener('click', () => this.finish());
-    this.musicBtn.addEventListener('click', () => host.toggleMusic());
-    host.music.onChange(() => this.syncMusic());
-    this.syncMusic();
-  }
-
-  /** the music button shows the library's presence and the on/off state */
-  private syncMusic(): void {
-    const m = this.host.music;
-    this.musicBtn.hidden = !m.available;
-    this.musicBtn.classList.toggle('off', !m.enabled);
-    this.musicBtn.classList.toggle('pending', m.pending);
   }
 
   /** true when this browser has not been through the welcome yet */
@@ -136,7 +122,6 @@ export class Welcome {
     window.addEventListener('keydown', this.onKey, true);
     this.host.overlay.cinematic = true;
     this.host.setTourOverrides(LOOK);
-    this.host.music.play('welcome');
     this.go(0);
   }
 
@@ -214,7 +199,6 @@ export class Welcome {
     this.root.hidden = true;
     document.body.classList.remove('welcoming');
     const h = this.host;
-    h.music.stop();
     h.overlay.cinematic = false;
     h.time.setRate(this.savedRate);
     h.setTourOverrides({});

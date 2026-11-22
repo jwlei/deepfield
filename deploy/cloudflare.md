@@ -71,7 +71,7 @@ Script (idempotent) şunları kurar:
 | Bot | Browser Integrity Check, security level *medium*. Bot Fight Mode isteğe bağlı (`BOT_FIGHT_MODE=1`): her HTML sayfasına Cloudflare'in betiğini ekler (önce CSP ile denenmeli) ve sertifika yenilemesini engelleyebilir |
 | WAF | Sadece GET/HEAD/OPTIONS; `.map`, `.env`, `.git`, gizli dosya yolları blok (`/.well-known/` hariç: sertifika yenilemesi oradan geçer) |
 | Rate limit | Genel 2000 istek/10 sn/IP, 10 sn blok (Free planın tek kuralı; önbellekten dönen istekler de sayılır) |
-| Cache | Statik klasörlerin tamamı (`/assets`, `/data`, `/models`, `/maps`, `/skins`, `/ground`, `/nebulae`, `/tours`, `/tour-media`, `/lessons`, `/music`, `/expedition`, `/scope`, `/wiki`, `/events`, `/ephem`) dosya türü ne olursa olsun edge'de tutulur; süreyi yalnızca nginx'in `Cache-Control` başlığı belirler. HTML edge'de tutulmaz; `/_b.gif` cache dışı |
+| Cache | Statik klasörlerin tamamı (`/assets`, `/data`, `/models`, `/maps`, `/skins`, `/ground`, `/nebulae`, `/tours`, `/tour-media`, `/lessons`, `/expedition`, `/scope`, `/wiki`, `/events`, `/ephem`) dosya türü ne olursa olsun edge'de tutulur; süreyi yalnızca nginx'in `Cache-Control` başlığı belirler. HTML edge'de tutulmaz; `/_b.gif` cache dışı |
 | Origin koruması | Transform rule ile `X-Origin-Auth: <sır>`; nginx başlığı doğrulamayan isteğe 403 |
 | Başlıklar | nosniff, Referrer-Policy, Permissions-Policy; `X-Powered-By` kaldırılır. `X-Frame-Options: DENY` yalnızca `?embed=1` **dışında** (gömülebilir olay görünümü başka sitelerde iframe içinde çalışır; nginx aynı koşulla CSP `frame-ancestors`'ı da `*` yapar) |
 

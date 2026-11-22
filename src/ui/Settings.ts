@@ -67,12 +67,6 @@ export interface Settings {
   exposure: number;
   mouseSensitivity: number;
   invertY: boolean;
-  /** background music under the tours and the welcome */
-  music: boolean;
-  /** radio: the library keeps playing, shuffled, outside the tours and the welcome */
-  radio: boolean;
-  /** music volume 0…1 (the radio widget's slider) */
-  musicVolume: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -118,9 +112,6 @@ export const DEFAULT_SETTINGS: Settings = {
   exposure: 1.0,
   mouseSensitivity: 1.0,
   invertY: false,
-  music: true,
-  radio: false,
-  musicVolume: 0.64,
 };
 
 export type GraphicsPreset = 'low' | 'medium' | 'high';

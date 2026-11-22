@@ -71,10 +71,7 @@ import { applyEventMeta, beacon, eventUrl, parseLaunch, type LaunchParams } from
 import { EmbedUI } from './ui/EmbedUI';
 import { Welcome } from './ui/Welcome';
 import { LoadProgress } from './ui/LoadProgress';
-import { VoyagerCelebration } from './ui/VoyagerCelebration';
 import { SupportAsk } from './ui/SupportAsk';
-import { Music } from './audio/Music';
-import { TOURS } from './data/tours';
 import { C_KM_S } from './core/constants';
 import { LessonPlayer } from './core/LessonPlayer';
 import type { MissionPlan } from './astro/mission';
@@ -129,7 +126,6 @@ class App implements UIHost {
   readonly ui: UI;
   /** first-visit introduction over live shots */
   readonly welcome: Welcome;
-  readonly music: Music;
   selected: CelestialBody | null = null;
   selectedStar: StarId | null = null;
   selectedGalaxy: number | null = null;
@@ -272,14 +268,8 @@ class App implements UIHost {
       arrived: (m) => this.onMissionArrived(m),
     });
     this.tours = new TourPlayer(this);
-    this.music = new Music(import.meta.env.BASE_URL);
-    this.music.setKeys(['welcome', ...TOURS.map((t) => t.id)]);
-    void this.music.load();
-    this.tours.onStart = (t) => { this.music.play(t.id, t.music); this.warmLanding(); };
-    this.music.onStart = (t) => this.ui.showNowPlaying(t);
-    this.tours.onSpeech = (speaking) => this.music.duck(speaking);
+    this.tours.onStart = () => this.warmLanding();
     this.tours.onEnd = (why) => {
-      this.music.stop();
       const wasEvent = this.currentEvent !== null;
       if (wasEvent) this.endEvent();
       if (why === 'finished' && !wasEvent) {
@@ -331,15 +321,6 @@ class App implements UIHost {
 
     this.applySettings();
     requestAnimationFrame(this.frame);
-  }
-
-  /** Background music on / off (saved with the settings) */
-  toggleMusic(): void {
-    // on, but the browser waited for a gesture: this click is it
-    if (this.music.pending) { this.music.kick(); return; }
-    this.settings.music = !this.settings.music;
-    this.applySettings();
-    this.ui.showToast(this.settings.music ? _('Fon müziği açık') : _('Fon müziği kapalı'), 1600);
   }
 
   /** Lift the loading screen (boot calls it once everything that should happen behind it has) */
@@ -2412,13 +2393,11 @@ class App implements UIHost {
   launch(p: LaunchParams): void {
     if (p.embed) {
       this.persistSettings = false;
-      // iframe: light on traffic (no NASA tiles, no background Horizons tables), silent narration,
-      // and the host page keeps its scrolling until the visitor clicks the view
+      // iframe: light on traffic (no NASA tiles, no background Horizons tables), and the host page keeps its scrolling until the visitor clicks the view
       this.settings.imagery = false;
       this.applySettings();
       ephemeris.deferBackground = true;
       this.input.setArmOnClick(true);
-      this.tours.muted = true;
       this.embed = new EmbedUI(this);
     }
     const e = p.event ? eventById(p.event) : undefined;
@@ -2486,10 +2465,6 @@ class App implements UIHost {
       if (this.persistSettings) finishGraphicsProbe();
     }
     if (this.persistSettings) saveSettings(s);
-    this.music.enabled = s.music;
-    this.music.radio = s.radio;
-    this.music.volume = s.musicVolume;
-    this.ui?.radio.sync();
     this.engine.setFov(s.fov);
     this.engine.bloom.enabled = s.bloom;
     if (s.autoExposure && !this.engine.autoExposure.active) this.engine.autoExposure.resetAdaptation();
@@ -3810,20 +3785,6 @@ async function boot(): Promise<void> {
   // the loading percentage: the start-up data downloads byte by byte, then the later steps
   const progress = new LoadProgress(document.querySelector<HTMLElement>('#loader .loader-fill'), document.querySelector<HTMLElement>('#loader .loader-pct'));
   progress.trackDownloads(import.meta.env.BASE_URL);
-  /** the loader's bar fills, a button appears; resolves inside its click */
-  const enterOnClick = (text: Element | null): Promise<void> => new Promise((resolve) => {
-    const loader = document.getElementById('loader');
-    progress.done();
-    if (!loader) { resolve(); return; }
-    if (text) text.textContent = _('Hazır');
-    const btn = document.createElement('button');
-    btn.className = 'loader-enter';
-    btn.textContent = _('Başla');
-    btn.addEventListener('click', () => { btn.disabled = true; resolve(); }, { once: true });
-    loader.classList.add('ready');
-    loader.appendChild(btn);
-    btn.focus();
-  });
   try {
     await initI18n();
     applyDom();
@@ -3852,7 +3813,7 @@ async function boot(): Promise<void> {
     app.launch(launch);
     progress.step(94);
     // Streamer Mode (The Great Expedition): stream.* host or ?stream; its UI replaces the app's
-    // Deep Field: streamer mode needs the upstream relay server and narration audio: off
+    // Deep Field: streamer mode needs the upstream relay server: off
     const stream = false;
     if (stream) {
       const { startCockpit } = await import('./expedition/host');
@@ -3870,10 +3831,7 @@ async function boot(): Promise<void> {
     const intro = !stream && partyCode === null && !launch.embed && !launch.event && !launch.target && !launch.open && Welcome.due;
     if (intro) {
       if (loaderText) loaderText.textContent = _('Sahneler hazırlanıyor…');
-      // the browser may refuse sound before a click: then the loader ends on a button, and the
-      // welcome (and its music) start from that click
-      const [allowed] = await Promise.all([app.music.probe(), app.welcome.prepare()]);
-      if (!allowed) await enterOnClick(loaderText);
+      await app.welcome.prepare();
     } else {
       // the first view's programs compile behind the loader instead of freezing its first frame
       await app.settle(2, 2);
@@ -3881,16 +3839,8 @@ async function boot(): Promise<void> {
     progress.done();
     app.ready();
     if (intro) app.welcome.start();
-    // Voyager 1 one light-day from Earth: a one-time card until 23 November (after the welcome, if any)
-    // (not over the milestone's own scene: a link straight to it is already the celebration)
-    // Deep Field: the Voyager card plays upstream event audio: off
-    if (DEEP_FIELD_UPSTREAM_EXTRAS && !stream && partyCode === null && !launch.embed && launch.event !== 'voyager1-light-day-2026' && VoyagerCelebration.due) {
-      const card = new VoyagerCelebration(app);
-      if (intro) app.welcome.onFinish = () => window.setTimeout(() => card.show(), 1500);
-      else window.setTimeout(() => card.show(), 1800);
-    }
     // the donation card: at the end of every Academy chapter, after the second finished tour, and
-    // on the fifth visit (not over the welcome or the Voyager card: a minute in, when the view is free)
+    // on the fifth visit (not over the welcome: a minute in, when the view is free)
     // the heart in the top bar opens the card any time (in stream mode / rooms / embeds: the plain support dialog)
     document.getElementById('btn-give')?.addEventListener('click', () => {
       if (app.supportAsk) app.supportAsk.toggle();
@@ -3898,7 +3848,7 @@ async function boot(): Promise<void> {
     });
     // Deep Field: the donation card asks for the upstream project: off
     if (DEEP_FIELD_UPSTREAM_EXTRAS && !stream && partyCode === null && !launch.embed) {
-      const ask = new SupportAsk({ get busy() { return app.tours.state.tour !== null || app.lessons.active || app.currentEvent !== null || document.querySelector('.v1day, .welcome:not([hidden])') !== null; } });
+      const ask = new SupportAsk({ get busy() { return app.tours.state.tour !== null || app.lessons.active || app.currentEvent !== null || document.querySelector('.welcome:not([hidden])') !== null; } });
       app.supportAsk = ask;
       app.lessons.onChapterEnd = () => ask.noteChapterFinished();
       ask.noteVisit(intro ? 90_000 : 45_000);

@@ -2,7 +2,7 @@
  * Academy — the side panel: course home (chapters → sections) and the lesson view
  * (one step at a time with formulas, callouts and an interactive widget).
  */
-import type { LessonPlayer, NarrationState } from '../core/LessonPlayer';
+import type { LessonPlayer } from '../core/LessonPlayer';
 import type { Block, Section, Step } from '../data/lessons';
 import { itex, tex } from './lessons/math';
 import { createWidget, type Widget } from './lessons/widgets';
@@ -97,12 +97,10 @@ export class LessonPanel {
   private widget: Widget | null = null;
   /** chapters expanded on the course home; null until first render (then seeded with the active one) */
   private openChapters: Set<string> | null = null;
-  private lec: { root: HTMLElement; play: HTMLButtonElement; time: HTMLElement; text: HTMLElement; fill: HTMLElement; auto: HTMLInputElement; mute: HTMLButtonElement } | null = null;
 
   constructor(private readonly player: LessonPlayer, private readonly onToggle: (show: boolean) => void) {
     this.btn.addEventListener('click', () => this.toggle(this.panel.hidden === true));
     player.onChange = () => this.render();
-    player.onNarration = (n) => this.renderNarration(n);
     document.addEventListener('keydown', (e) => {
       if (this.panel.hidden || !player.active) return;
       const t = e.target as HTMLElement | null;
@@ -269,8 +267,6 @@ export class LessonPanel {
       }
     });
 
-    const lecture = this.buildLecture();
-
     const foot = el('div', 'ac-foot');
     const prev = el('button', 'ac-nav', '‹ Previous');
     prev.disabled = i === 0;
@@ -281,58 +277,9 @@ export class LessonPanel {
     const next = el('button', 'ac-nav primary', isLast ? (nextSec ? `Next: ${esc(nextSec.number)} ›` : 'Finish ✓') : 'Next ›');
     next.addEventListener('click', () => { if (isLast && !nextSec) p.close(); else p.next(); });
     foot.append(prev, count, next);
-    this.panel.append(scroll, lecture, foot);
+    this.panel.append(scroll, foot);
     scroll.scrollTop = 0;
-    this.renderNarration(p.narration);
   }
 
-  /* ---------------------------------------------------------- lecturer ---- */
-  private buildLecture(): HTMLElement {
-    const p = this.player;
-    const root = el('div', 'ac-lecture');
-    const play = el('button', 'ac-lec-play', '▶');
-    play.title = 'Play / pause the lecturer';
-    play.addEventListener('click', () => p.toggleNarration());
-    const main = el('div', 'ac-lec-main');
-    const head = el('div', 'ac-lec-head');
-    const k = el('span', 'ac-lec-k', 'Lecturer');
-    const time = el('span', 'ac-lec-time', '');
-    head.append(k, time);
-    const text = el('div', 'ac-lec-text', '');
-    const bar = el('div', 'ac-lec-bar');
-    const fill = el('div');
-    bar.appendChild(fill);
-    bar.addEventListener('click', (e) => {
-      const r = bar.getBoundingClientRect();
-      p.seekNarration(((e.clientX - r.left) / r.width) * p.narration.duration);
-    });
-    main.append(head, text, bar);
-    const opts = el('div', 'ac-lec-opts');
-    const autoL = el('label', 'ac-lec-auto');
-    const auto = el('input'); auto.type = 'checkbox'; auto.checked = p.narration.auto;
-    auto.addEventListener('change', () => p.setAutoAdvance(auto.checked));
-    autoL.append(auto, document.createTextNode(' Auto-advance'));
-    const mute = el('button', 'ac-lec-mute', '');
-    mute.addEventListener('click', () => p.setNarrationEnabled(!p.narration.enabled));
-    opts.append(autoL, mute);
-    root.append(play, main, opts);
-    this.lec = { root, play, time, text, fill, auto, mute };
-    return root;
-  }
 
-  private renderNarration(n: NarrationState): void {
-    const L = this.lec;
-    if (!L || !L.root.isConnected) return;
-    L.root.classList.toggle('off', !n.enabled);
-    L.root.classList.toggle('none', !n.available && !n.loading);
-    L.play.textContent = n.playing ? '❚❚' : '▶';
-    L.play.disabled = !n.available;
-    const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
-    L.time.textContent = n.loading ? 'loading…' : n.available ? `${fmt(n.time)} / ${fmt(n.duration)}` : 'no narration for this step yet';
-    L.text.textContent = n.available ? (n.enabled ? n.sentence : 'Narration is muted — press 🔊 to listen.') : '';
-    L.fill.style.width = n.duration ? `${(n.time / n.duration) * 100}%` : '0%';
-    L.auto.checked = n.auto;
-    L.mute.textContent = n.enabled ? '🔊' : '🔇';
-    L.mute.title = n.enabled ? 'Mute the lecturer' : 'Unmute the lecturer';
-  }
 }

@@ -28,13 +28,12 @@ export interface EmbedHost {
 
 /**
  * The minimal chrome of the iframe view (?embed=1): one-line title + date top-left, play/pause,
- * rate and sound controls bottom-left, "Open in Deep Field ↗" bottom-right.
+ * rate and replay controls bottom-left, "Open in Deep Field ↗" bottom-right.
  */
 export class EmbedUI {
   private readonly root = $('embed-ui');
   private readonly play = $<HTMLButtonElement>('embed-play');
   private readonly rate = $('embed-rate');
-  private readonly mute = $<HTMLButtonElement>('embed-mute');
   private readonly open = $<HTMLAnchorElement>('embed-open');
   private event: SkyEvent | null = null;
   private lastRate = '';
@@ -51,12 +50,7 @@ export class EmbedUI {
     $('embed-slower').addEventListener('click', () => host.time.slower());
     $('embed-faster').addEventListener('click', () => host.time.faster());
     $('embed-replay').addEventListener('click', () => host.replayEvent());
-    this.mute.addEventListener('click', () => {
-      host.tours.muted = !host.tours.muted;
-      this.renderMute();
-    });
     this.open.addEventListener('click', () => beacon('open_click', this.event?.id ?? '', true));
-    this.renderMute();
     this.setEvent(null);
   }
 
@@ -67,12 +61,6 @@ export class EmbedUI {
     this.open.href = openFromEmbedUrl(e);
     this.open.title = _('Tam uygulamada aç (yeni sekme)');
     $<HTMLButtonElement>('embed-replay').hidden = !e;
-  }
-
-  private renderMute(): void {
-    const m = this.host.tours.muted;
-    this.mute.textContent = m ? '🔇' : '🔊';
-    this.mute.title = m ? _('Anlatım sesini aç') : _('Anlatım sesini kapat');
   }
 
   /** Call once per frame */

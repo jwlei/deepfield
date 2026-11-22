@@ -12,24 +12,6 @@ const LESSON_ORBIT = 0.035;
 interface Stored {
   visited: string[];
   last?: { section: string; step: number };
-  /** lecturer narration on/off and auto-advance when a clip ends */
-  voice?: boolean;
-  auto?: boolean;
-}
-
-interface LectureClip { duration: number; sentences: Array<{ start: number; end: number; text: string }>; script: string }
-interface LectureManifest { steps: Record<string, LectureClip> }
-
-export interface NarrationState {
-  /** a clip exists for the current step */
-  available: boolean;
-  loading: boolean;
-  enabled: boolean;
-  auto: boolean;
-  playing: boolean;
-  time: number;
-  duration: number;
-  sentence: string;
 }
 
 export class LessonPlayer {
@@ -45,15 +27,6 @@ export class LessonPlayer {
   private flight: object | null = null;
   private settled = false;
 
-  /* narration */
-  onNarration: ((n: NarrationState) => void) | null = null;
-  readonly narration: NarrationState = { available: false, loading: false, enabled: true, auto: false, playing: false, time: 0, duration: 0, sentence: '' };
-  private readonly audio = new Audio();
-  private manifests = new Map<string, Promise<LectureManifest | null>>();
-  private clip: LectureClip | null = null;
-  private clipToken = 0;
-  private lastEmit = '';
-
   constructor(private readonly host: TourHost, private readonly tours: TourPlayer) {
     try {
       const raw = localStorage.getItem(STORE_KEY);
@@ -61,104 +34,8 @@ export class LessonPlayer {
         const s = JSON.parse(raw) as Stored;
         this.visited = new Set(s.visited ?? []);
         this.last = s.last;
-        if (s.voice !== undefined) this.narration.enabled = s.voice;
-        if (s.auto !== undefined) this.narration.auto = s.auto;
       }
     } catch { /* ignore */ }
-    this.audio.preload = 'auto';
-    this.audio.addEventListener('ended', () => {
-      this.narration.playing = false;
-      this.emitNarration(true);
-      if (this.narration.auto && this.section) window.setTimeout(() => { if (this.section && !this.narration.playing) this.next(); }, 900);
-    });
-    this.audio.addEventListener('play', () => { this.narration.playing = true; this.emitNarration(true); });
-    this.audio.addEventListener('pause', () => { this.narration.playing = false; this.emitNarration(true); });
-  }
-
-  /* ---- narration ---- */
-  private manifest(sectionId: string): Promise<LectureManifest | null> {
-    let p = this.manifests.get(sectionId);
-    if (!p) {
-      p = fetch(`${import.meta.env.BASE_URL}lessons/en/${sectionId}.json`, { cache: 'no-cache' })
-        .then((r) => (r.ok ? (r.json() as Promise<LectureManifest>) : null))
-        .catch(() => null);
-      this.manifests.set(sectionId, p);
-    }
-    return p;
-  }
-
-  private async loadClip(section: Section, step: Step): Promise<void> {
-    const token = ++this.clipToken;
-    this.stopClip();
-    this.narration.loading = true;
-    this.emitNarration(true);
-    const m = await this.manifest(section.id);
-    if (token !== this.clipToken) return;
-    const clip = m?.steps[step.id] ?? null;
-    this.clip = clip && clip.duration ? clip : null;
-    this.narration.loading = false;
-    this.narration.available = this.clip !== null;
-    this.narration.duration = this.clip?.duration ?? 0;
-    this.narration.time = 0;
-    this.narration.sentence = this.clip?.sentences[0]?.text ?? '';
-    if (this.clip) {
-      this.audio.src = `${import.meta.env.BASE_URL}lessons/en/${section.id}/${step.id}.mp3`;
-      if (this.narration.enabled) this.audio.play().catch(() => { this.narration.playing = false; this.emitNarration(true); });
-    }
-    this.emitNarration(true);
-  }
-
-  private stopClip(): void {
-    if (!this.audio.paused) this.audio.pause();
-    this.audio.removeAttribute('src');
-    this.audio.load();
-    this.clip = null;
-    this.narration.available = false;
-    this.narration.playing = false;
-    this.narration.time = 0;
-    this.narration.duration = 0;
-    this.narration.sentence = '';
-  }
-
-  /** play / pause the lecturer */
-  toggleNarration(): void {
-    if (!this.clip) return;
-    if (this.audio.paused) {
-      if (this.audio.ended) this.audio.currentTime = 0;
-      this.narration.enabled = true;
-      this.save();
-      this.audio.play().catch(() => {});
-    } else this.audio.pause();
-  }
-  setNarrationEnabled(on: boolean): void {
-    this.narration.enabled = on;
-    this.save();
-    if (!on) { if (!this.audio.paused) this.audio.pause(); }
-    else if (this.clip && this.audio.paused) this.audio.play().catch(() => {});
-    this.emitNarration(true);
-  }
-  setAutoAdvance(on: boolean): void {
-    this.narration.auto = on;
-    this.save();
-    this.emitNarration(true);
-  }
-  seekNarration(t: number): void {
-    if (!this.clip) return;
-    this.audio.currentTime = Math.max(0, Math.min(this.clip.duration, t));
-    this.emitNarration(true);
-  }
-
-  private emitNarration(force = false): void {
-    const n = this.narration;
-    if (this.clip) {
-      n.time = this.audio.currentTime || 0;
-      const s = this.clip.sentences.find((x) => n.time >= x.start && n.time < x.end) ?? (n.time >= n.duration - 0.05 ? this.clip.sentences[this.clip.sentences.length - 1] : null);
-      if (s) n.sentence = s.text;
-    }
-    const sig = `${n.available}|${n.loading}|${n.enabled}|${n.auto}|${n.playing}|${Math.floor(n.time * 4)}|${n.sentence}`;
-    if (!force && sig === this.lastEmit) return;
-    this.lastEmit = sig;
-    this.onNarration?.(n);
   }
 
   /** the visitor finished the last section of a chapter */
@@ -195,7 +72,7 @@ export class LessonPlayer {
   }
   private save() {
     try {
-      const s: Stored = { visited: [...this.visited], last: this.last, voice: this.narration.enabled, auto: this.narration.auto };
+      const s: Stored = { visited: [...this.visited], last: this.last };
       localStorage.setItem(STORE_KEY, JSON.stringify(s));
     } catch { /* ignore */ }
   }
@@ -226,7 +103,6 @@ export class LessonPlayer {
     this.resetScene();
     if (step.scene?.length) this.applyScene(step.scene);
     this.onChange?.();
-    void this.loadClip(this.section, step);
   }
 
   next(): void {
@@ -254,8 +130,6 @@ export class LessonPlayer {
     if (!this.section) return;
     this.section = null;
     this.chapter = null;
-    this.clipToken++;
-    this.stopClip();
     this.resetScene();
     this.onChange?.();
   }
@@ -327,7 +201,6 @@ export class LessonPlayer {
     if (!this.section) return;
     // a tour started while a lesson was open takes over the scene
     if (this.tours.active) { this.close(); return; }
-    if (this.clip && this.narration.playing) this.emitNarration();
     if (this.settled) return;
     const cam = this.host.camera;
     // once the flight we launched has finished, drift gently around the target

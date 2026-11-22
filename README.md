@@ -20,9 +20,10 @@ Based on upstream commit
   their translations are © BigBrains, all rights reserved (see `LICENSE-CONTENT.md`), and are not
   part of this fork. `src/data/tours.ts`, `lessons.ts` and `events.ts` keep their types and helpers
   with empty data; the Tours, Academy and Events buttons are hidden.
-- **Server features off.** Streamer mode and multiplayer need the original's relay and room servers;
-  the Voyager card plays removed event audio; the donation prompt and usage beacon belong to the
-  original site. All four are disabled.
+- **Server features off.** Streamer mode and multiplayer need the original's relay and room servers,
+  and the donation prompt and usage beacon belong to the original site. All are disabled.
+- **No sound.** The background music, the radio, the tour and lesson narration players and the
+  Voyager card (which played the Golden Record) are removed; tours and lessons run on subtitles.
 - **Rebranded** to Deep Field with a new logo; the About panel and welcome pages credit the original.
 - **Static hosting.** Assets load from Vite's `base` (`/deepfield/`), so the site runs from a
   GitHub Pages project path, deployed by `.github/workflows/pages.yml`. The encyclopedia (static
@@ -48,5 +49,5 @@ The code is licensed under the **GNU AGPL-3.0-or-later** (see `LICENSE`), © 202
 modifications © 2026 Joachim Leiros under the same licence. The AGPL covers use over a network, so
 this repository is the source of exactly what is deployed.
 
-Third-party data, models, imagery and music keep their own licences and credits: see `NOTICE.md`
+Third-party data, models and imagery keep their own licences and credits: see `NOTICE.md`
 and the in-app "Controls and sources" panel.

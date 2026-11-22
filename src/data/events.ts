@@ -68,7 +68,7 @@ export function eventTour(e: SkyEvent): TourDef {
     show: [...(s.show ?? []), ...e.bodies],
     ...(i === 0 ? { title: s.title ?? e.title, kicker: s.kicker ?? e.kicker, facts: s.facts ?? e.facts } : {}),
   }));
-  return { id: `event:${e.id}`, title: e.title, summary: e.summary, steps, startIso: e.sceneStart ?? e.time, audio: `events/${e.id}`, keepClock: true };
+  return { id: `event:${e.id}`, title: e.title, summary: e.summary, steps, startIso: e.sceneStart ?? e.time, keepClock: true };
 }
 
 /** Human label of an event kind (source language) */
